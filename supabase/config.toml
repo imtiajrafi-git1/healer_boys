@@ -1,0 +1,16 @@
+# ============================================================================
+# supabase/config.toml — Healer Boy's
+# Merge the relevant blocks into your existing config.toml.
+# Docs: https://supabase.com/docs/guides/functions
+# ============================================================================
+
+project_id = "healer-boys"
+
+[functions.send-reminders]
+# The cron job calls this with the service-role key, so no public verify_jwt.
+verify_jwt = false
+# Sending to a whole member list can take a while — give it room.
+[functions.send-reminders.schedule]
+# Kept for reference; the real schedule lives in pg_cron
+# (supabase/migrations/0001_app_settings_and_cron.sql) because pg_net is used
+# to POST to this function every day at 06:00 UTC.

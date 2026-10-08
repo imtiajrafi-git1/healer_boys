@@ -1,0 +1,356 @@
+/* ============================================================================
+   payment.css — Healer Boy's "Payment Options" card
+   ----------------------------------------------------------------------------
+   Styling only. Mobile-first at 390px, centred and capped at 420px on desktop.
+   Pair with useCopy.js for the copy interactions.
+   ========================================================================= */
+
+/* ---------------------------------------------------------------- tokens -- */
+.pay {
+  --pay-bg: #FAF6FA;
+  --pay-text: #2B1B3D;
+  --pay-muted: #5B4B6B;
+  --pay-border: #CDBFD6;
+  --pay-border-soft: #E6DAEB;
+  --pay-primary: #4338CA;
+  --pay-radius: 20px;
+  --pay-shadow: 0 10px 30px -5px rgba(0, 0, 0, .06);
+  --pay-focus: 0 0 0 2px #4338CA;
+}
+
+/* ------------------------------------------------------------- container -- */
+.pay {
+  position: relative;
+  background: var(--pay-bg);
+  border: 1px solid #fff;
+  border-radius: var(--pay-radius);
+  box-shadow: var(--pay-shadow);
+  padding: 18px;
+  max-width: 420px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ---------------------------------------------------------------- header -- */
+.pay-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 48px;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pay-head:focus-visible { outline: none; box-shadow: var(--pay-focus); border-radius: 12px; }
+
+.pay-tile {
+  width: 48px;
+  height: 48px;
+  border-radius: 15px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #F59E0B, #EA580C);
+  color: #fff;
+  box-shadow: 0 8px 18px -8px rgba(234, 88, 12, .7), inset 0 1px 0 rgba(255, 255, 255, .3);
+}
+
+.pay-head-text { flex: 1; min-width: 0; }
+.pay-title { margin: 0; font-size: 18px; font-weight: 800; color: var(--pay-text); letter-spacing: -.02em; }
+.pay-sub { margin: 2px 0 0; font-size: 13px; color: var(--pay-muted); }
+
+.pay-chev {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  color: var(--pay-muted);
+  transition: transform 200ms ease;
+}
+.pay[aria-expanded="true"] .pay-chev { transform: rotate(180deg); }
+
+/* collapsible body */
+.pay-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 220ms ease, opacity 200ms ease;
+}
+.pay.open .pay-body { grid-template-rows: 1fr; opacity: 1; }
+.pay-body > div { overflow: hidden; }
+
+/* -------------------------------------------------------------- bank card -- */
+.bank-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  margin: 14px -18px 0;
+  padding: 0 18px 4px;
+}
+.bank-scroll::-webkit-scrollbar { display: none; }
+
+.bank-card {
+  position: relative;
+  flex: 0 0 100%;
+  scroll-snap-align: center;
+  height: 206px;
+  width: 100%;
+  border-radius: 22px;
+  padding: 18px;
+  overflow: hidden;
+  color: #fff;
+  box-shadow: 0 18px 30px -12px rgba(4, 120, 87, .6);
+  display: flex;
+  flex-direction: column;
+  isolation: isolate;
+}
+
+/* per-bank gradients */
+.bank-card.g-green { background: linear-gradient(135deg, #064E3B, #047857 55%, #0F766E); }
+.bank-card.g-indigo { background: linear-gradient(135deg, #312E81, #4338CA 55%, #4F46E5); box-shadow: 0 18px 30px -12px rgba(67, 56, 202, .6); }
+.bank-card.g-plum { background: linear-gradient(135deg, #701A45, #BE185D 55%, #9D174D); box-shadow: 0 18px 30px -12px rgba(190, 24, 93, .6); }
+
+/* decorative circles */
+.bank-card::before,
+.bank-card::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+.bank-card::before {
+  width: 190px; height: 190px;
+  top: -80px; right: -60px;
+  background: rgba(255, 255, 255, .10);
+}
+.bank-card::after {
+  width: 150px; height: 150px;
+  bottom: -70px; left: -40px;
+  background: rgba(255, 255, 255, .07);
+}
+
+/* diagonal shine */
+.bank-shine {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, .16) 48%, transparent 66%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.bank-card > * { position: relative; z-index: 1; }
+
+/* top row */
+.bank-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.bank-name {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  line-height: 1.15;
+}
+.bank-addr { margin: 3px 0 0; font-size: 11px; color: rgba(255, 255, 255, .85); line-height: 1.35; }
+
+.bank-pill {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  background: rgba(255, 255, 255, .22);
+  border: 1px solid rgba(255, 255, 255, .5);
+  color: #fff;
+}
+
+/* middle row: chip + contactless */
+.bank-mid { display: flex; align-items: center; justify-content: space-between; margin-top: auto; }
+.bank-chip {
+  width: 44px; height: 34px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #FDE68A, #D4A017);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), 0 2px 6px rgba(0, 0, 0, .2);
+  position: relative;
+  flex: none;
+}
+.bank-chip::before,
+.bank-chip::after {
+  content: "";
+  position: absolute;
+  left: 5px; right: 5px;
+  height: 1px;
+  background: rgba(120, 90, 10, .45);
+}
+.bank-chip::before { top: 13px; }
+.bank-chip::after { top: 20px; }
+.bank-wave { color: rgba(255, 255, 255, .95); flex: none; }
+
+/* account number — tappable */
+.bank-no {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  margin: 4px 0 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .22);
+  border-radius: 10px;
+}
+.bank-no:focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(255, 255, 255, .85); }
+
+.bank-hold { margin-top: 2px; }
+.bank-lbl {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: rgba(255, 255, 255, .85);
+}
+.bank-name-holder {
+  margin: 2px 0 0;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* carousel dots */
+.bank-dots { display: flex; justify-content: center; gap: 6px; margin-top: 10px; }
+.bank-dots i {
+  width: 6px; height: 6px; border-radius: 999px;
+  background: var(--pay-border);
+  transition: background 200ms ease, width 200ms ease;
+}
+.bank-dots i.on { background: var(--pay-primary); width: 18px; }
+
+/* ------------------------------------------------------------ copy buttons -- */
+.pay-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.pay-btn {
+  min-height: 48px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 0 12px;
+  cursor: pointer;
+  transition: transform 120ms ease, background 200ms ease, border-color 200ms ease;
+}
+.pay-btn:active { transform: scale(.97); }
+.pay-btn:focus-visible { outline: none; box-shadow: var(--pay-focus); }
+
+.pay-btn-primary { background: var(--pay-primary); color: #fff; box-shadow: 0 8px 20px -10px rgba(67, 56, 202, .8); }
+.pay-btn-primary:hover { filter: brightness(1.08); }
+
+.pay-btn-outline { background: #fff; border-color: var(--pay-border); color: var(--pay-text); }
+.pay-btn-outline:hover { border-color: var(--pay-primary); color: var(--pay-primary); }
+
+/* ------------------------------------------------------------- extras row -- */
+.pay-extra-title { margin: 18px 0 0; font-size: 13px; font-weight: 800; color: var(--pay-muted); }
+.pay-extras { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+
+.pay-mini {
+  background: #fff;
+  border: 1px solid var(--pay-border-soft);
+  border-radius: 16px;
+  padding: 12px;
+  min-width: 0;
+}
+.pay-mini-top { display: flex; align-items: center; gap: 8px; }
+.pay-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.pay-mini-name { margin: 0; font-size: 14px; font-weight: 700; color: var(--pay-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pay-mini-no { margin: 3px 0 0; font-size: 13px; color: var(--pay-muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.pay-mini-copy {
+  min-height: 44px;
+  width: 100%;
+  margin-top: 10px;
+  border-radius: 12px;
+  border: 1px solid var(--pay-primary);
+  background: #fff;
+  color: var(--pay-primary);
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: transform 120ms ease, background 200ms ease;
+}
+.pay-mini-copy:active { transform: scale(.97); }
+.pay-mini-copy:focus-visible { outline: none; box-shadow: var(--pay-focus); }
+.pay-mini-copy:hover { background: #F5F3FF; }
+
+/* ------------------------------------------------------- admin wallets -- */
+.pay-wallet-admin { margin-top: 16px; }
+
+.pay-wallet-head { display: flex; align-items: center; gap: 8px; }
+
+.pay-admin-tag {
+  flex: none;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--pay-primary);
+  background: #EEEBFF;
+}
+
+.pay-wallet-hint {
+  margin: 4px 0 10px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--pay-muted);
+}
+
+.pay-wallet-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* --------------------------------------------------------------- feedback -- */
+.pay-live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.pay-copied { color: #047857 !important; }
+
+/* ------------------------------------------------------------- reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .pay * { transition: none !important; }
+}

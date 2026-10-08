@@ -1,0 +1,189 @@
+/* ============================================================================
+   report.css — member fee & dues report (table) + link button on Members tab
+   Bengali-first typography, horizontally scrollable table, sticky name column.
+   ========================================================================= */
+
+.rp-screen {
+  padding: 14px 16px 132px;
+  font-family: "Noto Sans Bengali", "Plus Jakarta Sans", system-ui, sans-serif;
+}
+
+.rp-asof {
+  margin: -6px 0 14px 56px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #5B4B6B;
+}
+
+/* ---- summary cards ---- */
+.rp-sum {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.rp-sum-card {
+  padding: 12px 10px;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid #fff;
+  box-shadow: 0 10px 22px -14px rgba(67, 56, 202, .25);
+  min-width: 0;
+}
+
+.rp-sum-label {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  color: #5B4B6B;
+}
+
+.rp-sum-val {
+  margin: 4px 0 0;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -.01em;
+  white-space: nowrap;
+}
+
+.rp-sum-val.paid { color: #0C7A54; }
+.rp-sum-val.due  { color: #B8285F; }
+.rp-sum-val.cnt  { color: #3730A3; }
+
+/* ---- actions ---- */
+.rp-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.rp-btn {
+  min-height: 48px;
+  padding: 0 12px;
+  border-radius: 14px;
+  border: 1px solid #CDBFD6;
+  background: #fff;
+  color: #2B1B3D;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.rp-btn.primary {
+  background: #4f46e5;
+  border-color: #4f46e5;
+  color: #fff;
+}
+
+.rp-btn:active { transform: scale(.97); }
+.rp-btn:focus-visible { outline: 2px solid #4f46e5; outline-offset: 2px; }
+.rp-btn.pay-copied { color: #047857; }
+
+.rp-hint {
+  margin: 12px 4px 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #5B4B6B;
+}
+
+/* ---- table ---- */
+.rp-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 20px;
+  background: #fff;
+  border: 1px solid #fff;
+  box-shadow: 0 14px 30px -16px rgba(67, 56, 202, .25);
+}
+
+.rp-scroll:focus-visible { outline: 2px solid #4f46e5; outline-offset: 2px; }
+
+table.rp {
+  width: 100%;
+  min-width: 940px;
+  border-collapse: separate;
+  border-spacing: 0;
+  user-select: text;
+}
+
+table.rp th,
+table.rp td {
+  padding: 13px 12px;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 500;
+  color: #2B1B3D;
+  white-space: nowrap;
+  border-bottom: 1px solid #F0E8F3;
+  background: #fff;
+}
+
+table.rp thead th {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #5B4B6B;
+  background: #F5F0F8;
+}
+
+table.rp tbody tr:last-child th,
+table.rp tbody tr:last-child td { border-bottom: 0; }
+
+/* sticky first column (member name) */
+table.rp th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  box-shadow: 6px 0 8px -8px rgba(43, 27, 61, .35);
+}
+
+table.rp tbody th {
+  font-weight: 800;
+  color: #1E1538;
+}
+
+table.rp .r { text-align: right; font-variant-numeric: tabular-nums; }
+table.rp .amt-due { color: #B8285F; font-weight: 800; }
+table.rp .amt-paid { color: #0C7A54; font-weight: 800; }
+
+.rp-st {
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.rp-st.due { background: #FCE7F3; color: #B8285F; }
+.rp-st.adv { background: #D1FAE5; color: #0C7A54; }
+.rp-st.ok  { background: #EEEBFF; color: #3730A3; }
+
+/* ---- link button on the Members tab ---- */
+.mb-report {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 14px;
+  padding: 0 14px;
+  border-radius: 14px;
+  border: 1px solid #CDBFD6;
+  background: #fff;
+  color: #3730A3;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.mb-report:active { transform: scale(.98); }
+.mb-report:focus-visible { outline: 2px solid #4f46e5; outline-offset: 2px; }

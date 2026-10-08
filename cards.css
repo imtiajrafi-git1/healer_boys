@@ -1,0 +1,978 @@
+/* ============================================================================
+   cards.css — Healer Boy's Premium Card System
+   ----------------------------------------------------------------------------
+   "Editorial Glass" — a professional designer-grade card system with:
+   - Layered glass surfaces (3 distinct tiers)
+   - Subtle micro-textures (grain, gradient mesh, noise)
+   - Sophisticated hover/press physics
+   - Information hierarchy through scale & color
+   - Refined data visualization
+
+   Drop this file next to glass.css and link AFTER it in index.html.
+   ========================================================================= */
+
+/* ----------------------------------------------------------------------------
+   1. Extended Tokens — Professional Palette & Spacing
+---------------------------------------------------------------------------- */
+:root {
+  --ink-deep: #1A0F2E;
+  --ink: #2B1B3D;
+  --ink-soft: #5B4B6B;
+  --ink-muted: #8B7A99;
+  --ink-faint: #B5A8C0;
+
+  --paper: #EEE2F0;
+  --paper-warm: #F5EBF0;
+  --paper-cool: #EAE3F2;
+
+  /* ---- shared liquid-glass recipe (Tailwind bg-white/40 + backdrop-blur-md
+         + border-white/30 + shadow-lg + rounded-2xl) ---- */
+  --glass-bg: rgba(255, 255, 255, .40);
+  --glass-blur: blur(14px) saturate(180%);
+  --glass-border: rgba(255, 255, 255, .30);
+  --glass-shadow:
+    0 10px 15px -3px rgba(43, 27, 61, .10),
+    0 4px 6px -4px rgba(43, 27, 61, .05);
+  --glass-radius: 24px;
+
+  --primary: #4338CA;
+  --primary-deep: #3128A0;
+  --primary-light: #6366F1;
+  --primary-soft: #EEEBFF;
+  --primary-wash: #F5F3FF;
+
+  --fund: #047857;
+  --fund-light: #10B981;
+  --fund-soft: #D1FAE5;
+  --fund-wash: #ECFDF5;
+
+  --don: #BE185D;
+  --don-light: #DB2777;
+  --don-soft: #FCE7F1;
+  --don-wash: #FDF2F8;
+
+  --due: #9A3412;
+  --due-light: #EA580C;
+  --due-soft: #FEF0E7;
+  --due-wash: #FFF7ED;
+
+  /* translucency tuned so text keeps >= 4.5:1 on the tinted blobs */
+  --glass-1: rgba(255, 255, 255, .40);
+  --glass-2: rgba(255, 255, 255, .40);
+  --glass-3: rgba(255, 255, 255, .40);
+
+  --border-soft: rgba(255, 255, 255, .30);
+  --border-mid: rgba(255, 255, 255, .30);
+
+  --shadow-sm: 0 4px 10px -3px rgba(43, 27, 61, .08);
+  --shadow-md: 0 10px 15px -3px rgba(43, 27, 61, .10), 0 4px 6px -4px rgba(43, 27, 61, .05);
+  --shadow-lg: 0 20px 48px -16px rgba(67, 56, 202, .22), 0 4px 8px rgba(43, 27, 61, .06);
+  --shadow-xl: 0 32px 64px -20px rgba(67, 56, 202, .3), 0 8px 16px rgba(43, 27, 61, .08);
+
+  --radius-sm: 12px;
+  --radius: 16px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+
+  --ease-out: cubic-bezier(.16, .84, .44, 1);
+  --ease-in-out: cubic-bezier(.4, 0, .2, 1);
+  --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+}
+
+/* ----------------------------------------------------------------------------
+   2. The Premium Card Base
+   Three-tier glass system with:
+   - Specular top-light (inner glow from above)
+   - Subtle bottom warmth
+   - Refined multi-layer shadow
+   - Crisp white border
+---------------------------------------------------------------------------- */
+.card {
+  /* ---- liquid glass: translucent white + frosted blur + light edge ---- */
+  background:
+    /* soft specular sheen across the top */
+    linear-gradient(180deg, rgba(255, 255, 255, .55) 0%, rgba(255, 255, 255, .18) 100%),
+    var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    var(--glass-shadow),
+    inset 0 1px 0 rgba(255, 255, 255, .6);
+  border-radius: var(--glass-radius);
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Subtle grain texture overlay */
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='.4'/%3E%3C/svg%3E");
+  opacity: .03;
+  pointer-events: none;
+  z-index: 0;
+  mix-blend-mode: overlay;
+}
+
+/* Diagonal sheen (above content, below text) */
+.card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -20%;
+  right: -20%;
+  height: 60%;
+  background: linear-gradient(135deg,
+    transparent 0%,
+    rgba(255, 255, 255, .35) 45%,
+    rgba(255, 255, 255, .6) 50%,
+    rgba(255, 255, 255, .35) 55%,
+    transparent 100%);
+  opacity: .5;
+  pointer-events: none;
+  z-index: 0;
+  transform: translateY(-30%);
+  transition: transform .6s var(--ease-out);
+}
+
+.card:hover::after { transform: translateY(0); }
+
+/* Ensure children sit above the overlay layers */
+.card > * { position: relative; z-index: 1; }
+
+/* ----------------------------------------------------------------------------
+   3. Hero Card — Total Fund
+   The flagship card with gradient mesh and elevated presence
+---------------------------------------------------------------------------- */
+.card:has(#fundBig) {
+  background:
+    /* Diagonal gradient mesh */
+    radial-gradient(circle at 0% 0%, rgba(67, 56, 202, .08) 0%, transparent 50%),
+    radial-gradient(circle at 100% 100%, rgba(4, 120, 87, .08) 0%, transparent 50%),
+    linear-gradient(180deg, rgba(255, 255, 255, .85) 0%, rgba(255, 255, 255, .6) 100%);
+  border: 1px solid rgba(255, 255, 255, .9);
+  box-shadow:
+    0 24px 60px -20px rgba(67, 56, 202, .25),
+    0 4px 12px rgba(43, 27, 61, .05),
+    inset 0 2px 0 rgba(255, 255, 255, 1),
+    inset 0 -1px 0 rgba(67, 56, 202, .05);
+  border-radius: var(--radius-xl);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Decorative top accent bar */
+.card:has(#fundBig)::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 20%;
+  right: 20%;
+  height: 3px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    var(--primary) 20%,
+    var(--fund) 50%,
+    var(--primary) 80%,
+    transparent 100%);
+  border-radius: 0 0 4px 4px;
+  opacity: .7;
+}
+
+/* Decorative corner orb */
+.card:has(#fundBig) .hero-glow {
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(67, 56, 202, .15) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ----------------------------------------------------------------------------
+   4. Stat Tiles — Donations & Members
+   Compact, colorful, with icon containers
+---------------------------------------------------------------------------- */
+.stat {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .75) 0%, rgba(255, 255, 255, .45) 100%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid var(--border-soft);
+  box-shadow:
+    var(--shadow-sm),
+    inset 0 1px 0 rgba(255, 255, 255, .9);
+  border-radius: var(--radius-lg);
+  position: relative;
+  overflow: hidden;
+  transition: transform .25s var(--ease-out), box-shadow .25s var(--ease-out);
+}
+
+.stat:active {
+  transform: scale(.97);
+  transition: transform .12s ease;
+}
+
+/* tap flash — the glass "lights up" under your finger */
+:is(.card, .stat, .mini-card, .feat-card, .recent-card, .mb-card):active {
+  box-shadow:
+    var(--glass-shadow),
+    inset 0 0 0 1px rgba(255, 255, 255, .85),
+    inset 0 3px 14px rgba(255, 255, 255, .6);
+}
+
+/* Subtle left accent bar for stat tiles */
+.stat::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 20%;
+  bottom: 20%;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  transition: top .3s var(--ease-out), bottom .3s var(--ease-out);
+}
+
+/* Donations stat — pink accent */
+.stat:has([style*="var(--don)"])::before,
+.stat[data-kind="don"]::before { background: var(--don); }
+
+/* Members stat — indigo accent */
+.stat:has([style*="var(--primary)"])::before,
+.stat[data-kind="members"]::before { background: var(--primary); }
+
+/* Icon container refinement */
+.stat .icon-box {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 10px;
+  position: relative;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8);
+}
+
+/* ----------------------------------------------------------------------------
+   5. Payment Channels Card
+   Bank account display with premium typography
+---------------------------------------------------------------------------- */
+.card:has(.kv) {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .7) 0%, rgba(255, 255, 255, .5) 100%);
+  border: 1px solid var(--border-soft);
+  box-shadow:
+    var(--shadow-sm),
+    inset 0 1px 0 rgba(255, 255, 255, .85);
+}
+
+.kv {
+  min-height: 44px;
+  font-size: 14px;
+  padding: 2px 0;
+}
+
+.kv span:first-child {
+  color: var(--ink-soft);
+  font-weight: 500;
+  font-size: 13px;
+  letter-spacing: -.005em;
+}
+
+.kv span:last-child {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.01em;
+}
+
+/* ----------------------------------------------------------------------------
+   6. Member Row Card
+   Interactive list items with premium feel
+---------------------------------------------------------------------------- */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 12px 4px;
+  border-bottom: 1px solid rgba(205, 191, 214, .25);
+  transition: background .2s var(--ease-out);
+  position: relative;
+}
+
+.row:last-child { border-bottom: 0; }
+
+.row-tap {
+  cursor: pointer;
+  border-radius: 12px;
+  margin: 0 -8px;
+  padding: 12px 12px;
+  transition: background .2s var(--ease-out), transform .15s var(--ease-out);
+}
+
+.row-tap:hover { background: rgba(67, 56, 202, .04); }
+.row-tap:active { transform: scale(.99); background: rgba(67, 56, 202, .06); }
+
+.row-tap .row-title { color: var(--ink); }
+
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  flex: none;
+  display: grid;
+  place-items: center;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 14px;
+  font-weight: 700;
+  background-size: cover;
+  background-position: center;
+  border: 2px solid var(--white);
+  box-shadow: 0 2px 8px rgba(67, 56, 202, .15);
+  letter-spacing: -.02em;
+}
+
+.avatar-lg {
+  width: 72px;
+  height: 72px;
+  font-size: 22px;
+  border-width: 3px;
+  box-shadow: 0 4px 16px rgba(67, 56, 202, .2);
+}
+
+.avatar-sm {
+  width: 38px;
+  height: 38px;
+  font-size: 12px;
+  border-width: 2px;
+}
+
+/* ----------------------------------------------------------------------------
+   7. Pill Badges — Refined Status Indicators
+---------------------------------------------------------------------------- */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .01em;
+  white-space: nowrap;
+}
+
+.pill-paid {
+  background: linear-gradient(135deg, var(--fund-soft) 0%, var(--fund-wash) 100%);
+  color: var(--fund);
+  border: 1px solid rgba(4, 120, 87, .15);
+}
+
+.pill-due {
+  background: linear-gradient(135deg, #FEF0E7 0%, #FFF7ED 100%);
+  color: var(--due);
+  border: 1px solid rgba(154, 52, 18, .15);
+}
+
+.pill-future {
+  background: #F3ECF5;
+  color: var(--ink-muted);
+  border: 1px solid rgba(181, 168, 192, .2);
+}
+
+.pill-don {
+  background: linear-gradient(135deg, var(--don-soft) 0%, var(--don-wash) 100%);
+  color: var(--don);
+  border: 1px solid rgba(190, 24, 93, .15);
+}
+
+/* ----------------------------------------------------------------------------
+   8. Filter Chips — Interactive Glass Pills
+---------------------------------------------------------------------------- */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--glass-1);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-soft);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .2s var(--ease-out);
+  box-shadow: 0 1px 2px rgba(43, 27, 61, .04);
+}
+
+.chip:active { transform: scale(.96); }
+
+.chip[aria-pressed="true"] {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-deep) 100%);
+  color: #fff;
+  border-color: transparent;
+  box-shadow:
+    0 4px 12px rgba(67, 56, 202, .3),
+    inset 0 1px 0 rgba(255, 255, 255, .2);
+}
+
+/* ----------------------------------------------------------------------------
+   9. Bottom Sheet Modal
+   Refined glass overlay with smooth spring entrance
+---------------------------------------------------------------------------- */
+.sheet {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .9) 0%, rgba(255, 255, 255, .78) 100%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid var(--border-soft);
+  border-radius: 24px 24px 0 0;
+  box-shadow: 0 -20px 60px -20px rgba(43, 27, 61, .35);
+  padding: 8px 20px calc(20px + var(--safe-b, 0px));
+  max-height: 82%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+}
+
+.sheet::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .8), transparent);
+}
+
+.grab {
+  width: 36px;
+  height: 4px;
+  border-radius: 99px;
+  background: var(--ink-faint);
+  margin: 6px auto 14px;
+  opacity: .5;
+}
+
+/* ----------------------------------------------------------------------------
+   10. Form Fields — Refined Inputs
+---------------------------------------------------------------------------- */
+.field {
+  height: 48px;
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid rgba(205, 191, 214, .5);
+  background: rgba(255, 255, 255, .7);
+  padding: 0 14px;
+  font-size: 15px;
+  color: var(--ink);
+  transition: all .2s var(--ease-out);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8);
+}
+
+.field::placeholder { color: var(--ink-faint); }
+
+.field:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: var(--white);
+  box-shadow:
+    0 0 0 4px rgba(67, 56, 202, .1),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+}
+
+.label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin: 0 0 6px;
+  letter-spacing: -.005em;
+}
+
+/* ----------------------------------------------------------------------------
+   11. Buttons — Premium Tactile Feel
+---------------------------------------------------------------------------- */
+.btn {
+  min-height: 52px;
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 0 18px;
+  cursor: pointer;
+  transition: all .2s var(--ease-out);
+  letter-spacing: -.01em;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn:active { transform: scale(.97); transition: transform .1s ease; }
+
+.btn-primary {
+  background: linear-gradient(180deg, var(--primary) 0%, var(--primary-deep) 100%);
+  color: #fff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .25),
+    inset 0 -1px 0 rgba(0, 0, 0, .1),
+    0 6px 16px -4px rgba(67, 56, 202, .4);
+}
+
+.btn-primary:hover {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .3),
+    inset 0 -1px 0 rgba(0, 0, 0, .1),
+    0 8px 20px -4px rgba(67, 56, 202, .5);
+}
+
+.btn-outline {
+  background: var(--glass-1);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-mid);
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgba(43, 27, 61, .04);
+}
+
+.btn-outline:hover {
+  background: var(--white);
+  border-color: var(--primary-soft);
+  color: var(--primary);
+}
+
+/* ----------------------------------------------------------------------------
+   12. Eyebrow Text & Hierarchy
+---------------------------------------------------------------------------- */
+.eyebrow {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.eyebrow::before {
+  content: "";
+  width: 12px;
+  height: 2px;
+  background: var(--primary);
+  border-radius: 2px;
+  opacity: .6;
+}
+
+.h1 {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -.025em;
+  margin: 2px 0 0;
+  color: var(--ink);
+  line-height: 1.15;
+}
+
+.h2 {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -.015em;
+  margin: 0;
+  color: var(--ink);
+}
+
+.sub {
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin: 4px 0 0;
+  line-height: 1.5;
+}
+
+/* ----------------------------------------------------------------------------
+   13. Fund Big Number — Hero Treatment
+---------------------------------------------------------------------------- */
+.fund-big {
+  font-size: 40px;
+  font-weight: 900;
+  letter-spacing: -.04em;
+  line-height: 1;
+  color: var(--fund);
+  margin: 10px 0 0;
+  font-variant-numeric: tabular-nums;
+  background: linear-gradient(180deg, var(--fund) 0%, var(--fund-light) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 2px 4px rgba(4, 120, 87, .1);
+}
+
+/* ----------------------------------------------------------------------------
+   14. Month Grid — Status Calendar
+---------------------------------------------------------------------------- */
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.month-cell {
+  height: 56px;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: 1px solid rgba(205, 191, 214, .4);
+  background: var(--glass-1);
+  transition: transform .15s var(--ease-out);
+}
+
+.month-cell:active { transform: scale(.95); }
+
+.month-cell .m {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.month-cell .s {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: -.01em;
+}
+
+.month-cell.paid {
+  background: linear-gradient(135deg, var(--fund-soft) 0%, var(--fund-wash) 100%);
+  border-color: rgba(4, 120, 87, .2);
+  box-shadow: 0 2px 6px rgba(4, 120, 87, .1);
+}
+
+.month-cell.paid .s { color: var(--fund); }
+
+.month-cell.due {
+  background: var(--white);
+  border-color: rgba(154, 52, 18, .25);
+  box-shadow: 0 2px 6px rgba(154, 52, 18, .08);
+  position: relative;
+}
+
+.month-cell.due::after {
+  content: "";
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--due);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.month-cell.due .s { color: var(--due); }
+
+.month-cell.future {
+  background: #F3ECF5;
+  border-color: transparent;
+  opacity: .6;
+}
+
+.month-cell.future .s { color: var(--ink-faint); }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: .5; transform: scale(.8); }
+}
+
+/* ----------------------------------------------------------------------------
+   15. Stat Numbers — Refined Display
+---------------------------------------------------------------------------- */
+.stat-num {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -.025em;
+  margin: 6px 0 0;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+/* ----------------------------------------------------------------------------
+   16. Role Chip — Identity Indicator
+---------------------------------------------------------------------------- */
+.role-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  border: 1px solid var(--border-soft);
+}
+
+.role-admin {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-deep) 100%);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 2px 8px rgba(67, 56, 202, .25);
+}
+
+.role-viewer {
+  background: var(--glass-2);
+  color: var(--ink-soft);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+/* ----------------------------------------------------------------------------
+   17. Banners — Contextual Messages
+---------------------------------------------------------------------------- */
+.banner {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: linear-gradient(135deg, var(--primary-wash) 0%, rgba(238, 235, 255, .5) 100%);
+  border: 1px solid rgba(67, 56, 202, .15);
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--primary);
+  line-height: 1.5;
+  box-shadow: 0 2px 8px rgba(67, 56, 202, .06);
+}
+
+.banner.amber {
+  background: linear-gradient(135deg, var(--due-wash) 0%, rgba(254, 240, 231, .5) 100%);
+  border-color: rgba(154, 52, 18, .15);
+  color: var(--due);
+}
+
+/* ----------------------------------------------------------------------------
+   18. Switch — Refined Toggle
+---------------------------------------------------------------------------- */
+.switch {
+  width: 48px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(205, 191, 214, .5);
+  border: 1px solid var(--border-soft);
+  position: relative;
+  flex: none;
+  transition: background .25s var(--ease-out), border-color .25s var(--ease-out);
+  box-shadow: inset 0 1px 2px rgba(43, 27, 61, .08);
+}
+
+.switch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #fff 0%, #F8F5FA 100%);
+  box-shadow:
+    0 2px 4px rgba(43, 27, 61, .15),
+    0 1px 0 rgba(255, 255, 255, 1);
+  transition: transform .3s var(--ease-spring);
+}
+
+.switch[aria-checked="true"] {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-deep) 100%);
+  border-color: transparent;
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, .1),
+    0 0 0 0 rgba(67, 56, 202, .3);
+}
+
+.switch[aria-checked="true"]::after {
+  transform: translateX(20px);
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, .2),
+    0 1px 0 rgba(255, 255, 255, 1);
+}
+
+/* ----------------------------------------------------------------------------
+   19. Error Box
+---------------------------------------------------------------------------- */
+.error-box {
+  background: linear-gradient(135deg, #FDECEE 0%, #FEF2F3 100%);
+  border: 1px solid rgba(159, 18, 57, .2);
+  color: #9F1239;
+  font-size: 12.5px;
+  font-weight: 600;
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-top: 10px;
+}
+
+/* ----------------------------------------------------------------------------
+   20. Toasts — Premium Notification Style
+---------------------------------------------------------------------------- */
+.toast {
+  max-width: 100%;
+  background: linear-gradient(135deg, var(--ink-deep) 0%, var(--ink) 100%);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 14px;
+  padding: 12px 16px;
+  box-shadow: 0 16px 40px -12px rgba(43, 27, 61, .5);
+  animation: toastIn .35s var(--ease-spring) both;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(255, 255, 255, .1);
+}
+
+.toast.ok {
+  background: linear-gradient(135deg, var(--fund) 0%, #065F46 100%);
+}
+
+.toast.err {
+  background: linear-gradient(135deg, #BE123C 0%, #9F1239 100%);
+}
+
+.toast.out { animation: toastOut .25s ease forwards; }
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(16px) scale(.94); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes toastOut {
+  to { opacity: 0; transform: translateY(8px) scale(.96); }
+}
+
+/* ----------------------------------------------------------------------------
+   21. Divider Line
+---------------------------------------------------------------------------- */
+.divider-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(205, 191, 214, .5), transparent);
+  margin: 16px 0;
+}
+
+/* ----------------------------------------------------------------------------
+   22. Login Screen Logo — Premium Mark
+---------------------------------------------------------------------------- */
+.logo {
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-deep) 100%);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 28px;
+  font-weight: 800;
+  box-shadow:
+    0 16px 36px -12px rgba(67, 56, 202, .5),
+    inset 0 2px 0 rgba(255, 255, 255, .25),
+    inset 0 -2px 0 rgba(0, 0, 0, .1);
+  letter-spacing: -.04em;
+  position: relative;
+  overflow: hidden;
+}
+
+.logo::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .2) 0%, transparent 100%);
+}
+
+/* ----------------------------------------------------------------------------
+   23. Amount Display — Premium Money Typography
+---------------------------------------------------------------------------- */
+.amount {
+  font-size: 15px;
+  font-weight: 800;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.015em;
+}
+
+/* ----------------------------------------------------------------------------
+   24. Mono Text — Tabular Numbers
+---------------------------------------------------------------------------- */
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.01em;
+}
+
+/* ----------------------------------------------------------------------------
+   25. Skeleton Loader — Refined Shimmer
+---------------------------------------------------------------------------- */
+.skeleton {
+  background:
+    linear-gradient(90deg,
+      rgba(205, 191, 214, .3) 0%,
+      rgba(255, 255, 255, .8) 50%,
+      rgba(205, 191, 214, .3) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+/* ----------------------------------------------------------------------------
+   26. Reduced Motion — Respect User Preferences
+---------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .card::after,
+  .stat,
+  .month-cell,
+  .switch,
+  .btn,
+  .chip {
+    transition: none;
+  }
+
+  .month-cell.due::after { animation: none; }
+  .skeleton { animation: none; }
+}
+
+/* ----------------------------------------------------------------------------
+   27. Fallback — No Backdrop-Filter Support
+---------------------------------------------------------------------------- */
+@supports not (backdrop-filter: blur(1px)) {
+  .card,
+  .stat,
+  .chip,
+  .field,
+  .btn-outline,
+  .role-viewer {
+    background: rgba(250, 246, 250, .97);
+  }
+}

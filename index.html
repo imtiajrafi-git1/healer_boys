@@ -1,0 +1,4892 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+
+  <title>Healer Boy's — Fund Tracker</title>
+  <meta name="description" content="Healer Boy's club fund tracker: members, monthly fees, donations and dues." />
+  <meta http-equiv="Cache-Control" content="no-store" />
+
+  <!-- PWA -->
+  <link rel="manifest"
+    href="data:application/manifest+json;base64,eyJuYW1lIjoiSGVhbGVyIEJveSdzIEZ1bmQgVHJhY2tlciIsInNob3J0X25hbWUiOiJIZWFsZXIgQm95J3MiLCJzdGFydF91cmwiOiIuIiwic2NvcGUiOiIuIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiI0VFRTJGMCIsInRoZW1lX2NvbG9yIjoiIzQzMzhDQSIsIm9yaWVudGF0aW9uIjoicG9ydHJhaXQiLCJpY29ucyI6W3sic3JjIjoiaHR0cHM6Ly9jZG4taWNvbnMtcG5nLmZsYXRpY29uLmNvbS81MTIvMjkxMy8yOTEzMDA4LnBuZyIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9wbmcifSx7InNyYyI6Imh0dHBzOi8vY2RuLWljb25zLXBuZy5mbGF0aWNvbi5jb20vNTEyLzI5MTMvMjkxMzAwOC5wbmciLCJzaXplcyI6IjUxMng1MTIiLCJ0eXBlIjoiaW1hZ2UvcG5nIn1dfQ==" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="theme-color" content="#4338CA" />
+
+  <!-- Supabase v2 + EmailJS -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/emailjs.min.js"></script>
+
+  <style>
+    /* ============ TOKENS ============ */
+    :root {
+      --bg: #EEE2F0;
+      --card: #FAF6FA;
+      --text: #2B1B3D;
+      --muted: #5B4B6B;
+      --border: #CDBFD6;
+      --primary: #4338CA;
+      --primary-soft: #EEEBFF;
+      --fund: #047857;
+      --fund-soft: #D1FAE5;
+      --don: #BE185D;
+      --don-soft: #FCE7F1;
+      --due: #9A3412;
+      --due-soft: #FEF0E7;
+      --paid-bg: #D1FAE5;
+      --paid-fg: #064E3B;
+      --white: #FFFFFF;
+      --r-card: 20px;
+      --r-input: 14px;
+      --shadow: 0 10px 30px -5px rgba(0, 0, 0, .06);
+      --safe-b: env(safe-area-inset-bottom, 0px);
+    }
+
+    * {
+      -webkit-tap-highlight-color: transparent;
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: #E3D6E7;
+      color: var(--text);
+      font-family: "Plus Jakarta Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      user-select: none;
+      -webkit-touch-callout: none;
+      overscroll-behavior-y: none;
+    }
+
+    input,
+    textarea,
+    select,
+    button {
+      font-family: inherit;
+    }
+
+    input,
+    textarea {
+      user-select: text;
+    }
+
+    /* ============ APP FRAME (390px) ============ */
+    #app {
+      width: 100%;
+      max-width: 390px;
+      margin: 0 auto;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+      position: relative;
+      overflow: hidden;
+    }
+
+    @media (min-width: 420px) {
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px 0;
+      }
+
+      #app {
+        height: calc(100dvh - 40px);
+        max-height: 880px;
+        border-radius: 34px;
+        box-shadow: 0 0 0 1px rgba(43, 27, 61, .07), 0 40px 90px -30px rgba(43, 27, 61, .45);
+      }
+    }
+
+    /* ============ SCREEN ============ */
+    #view {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+
+    #view::-webkit-scrollbar {
+      display: none;
+    }
+
+    .screen {
+      padding: 18px 16px calc(28px + var(--safe-b));
+      animation: screenIn .26s cubic-bezier(.2, .8, .3, 1) both;
+    }
+
+    @keyframes screenIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    /* ============ TYPO ============ */
+    .h1 {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -.02em;
+      margin: 2px 0 0;
+    }
+
+    .h2 {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -.01em;
+      margin: 0;
+    }
+
+    .sub {
+      font-size: 13px;
+      color: var(--muted);
+      margin: 4px 0 0;
+      line-height: 1.45;
+    }
+
+    .eyebrow {
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0;
+    }
+
+    .num {
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: "tnum";
+    }
+
+    /* ============ CARD ============ */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--white);
+      border-radius: var(--r-card);
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+
+    .card+.card {
+      margin-top: 12px;
+    }
+
+    .stack>*+* {
+      margin-top: 12px;
+    }
+
+    /* ============ BUTTONS ============ */
+    .btn {
+      min-height: 50px;
+      width: 100%;
+      border-radius: var(--r-input);
+      border: 1px solid transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      padding: 0 16px;
+      cursor: pointer;
+      transition: transform .12s ease, filter .18s ease, background .18s ease;
+    }
+
+    .btn:active {
+      transform: scale(.98);
+    }
+
+    .btn:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      min-height: 52px;
+    }
+
+    .btn-primary:hover {
+      filter: brightness(1.08);
+    }
+
+    .btn-outline {
+      background: var(--white);
+      border-color: var(--border);
+      color: var(--text);
+    }
+
+    .btn-outline:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--muted);
+      min-height: 44px;
+    }
+
+    .btn-sm {
+      min-height: 44px;
+      width: auto;
+      padding: 0 16px;
+      font-size: 13.5px;
+      border-radius: 12px;
+      flex: none;
+    }
+
+    .linklike {
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      width: 100%;
+      background: transparent;
+      border: 0;
+      padding: 0 2px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--primary);
+      cursor: pointer;
+    }
+
+    /* ============ INPUTS ============ */
+    .label {
+      display: block;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--muted);
+      margin: 0 0 6px;
+    }
+
+    .field {
+      height: 48px;
+      width: 100%;
+      border-radius: var(--r-input);
+      border: 1px solid var(--border);
+      background: var(--white);
+      padding: 0 14px;
+      font-size: 15px;
+      color: var(--text);
+      transition: border-color .18s ease, box-shadow .18s ease;
+    }
+
+    .field::placeholder {
+      color: #A393B0;
+    }
+
+    .field:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(67, 56, 202, .12);
+    }
+
+    .with-icon {
+      position: relative;
+    }
+
+    .with-icon svg {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #A393B0;
+      pointer-events: none;
+    }
+
+    .with-icon .field {
+      padding-left: 42px;
+    }
+
+    .g2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .g3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+    }
+
+    /* ============ CHIPS ============ */
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 38px;
+      padding: 0 14px;
+      border-radius: 999px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: border-color .18s ease, color .18s ease, background .18s ease;
+    }
+
+    .chip:active {
+      transform: scale(.97);
+    }
+
+    .chip[aria-pressed="true"] {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: var(--primary-soft);
+    }
+
+    .chip-row {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      /* 38px chip + 3px padding top/bottom = 44px touch target */
+      padding: 3px 2px;
+      margin: 10px -2px 2px;
+    }
+
+    .chip-row::-webkit-scrollbar {
+      display: none;
+    }
+
+    .role-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .02em;
+    }
+
+    .role-admin {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .role-viewer {
+      background: var(--white);
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      height: 22px;
+      padding: 0 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .pill-paid {
+      background: var(--paid-bg);
+      color: var(--paid-fg);
+    }
+
+    .pill-due {
+      background: var(--white);
+      color: var(--due);
+      border: 1px solid #E8B79C;
+    }
+
+    .pill-future {
+      background: #F0E9F2;
+      color: #A393B0;
+    }
+
+    .pill-don {
+      background: var(--don-soft);
+      color: var(--don);
+    }
+
+    /* ============ ROWS ============ */
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 56px;
+      padding: 8px 0;
+      border-bottom: 1px solid #EFE6F1;
+    }
+
+    .row:last-child {
+      border-bottom: 0;
+    }
+
+    .row-tap {
+      cursor: pointer;
+    }
+
+    .row-tap:hover {
+      background: rgba(67, 56, 202, .03);
+    }
+
+    .avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      flex: none;
+      display: grid;
+      place-items: center;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-size: 14px;
+      font-weight: 800;
+      background-size: cover;
+      background-position: center;
+      border: 1px solid #fff;
+    }
+
+    .avatar-lg {
+      width: 68px;
+      height: 68px;
+      font-size: 22px;
+    }
+
+    .avatar-sm {
+      width: 36px;
+      height: 36px;
+      font-size: 12px;
+    }
+
+    .row-main {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .row-title {
+      font-size: 14.5px;
+      font-weight: 700;
+      margin: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .row-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin: 2px 0 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .amount {
+      font-size: 15px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    /* ============ STATS ============ */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .stat {
+      background: var(--card);
+      border: 1px solid var(--white);
+      border-radius: var(--r-card);
+      box-shadow: var(--shadow);
+      padding: 14px;
+      cursor: pointer;
+      transition: transform .2s ease;
+    }
+
+    .stat:active {
+      transform: scale(.98);
+    }
+
+    .stat-num {
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: -.02em;
+      margin: 6px 0 0;
+    }
+
+    .icon-box {
+      width: 34px;
+      height: 34px;
+      border-radius: 11px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 8px;
+    }
+
+    .fund-big {
+      font-size: 38px;
+      font-weight: 900;
+      letter-spacing: -.035em;
+      line-height: 1;
+      color: var(--fund);
+      margin: 8px 0 0;
+    }
+
+    /* ============ TOTAL FUND — premium summary card ============ */
+    .fund-summary {
+      container: fund-summary / inline-size;
+      position: relative;
+      width: 100%;
+      padding: 15px 16px 0;
+      border: 1px solid rgba(255, 255, 255, .95);
+      border-radius: 23px;
+      background:
+        radial-gradient(90% 70% at 100% 0%, rgba(16, 185, 129, .07), transparent 55%),
+        radial-gradient(70% 60% at 0% 100%, rgba(79, 70, 229, .05), transparent 55%),
+        linear-gradient(180deg, #FFFFFF 0%, #FBFAFD 100%);
+      box-shadow:
+        0 20px 44px -18px rgba(43, 27, 61, .16),
+        0 2px 6px rgba(43, 27, 61, .04),
+        inset 0 1.5px 0 #fff;
+      color: #2B1B3D;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    /* emerald accent beam across the top edge */
+    .fund-summary::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 22%;
+      right: 22%;
+      height: 3px;
+      border-radius: 0 0 6px 6px;
+      background: linear-gradient(90deg, transparent, #10B981 30%, #047857 70%, transparent);
+      opacity: .75;
+    }
+
+    /* giant watermark taka sign, barely visible */
+    .fund-summary::after {
+      content: "\09F3";
+      position: absolute;
+      right: -6px;
+      bottom: -34px;
+      font-size: 150px;
+      font-weight: 800;
+      line-height: 1;
+      color: rgba(4, 120, 87, .05);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .fund-summary > * { position: relative; z-index: 1; }
+
+    /* --- header row: icon + labels + live pill --- */
+    .fund-summary__head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .fund-summary__icon {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      flex: none;
+      border-radius: 14px;
+      background: linear-gradient(145deg, #059669, #047857 60%, #065F46);
+      box-shadow:
+        0 10px 20px -8px rgba(4, 120, 87, .55),
+        inset 0 1px 0 rgba(255, 255, 255, .35),
+        inset 0 -2px 4px rgba(0, 0, 0, .15);
+      color: #fff;
+    }
+
+    .fund-summary__titles { flex: 1; min-width: 0; }
+
+    .fund-summary__title {
+      margin: 0;
+      font-size: 12.5px;
+      font-weight: 800;
+      line-height: 1.3;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+      color: #2B1B3D;
+    }
+
+    .fund-summary__subtitle {
+      margin: 3px 0 0;
+      font-size: 11px;
+      font-weight: 500;
+      line-height: 1.45;
+      color: #5B4B6B;
+    }
+
+    .fund-summary__live {
+      flex: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      height: 22px;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: #ECFDF5;
+      border: 1px solid rgba(4, 120, 87, .14);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .06em;
+      color: #047857;
+    }
+
+    .fund-summary__live i {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #10B981;
+      animation: fundPulse 2.2s ease-in-out infinite;
+    }
+
+    @keyframes fundPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, .45); }
+      55% { box-shadow: 0 0 0 5px rgba(16, 185, 129, 0); }
+    }
+
+    /* --- hero amount --- */
+    .fund-summary__amount {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      margin: 10px 0 0;
+      font-weight: 800;
+      font-size: clamp(32px, 10.5cqi, 42px);
+      line-height: 1.05;
+      letter-spacing: -.045em;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+      user-select: text;
+      background: linear-gradient(135deg, #065F46 0%, #047857 55%, #10B981 110%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .fund-summary__currency { font-size: .68em; font-weight: 800; }
+
+    /* --- footer: collected / donated breakdown strip --- */
+    .fund-summary__foot {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 12px;
+      margin: 11px -16px 0;
+      padding: 9px 16px 10px;
+      background: linear-gradient(180deg, rgba(243, 240, 248, .65), rgba(243, 240, 248, .9));
+      border-top: 1px solid rgba(205, 191, 214, .35);
+    }
+
+    .fund-summary__stat { min-width: 0; }
+    .fund-summary__stat + .fund-summary__stat { text-align: right; }
+
+    .fund-summary__stat-label {
+      margin: 0;
+      font-size: 9.5px;
+      font-weight: 800;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: #8B7A99;
+    }
+
+    .fund-summary__stat-value {
+      margin: 2px 0 0;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: -.015em;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+      user-select: text;
+    }
+
+    .fund-summary__stat-value.in { color: #047857; }
+    .fund-summary__stat-value.out { color: #BE185D; }
+
+    .fund-summary__foot-div {
+      width: 1px;
+      height: 24px;
+      background: linear-gradient(180deg, transparent, rgba(205, 191, 214, .7), transparent);
+    }
+
+    /* wider containers: everything breathes a little more */
+    @container fund-summary (min-width: 440px) {
+      .fund-summary { padding: 22px 22px 0; }
+      .fund-summary__icon { width: 54px; height: 54px; border-radius: 17px; }
+      .fund-summary__title { font-size: 14px; }
+      .fund-summary__subtitle { font-size: 12.5px; }
+      .fund-summary__stat-label { font-size: 10.5px; }
+      .fund-summary__stat-value { font-size: 17px; }
+      .fund-summary__foot { margin: 20px -22px 0; padding: 14px 22px; }
+    }
+
+    @media (max-width: 350px) {
+      .fund-summary { padding: 13px 14px 0; border-radius: 21px; }
+      .fund-summary__icon { width: 38px; height: 38px; border-radius: 12px; }
+      .fund-summary__title { font-size: 11px; letter-spacing: .05em; }
+      .fund-summary__subtitle { font-size: 10px; }
+      .fund-summary__live { display: none; }
+      .fund-summary__amount { font-size: 30px; }
+      .fund-summary__foot { margin: 10px -14px 0; padding: 8px 14px 9px; gap: 10px; }
+      .fund-summary__stat-value { font-size: 13px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .fund-summary__live i { animation: none; }
+    }
+
+    /* ============ MONTH GRID ============ */
+    .month-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .month-cell {
+      height: 52px;
+      border-radius: 13px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1px;
+      border: 1px solid var(--border);
+      background: var(--white);
+    }
+
+    .month-cell .m {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .month-cell .s {
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .month-cell.paid {
+      background: var(--paid-bg);
+      border-color: #A7F3D0;
+    }
+
+    .month-cell.paid .s {
+      color: var(--paid-fg);
+    }
+
+    .month-cell.due {
+      background: var(--white);
+      border-color: #E8B79C;
+    }
+
+    .month-cell.due .s {
+      color: var(--due);
+    }
+
+    .month-cell.future {
+      background: #F3ECF5;
+      border-color: #E7DCEA;
+      color: #A393B0;
+    }
+
+    .month-cell.future .s {
+      color: #A393B0;
+    }
+
+    /* ============ SWITCH ============ */
+    .switch-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      min-height: 48px;
+      background: transparent;
+      border: 0;
+      padding: 0;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .switch {
+      width: 48px;
+      height: 28px;
+      border-radius: 999px;
+      background: #E2D6E6;
+      border: 1px solid var(--border);
+      position: relative;
+      flex: none;
+      transition: background .22s ease, border-color .22s ease;
+    }
+
+    .switch::after {
+      content: "";
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 2px 5px rgba(43, 27, 61, .25);
+      transition: transform .22s cubic-bezier(.3, 1.3, .4, 1);
+    }
+
+    .switch[aria-checked="true"] {
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .switch[aria-checked="true"]::after {
+      transform: translateX(20px);
+    }
+
+    /* ============ BOTTOM NAV ============ */
+    #nav {
+      height: calc(84px + var(--safe-b));
+      padding-bottom: var(--safe-b);
+      background: var(--white);
+      border-top: 1px solid #EFE6F1;
+      display: none;
+      flex: none;
+    }
+
+    #nav.show {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .nav-btn {
+      min-height: 44px;
+      background: transparent;
+      border: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #8B7A99;
+      cursor: pointer;
+      padding: 8px 2px 0;
+      min-width: 0;
+    }
+
+    .nav-lbl {
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      padding: 0 1px;
+    }
+
+    /* the 5th tab has a longer label — shrink it slightly so it never clips */
+    .nav-lbl-long { font-size: 9.5px; letter-spacing: -.01em; }
+
+    .nav-btn.active {
+      color: var(--primary);
+      font-weight: 800;
+    }
+
+    .nav-dot {
+      position: absolute;
+      top: 6px;
+      right: calc(50% - 18px);
+      min-width: 16px;
+      height: 16px;
+      padding: 0 4px;
+      border-radius: 999px;
+      background: var(--due);
+      color: #fff;
+      font-size: 9.5px;
+      font-weight: 800;
+      display: grid;
+      place-items: center;
+    }
+
+    /* ============ HEADER ============ */
+    .app-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .profile-app-header { align-items: center; }
+
+    .profile-brand-mark {
+      display: grid;
+      place-items: center;
+      width: 62px;
+      height: 62px;
+      margin: 0;
+      padding: 5px;
+      flex: none;
+      overflow: hidden;
+      border-radius: 19px;
+      border: 1px solid #fff;
+      background: #fff;
+      box-shadow: 0 12px 28px -12px rgba(67, 56, 202, .3);
+    }
+
+    .profile-brand-mark img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 14px;
+    }
+
+    /* ============ LOGIN ============ */
+    /* Full-screen soft gradient canvas (lavender -> pink -> mint) */
+    .login-wrap {
+      position: relative;
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 34px 22px 34px;
+      overflow: hidden;
+      isolation: isolate;
+      /* top #f3e8ff (purple-100) -> bottom #d8b4fe (purple-300) */
+      background: linear-gradient(180deg, #f3e8ff 0%, #efe0fe 45%, #dcc4fd 80%, #d8b4fe 100%);
+      background-attachment: local;
+      /* colours used across the whole login screen */
+      --lg-heading: #1e1b4b;   /* deep indigo (main title) */
+      --lg-sub: #4b5563;       /* gray-600 (subtitle / labels) */
+      --lg-indigo: #4f46e5;    /* indigo-600 */
+      --lg-indigo-2: #6366f1;  /* indigo-500 */
+    }
+
+    /* keep the frame behind the login screen in the same family so no white
+       seam shows if the content is shorter than the viewport */
+    #view:has(.login-wrap) { background: #d8b4fe; }
+
+    /* brand mark: your logo image inside a white rounded plate */
+    .login-wrap .logo,
+    .logo.brand {
+      width: 96px;
+      height: 96px;
+      padding: 8px;
+      border-radius: 28px;
+      background: #ffffff;
+      color: transparent;
+      box-shadow:
+        0 18px 34px -14px rgba(79, 70, 229, .5),
+        0 2px 6px rgba(43, 27, 61, .06),
+        inset 0 1px 0 #fff;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+
+    .login-wrap .logo::after,
+    .logo.brand::after { display: none; }
+
+    .logo.brand img,
+    .login-wrap .logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      border-radius: 20px;
+      background: #fff;
+    }
+
+    .login-wrap .login-title { color: var(--lg-heading); }
+
+    .login-wrap .sub { color: var(--lg-sub); }
+
+    .login-byline {
+      margin: 4px 0 0;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0;
+      color: var(--lg-sub);
+    }
+
+    .login-byline strong {
+      font-weight: 600;
+    }
+
+    /* indigo buttons + labels on this screen */
+    .login-wrap .btn-primary {
+      background: linear-gradient(135deg, var(--lg-indigo-2), var(--lg-indigo));
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, .25),
+        0 10px 22px -10px rgba(79, 70, 229, .7);
+    }
+
+    .login-wrap .label { color: var(--lg-sub); }
+
+    .login-wrap .field:focus {
+      border-color: var(--lg-indigo);
+      box-shadow: 0 0 0 4px rgba(79, 70, 229, .12);
+    }
+
+    .login-wrap .eyebrow {
+      color: var(--lg-indigo);
+      letter-spacing: .12em;
+    }
+
+    .login-wrap .divider::before,
+    .login-wrap .divider::after { background: rgba(79, 70, 229, .18); }
+
+    .login-wrap .divider span { color: var(--lg-indigo); }
+
+    .logo::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: linear-gradient(150deg, rgba(255, 255, 255, .35), transparent 58%);
+    }
+
+    .login-title {
+      font-size: 30px;
+      font-weight: 800;
+      line-height: 1.2;
+      letter-spacing: -.025em;
+      text-transform: uppercase;
+      color: var(--text);
+      margin: 20px 0 0;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 26px 0 14px;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .divider span {
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: .16em;
+      color: var(--muted);
+    }
+
+    .error-box {
+      background: #FDECEE;
+      border: 1px solid #F5C2C9;
+      color: #9F1239;
+      font-size: 12.5px;
+      font-weight: 600;
+      border-radius: 12px;
+      padding: 10px 12px;
+      margin-top: 10px;
+    }
+
+    /* ============ DONATIONS — hero + yearly timeline ============ */
+    .don-hero {
+      position: relative;
+      padding: 20px 20px 20px;
+      border-radius: 26px;
+      color: #fff;
+      overflow: hidden;
+      isolation: isolate;
+      background:
+        radial-gradient(80% 90% at 88% 8%, rgba(255, 255, 255, .22), transparent 55%),
+        radial-gradient(70% 80% at 0% 100%, rgba(255, 255, 255, .12), transparent 55%),
+        linear-gradient(135deg, #831843 0%, #BE185D 46%, #EC4899 100%);
+      box-shadow:
+        0 24px 44px -18px rgba(190, 24, 93, .6),
+        inset 0 1.5px 0 rgba(255, 255, 255, .4),
+        inset 0 -1.5px 0 rgba(0, 0, 0, .12);
+    }
+
+    .don-hero-watermark {
+      position: absolute;
+      right: -14px;
+      bottom: -26px;
+      width: 140px;
+      height: 140px;
+      color: rgba(255, 255, 255, .10);
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    .don-hero::before,
+    .don-hero::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .don-hero::before {
+      width: 170px; height: 170px;
+      right: -46px; top: -66px;
+      background: rgba(255, 255, 255, .14);
+    }
+
+    .don-hero::after {
+      width: 110px; height: 110px;
+      left: -30px; bottom: -58px;
+      background: rgba(255, 255, 255, .09);
+    }
+
+    .don-hero-heart {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: rgba(255, 255, 255, .2);
+      border: 1px solid rgba(255, 255, 255, .35);
+      color: #fff;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4);
+      z-index: 1;
+    }
+
+    .don-hero-label {
+      position: relative;
+      margin: 0;
+      font-size: 11.5px;
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, .92);
+    }
+
+    .don-hero-amount {
+      position: relative;
+      margin: 10px 0 0;
+      font-size: 42px;
+      font-weight: 900;
+      letter-spacing: -.035em;
+      line-height: 1.05;
+      font-variant-numeric: tabular-nums;
+      text-shadow: 0 2px 10px rgba(131, 24, 67, .25);
+    }
+
+    .don-hero-chips {
+      position: relative;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .don-hero-chip {
+      height: 32px;
+      padding: 0 12px 0 10px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      background: rgba(255, 255, 255, .2);
+      border: 1px solid rgba(255, 255, 255, .4);
+      backdrop-filter: blur(4px);
+    }
+
+    .don-year { margin-top: 18px; }
+
+    .don-year-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+      padding: 0 2px;
+    }
+
+    .don-year-label {
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: .1em;
+      color: #BE185D;
+    }
+
+    .don-year-sum {
+      font-size: 12px;
+      font-weight: 800;
+      color: #9D174D;
+      background: #FCE7F1;
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+
+    .don-timeline {
+      position: relative;
+      padding-left: 22px;
+    }
+
+    .don-timeline::before {
+      content: "";
+      position: absolute;
+      left: 6px;
+      top: 8px;
+      bottom: 8px;
+      width: 2px;
+      border-radius: 2px;
+      background: linear-gradient(180deg, #F9A8D4, rgba(249, 168, 212, .15));
+    }
+
+    .don-item {
+      position: relative;
+      margin-bottom: 12px;
+    }
+
+    .don-dot {
+      position: absolute;
+      left: -22px;
+      top: 28px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #fff;
+      border: 3px solid #DB2777;
+      box-shadow: 0 0 0 4px rgba(219, 39, 119, .12);
+    }
+
+    .don-card {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 13px 14px;
+      border-radius: 18px;
+      border: 1px solid #fff;
+      background:
+        linear-gradient(135deg, #FFFFFF 60%, #FCE7F1 140%);
+      box-shadow: 0 12px 26px -16px rgba(190, 24, 93, .3);
+      transition: transform .18s ease, box-shadow .18s ease;
+    }
+    .don-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 18px 32px -16px rgba(190, 24, 93, .4);
+    }
+
+    .don-ico {
+      width: 44px;
+      height: 44px;
+      flex: none;
+      display: grid;
+      place-items: center;
+      border-radius: 13px;
+      color: #fff;
+      background: linear-gradient(145deg, #EC4899, #BE185D);
+      box-shadow: 0 8px 16px -8px rgba(190, 24, 93, .6), inset 0 1px 0 rgba(255, 255, 255, .4);
+    }
+
+    .don-body { flex: 1; min-width: 0; }
+
+    .don-note {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.4;
+      color: #2B1B3D;
+      overflow-wrap: anywhere;
+    }
+
+    .don-date {
+      margin: 3px 0 0;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #8A7B9C;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .don-amt-wrap {
+      flex: none;
+      text-align: right;
+      margin-right: 4px;
+    }
+
+    .don-amt {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 900;
+      letter-spacing: -.02em;
+      color: #BE185D;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .don-cap {
+      margin: 2px 0 0;
+      font-size: 9.5px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: #C99DB4;
+    }
+
+    /* ============ PAYMENT HISTORY — member detail ledger list ============ */
+    .hist-card {
+      position: relative;
+      padding: 14px 14px 16px;
+      border-radius: 22px;
+      background: #fff;
+      border: 1px solid #fff;
+      box-shadow: 0 12px 30px -16px rgba(43, 27, 61, .18);
+      overflow: hidden;
+    }
+    .hist-head { margin-bottom: 10px; }
+    .hist-count {
+      margin: 5px 0 0;
+      font-size: 12px;
+      font-weight: 700;
+      color: #5B4B6B;
+    }
+    .hist-list { position: relative; padding-left: 2px; }
+    .hist-item {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 9px 0;
+      animation: histIn .4s cubic-bezier(.2, .8, .2, 1) both;
+    }
+    @keyframes histIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: none; }
+    }
+    /* continuous connector spine running behind the icons */
+    .hist-item::before {
+      content: "";
+      position: absolute;
+      left: 19px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: rgba(205, 191, 214, .4);
+      z-index: 0;
+    }
+    .hist-item:first-child::before { top: 29px; }
+    .hist-item:last-child::before { bottom: auto; height: 29px; }
+    .hist-ico {
+      position: relative;
+      z-index: 1;
+      width: 40px;
+      height: 40px;
+      flex: none;
+      display: grid;
+      place-items: center;
+      border-radius: 13px;
+      background: var(--tint-soft);
+      color: var(--tint);
+      box-shadow: 0 0 0 4px var(--surface, #fff);
+    }
+    .hist-main { flex: 1; min-width: 0; }
+    .hist-title {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 700;
+      color: #2B1B3D;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .hist-sub {
+      margin: 3px 0 0;
+      font-size: 11.5px;
+      color: #7A6B8C;
+      white-space: normal;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+    }
+    .hist-chip {
+      display: inline-block;
+      padding: 2px 8px;
+      margin-right: 6px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--tint);
+      background: var(--tint-soft);
+    }
+
+    .hist-date {
+      font-weight: 700;
+      color: #5B4B6B;
+    }
+
+    .hist-ago {
+      margin-left: 6px;
+      font-weight: 600;
+      color: #A296AE;
+    }
+
+    .hist-amt {
+      margin: 0;
+      flex: none;
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: -.01em;
+      color: #047857;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .hist-del {
+      flex: none;
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border: 0;
+      border-radius: 10px;
+      background: transparent;
+      color: #C3B8CC;
+      cursor: pointer;
+      transition: background .15s ease, color .15s ease;
+    }
+    .hist-del:hover { background: #FFE4E9; color: #E11D48; }
+    .hist-del:active { transform: scale(.92); }
+
+    .don-del {
+      flex: none;
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border: 0;
+      border-radius: 10px;
+      background: transparent;
+      color: #C99DB4;
+      cursor: pointer;
+      transition: background .15s ease, color .15s ease;
+    }
+    .don-del:hover { background: #FFE4E9; color: #E11D48; }
+    .don-del:active { transform: scale(.9); }
+
+    .pay-cal {
+      background: #fff;
+      border: 1px solid #E7DCEA;
+      border-radius: 16px;
+      padding: 10px;
+    }
+
+    .pay-cal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .pay-cal-title {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 800;
+      color: #2B1B3D;
+    }
+
+    .pay-cal-nav {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      border: 1px solid #E7DCEA;
+      background: #FAF6FA;
+      color: #4338CA;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+    }
+
+    .pay-cal-nav:focus-visible,
+    .pay-cal-day:focus-visible {
+      outline: 2px solid #4f46e5;
+      outline-offset: 2px;
+    }
+
+    .pay-cal-week,
+    .pay-cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+
+    .pay-cal-week span {
+      text-align: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: #8B7A99;
+      padding: 4px 0;
+    }
+
+    .pay-cal-day,
+    .pay-cal-empty {
+      min-height: 40px;
+      border-radius: 12px;
+    }
+
+    .pay-cal-day {
+      border: 0;
+      background: transparent;
+      color: #2B1B3D;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .pay-cal-day.today {
+      box-shadow: inset 0 0 0 1.5px #C4B5FD;
+    }
+
+    .pay-cal-day.on {
+      background: #4f46e5;
+      color: #fff;
+    }
+
+    .date-shown {
+      margin: 8px 0 0;
+      font-size: 13px;
+      font-weight: 700;
+      color: #047857;
+    }
+
+    /* ============ SHEET ============ */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      /* must sit above the fixed bottom nav (z-index 1000), otherwise the
+         sheet's buttons are hidden behind it */
+      z-index: 1200;
+      background: rgba(43, 27, 61, .45);
+      backdrop-filter: blur(3px);
+      display: none;
+      align-items: flex-end;
+    }
+
+    .overlay.show {
+      display: flex;
+      animation: fadeIn .2s ease both;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0
+      }
+
+      to {
+        opacity: 1
+      }
+    }
+
+    .sheet {
+      width: 100%;
+      background: var(--card);
+      border-radius: 24px 24px 0 0;
+      padding: 8px 16px calc(20px + var(--safe-b));
+      box-shadow: 0 -20px 50px -20px rgba(43, 27, 61, .5);
+      max-height: 82%;
+      overflow-y: auto;
+      animation: sheetIn .28s cubic-bezier(.2, .9, .3, 1) both;
+    }
+
+    @keyframes sheetIn {
+      from {
+        transform: translateY(30px);
+        opacity: .6
+      }
+
+      to {
+        transform: none;
+        opacity: 1
+      }
+    }
+
+    .grab {
+      width: 40px;
+      height: 4px;
+      border-radius: 99px;
+      background: var(--border);
+      margin: 6px auto 10px;
+    }
+
+    .opt {
+      width: 100%;
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: transparent;
+      border: 0;
+      border-bottom: 1px solid #EFE6F1;
+      font-size: 14.5px;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+      padding: 0 4px;
+    }
+
+    .opt:last-child {
+      border-bottom: 0;
+    }
+
+    .opt[aria-selected="true"] {
+      color: var(--primary);
+    }
+
+    /* ============ TOAST ============ */
+    #toasts {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: calc(100px + var(--safe-b));
+      z-index: 1300;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      pointer-events: none;
+      padding: 0 16px;
+    }
+
+    .toast {
+      max-width: 100%;
+      background: var(--text);
+      color: #fff;
+      font-size: 12.5px;
+      font-weight: 600;
+      border-radius: 12px;
+      padding: 11px 14px;
+      box-shadow: 0 14px 30px -12px rgba(43, 27, 61, .7);
+      animation: toastIn .3s cubic-bezier(.2, 1.2, .4, 1) both;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toast.err {
+      background: #9F1239;
+    }
+
+    .toast.ok {
+      background: var(--fund);
+    }
+
+    .toast.out {
+      animation: toastOut .25s ease forwards;
+    }
+
+    @keyframes toastIn {
+      from {
+        opacity: 0;
+        transform: translateY(12px) scale(.96)
+      }
+
+      to {
+        opacity: 1;
+        transform: none
+      }
+    }
+
+    @keyframes toastOut {
+      to {
+        opacity: 0;
+        transform: translateY(8px)
+      }
+    }
+
+    /* ============ MISC ============ */
+    .skeleton {
+      background: linear-gradient(90deg, #EFE6F1, #F7F1F8, #EFE6F1);
+      background-size: 200% 100%;
+      animation: shimmer 1.2s linear infinite;
+      border-radius: 10px;
+      height: 14px;
+    }
+
+    @keyframes shimmer {
+      from {
+        background-position: 200% 0
+      }
+
+      to {
+        background-position: -200% 0
+      }
+    }
+
+    .banner {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      background: var(--primary-soft);
+      border: 1px solid #DDD7FB;
+      border-radius: 16px;
+      padding: 11px 13px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--primary);
+      line-height: 1.45;
+    }
+
+    .banner.amber {
+      background: var(--due-soft);
+      border-color: #F3D6C4;
+      color: var(--due);
+    }
+
+    .divider-line {
+      height: 1px;
+      background: #EFE6F1;
+      margin: 14px 0;
+    }
+
+    .kv {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 40px;
+      font-size: 13.5px;
+    }
+
+    .kv span:first-child {
+      color: var(--muted);
+    }
+
+    .kv span:last-child {
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .center {
+      text-align: center;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, .4);
+      border-top-color: #fff;
+      animation: spin .7s linear infinite;
+    }
+
+    .spinner.dark {
+      border-color: rgba(67, 56, 202, .25);
+      border-top-color: var(--primary);
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    .admin-badge {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--primary);
+      background: var(--primary-soft);
+      border-radius: 999px;
+      padding: 3px 8px;
+    }
+
+    .del-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 11px;
+      background: #FDECEE;
+      color: #9F1239;
+      border: 0;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      flex: none;
+    }
+  </style>
+
+  <!-- Liquid glass skin (styling only) — shared .glass class lives here -->
+  <link rel="stylesheet" href="glass.css" />
+  <!-- Premium card system — designer-grade refinements -->
+  <link rel="stylesheet" href="cards.css" />
+  <!-- Payment Options card (bank card + copy) -->
+  <link rel="stylesheet" href="payment.css" />
+  <!-- Home screen (greeting header, fund hero, recent payments, stay connected) -->
+  <link rel="stylesheet" href="home.css" />
+  <!-- Members screen + nav active underline -->
+  <link rel="stylesheet" href="members.css" />
+  <!-- Member fee & dues report table -->
+  <link rel="stylesheet" href="report.css" />
+  <!-- Shared fixed bottom navigation -->
+  <link rel="stylesheet" href="bottom-nav.css" />
+</head>
+
+<body>
+  <div id="app">
+    <!-- ambient glass blobs (purely decorative) -->
+    <div class="blob-bg" aria-hidden="true">
+      <span class="blob blob-1"></span>
+      <span class="blob blob-2"></span>
+      <span class="blob blob-3"></span>
+    </div>
+
+    <div id="view"></div>
+
+    <!-- floating action host (admin "+ Add member" on the Members tab) -->
+    <div id="fabHost"></div>
+
+    <nav id="nav" class="bottom-nav nav-variant-b" aria-label="Main navigation"></nav>
+
+    <div class="overlay" id="overlay">
+      <div class="sheet" id="sheet"></div>
+    </div>
+
+    <div id="toasts" aria-live="polite"></div>
+  </div>
+
+  <script>
+    /* =====================================================================
+       CONFIG — replace these 5 values with your own project's values
+       NOTE: no admin password lives in the frontend. Only the admin EMAIL
+       is referenced here, and only to show/hide UI. RLS is the real gate.
+    ===================================================================== */
+    const SUPABASE_URL = "https://gaikdlyydlgrrqpvwkvv.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdhaWtkbHl5ZGxncnJxcHZ3a3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5MDUyNTcsImV4cCI6MjA3OTQ4MTI1N30.fEx9ckWgnC2LTIjlaWApL1-ac9bNuPpsundsKHBxhEM";
+    const ADMIN_EMAIL = "yourhealerboys@gmail.com";
+    const ADMIN_PASSWORD = "createdin2017";
+    const EMAILJS_SERVICE_ID = "YOUR_EMAILJS_SERVICE_ID";
+    const EMAILJS_TEMPLATE_ID = "YOUR_EMAILJS_TEMPLATE_ID";
+    const EMAILJS_PUBLIC_KEY = "YOUR_EMAILJS_PUBLIC_KEY";
+
+    /* Google Sheet webhook (Apps Script web app URL).
+       Leave empty until you deploy google-apps-script.gs — then paste the URL here.
+       New members / payments / donations are appended to that sheet. */
+    const SHEET_WEBHOOK_URL = "";
+    const APP_TIMEZONE_OFFSET_MIN = 6 * 60; // Asia/Dhaka (UTC+6) for "day of month" logic
+    const IMGBB_KEY = "b42081d0e06cf735338afa7a40400bd1"; // member photo uploads
+
+    /** upload a member photo to ImgBB, return the hosted URL (or null) */
+    async function uploadImageToImgbb(file) {
+      if (!file || !IMGBB_KEY || IMGBB_KEY === "YOUR_IMGBB_KEY") return null;
+      const fd = new FormData();
+      fd.append("image", file);
+      try {
+        const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, { method: "POST", body: fd });
+        const json = await res.json();
+        return (json && json.data && json.data.url) || null;
+      } catch (e) {
+        console.error("Photo upload failed", e);
+        return null;
+      }
+    }
+
+    /* ---- Payment accounts (single data source for the Payment Options card) ----
+       The card reads name/address/holder/no from here — nothing is typed in the
+       component. Add another object to get a swipeable second card.            */
+    const BANK_ACCOUNTS = [
+      {
+        id: "city",
+        bank: "City Bank",
+        branch: "Bansha Bazar, Noakhali, Chatkhil",
+        holder: "JUNAYED HOSSAIN",
+        number: "2203891976001",
+        primary: true,
+        theme: "g-green"
+      }
+    ];
+    /* Extra channels: name + value. Wallet numbers still come from app_settings. */
+    const EXTRA_METHOD_FALLBACK = [];
+
+    const LIVE = /^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(SUPABASE_URL) && !SUPABASE_ANON_KEY.startsWith("YOUR-");
+
+    /* =====================================================================
+       CONSTANTS
+    ===================================================================== */
+    const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const MON3 = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const PAY_TYPES = ["Monthly Fee", "Advanced Fee", "Late Fine", "Personal Donation", "Other"];
+    const DEFAULT_FEE = 150;
+    const YEAR = () => new Date().getFullYear();
+
+    /* club fee collection began Sep 2024 */
+    const FEE_START = { y: 2024, m: 9 };
+    /** month index (year*12 + month-1) for easy cross-year comparison */
+    const monthIndex = (y, m) => y * 12 + (m - 1);
+
+    const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    const taka = (n) => "\u09F3" + Number(n || 0).toLocaleString("en-US");
+    const fmtNumOnly = (n) => Number(n || 0).toLocaleString("en-US");
+    const pad = (n) => String(n).padStart(2, "0");
+    const initials = (n) => String(n || "?").trim().split(/\s+/).map(w => w[0]).slice(0, 2).join("").toUpperCase();
+    const uid = (p) => p + "_" + Math.random().toString(36).slice(2, 9) + Date.now().toString(36);
+    /* a real UUID works in BOTH text and uuid columns, so inserts never fail
+       with "null value in column id" or "invalid input syntax for type uuid" */
+    const newId = () => {
+      try { if (window.crypto && crypto.randomUUID) return crypto.randomUUID(); } catch (e) { }
+      return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0;
+        return (c === "x" ? r : (r & 0x3 | 0x8)).toString(16);
+      });
+    };
+    const todayISO = () => new Date().toISOString().slice(0, 10);
+    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+    function nowLocal() {
+      const d = new Date();
+      return new Date(d.getTime() + (APP_TIMEZONE_OFFSET_MIN + d.getTimezoneOffset()) * 60000);
+    }
+    function dayOfMonth() { return nowLocal().getDate(); }
+
+    /* =====================================================================
+       SUPABASE CLIENT
+    ===================================================================== */
+    let sb = null;
+    if (LIVE && window.supabase && window.supabase.createClient) {
+      /* Supabase session is kept in sessionStorage too, so closing the app
+         logs the admin out automatically (same policy as the viewer). */
+      let authStorage;
+      try {
+        sessionStorage.setItem("__hb_probe", "1"); sessionStorage.removeItem("__hb_probe");
+        authStorage = window.sessionStorage;
+      } catch (e) { authStorage = undefined; }
+
+      /* drop any Supabase token an older build left in localStorage */
+      try {
+        Object.keys(localStorage).forEach(k => { if (/^sb-.*-auth-token/.test(k)) localStorage.removeItem(k); });
+      } catch (e) { }
+
+      sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true,
+          storage: authStorage
+        }
+      });
+    }
+
+    if (window.emailjs && !EMAILJS_PUBLIC_KEY.startsWith("YOUR_")) {
+      window.emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+    }
+    const emailJSReady = () => !EMAILJS_PUBLIC_KEY.startsWith("YOUR_") && !EMAILJS_SERVICE_ID.startsWith("YOUR_") && window.emailjs;
+
+    /* =====================================================================
+       STATE
+    ===================================================================== */
+    const LS_DATA = "hb_data_v2";
+    const LS_SETTINGS = "hb_settings_v2";
+
+    const state = {
+      session: null,
+      isAdmin: false,
+      booted: false,
+      loading: true,
+      members: [],
+      payments: [],
+      donations: [],
+      settings: null,
+      duesSearch: "",
+      duesMonth: 0,      // 0 = all months
+      duesType: "Monthly Fee",
+      memberQuery: "",
+      donQuery: "",
+      demo: !LIVE,
+      memberFilter: "all",   // all | paid | due
+      memberSort: "paid"     // paid (top payer first) | name | due
+    };
+
+    const DEFAULT_SETTINGS = {
+      id: 1,
+      auto_email_reminder: true,
+      send_day: 5,
+      channel: "Email",
+      /* wallet numbers are empty by design — the admin adds them from
+         Payment Options -> "Wallet numbers" whenever they want */
+      bkash_number: "",
+      nagad_number: "",
+      last_sent_at: null,
+      last_sent_count: 0
+    };
+
+    /* =====================================================================
+       DATA ACCESS (Supabase when live, local snapshot in demo)
+    ===================================================================== */
+    const db = {
+      async fetchAll() {
+        if (!sb) { this.loadLocal(); return; }
+        const [m, p, d, s] = await Promise.all([
+          sb.from("members").select("*").order("name", { ascending: true }),
+          sb.from("payments").select("*"),
+          sb.from("donations").select("*").order("date", { ascending: false }),
+          sb.from("app_settings").select("*").eq("id", 1).maybeSingle()
+        ]);
+        if (m.error) throw m.error;
+        if (p.error) throw p.error;
+        if (d.error) throw d.error;
+        state.members = m.data || [];
+        state.payments = p.data || [];
+        state.donations = d.data || [];
+        state.settings = { ...DEFAULT_SETTINGS, ...(s.data || {}) };
+        this.saveLocal();
+        notifyReportDataChanged();
+      },
+
+      saveLocal() {
+        try {
+          localStorage.setItem(LS_DATA, JSON.stringify({
+            members: state.members, payments: state.payments,
+            donations: state.donations, settings: state.settings
+          }));
+        } catch (e) { }
+      },
+
+      loadLocal() {
+        let d = null;
+        try { d = JSON.parse(localStorage.getItem(LS_DATA) || "null"); } catch (e) { }
+        if (d && d.members && d.members.length) {
+          state.members = d.members;
+          state.payments = d.payments || [];
+          state.donations = d.donations || [];
+          state.settings = { ...DEFAULT_SETTINGS, ...(d.settings || {}) };
+          /* one-time cleanup: drop the old demo wallet numbers from caches */
+          if (state.settings.bkash_number === "01712345678") state.settings.bkash_number = "";
+          if (state.settings.nagad_number === "01812345678") state.settings.nagad_number = "";
+        } else {
+          this.seed();
+          this.saveLocal();
+        }
+      },
+
+      seed() {
+        const defs = [
+          { name: "Abdullah H. Kafi", start: { y: 2024, m: 9 }, count: 32, fee: 150 },
+          { name: "Afrahul Haque Orko", start: { y: 2024, m: 9 }, count: 10, fee: 150, extra: 10 },
+          { name: "Imtiaj Ahmed Rafi", start: { y: 2024, m: 9 }, count: 10, fee: 150 },
+          { name: "Istique Ahmed Chomok", start: { y: 2024, m: 9 }, count: 4, fee: 150, fine: 100 },
+          { name: "Junaed Hossain Toni", start: { y: 2024, m: 9 }, count: 37, fee: 150 },
+          { name: "Kamrul H. Rafi", start: { y: 2024, m: 9 }, count: 25, fee: 150 },
+          { name: "Khaled Mahmud", start: { y: 2024, m: 9 }, count: 27, fee: 150 },
+          { name: "Mehedi Hasan Saikat", start: { y: 2025, m: 12 }, count: 5, fee: 100 },
+          { name: "Sabbir Hossain", start: { y: 2024, m: 9 }, count: 32, fee: 150 }
+        ];
+        state.members = defs.map((d, i) => ({
+          id: "mem_" + (i + 1),
+          name: d.name,
+          email: d.name.toLowerCase().replace(/[^a-z]+/g, ".") + "@gmail.com",
+          avatar_url: null
+        }));
+        state.payments = [];
+        const now = nowLocal();
+        const nowIdx = monthIndex(now.getFullYear(), now.getMonth() + 1);
+
+        defs.forEach((d, i) => {
+          const startIdx = monthIndex(d.start.y, d.start.m);
+          for (let step = 0; step < d.count; step++) {
+            const curIdx = startIdx + step;
+            const y = Math.floor(curIdx / 12);
+            const m = (curIdx % 12) + 1;
+            const isAdvance = curIdx > nowIdx;
+            const amt = d.fee + (step === 0 && d.extra ? d.extra : 0);
+            state.payments.push({
+              id: uid("pay"),
+              member_id: state.members[i].id,
+              amount: amt,
+              date: `${y}-${pad(m)}-05`,
+              type: `${isAdvance ? "Advanced Fee" : "Monthly Fee"} (${MONTHS[m - 1]} ${y})`
+            });
+          }
+          if (d.fine) {
+            state.payments.push({
+              id: uid("pay"),
+              member_id: state.members[i].id,
+              amount: d.fine,
+              date: `${d.start.y}-${pad(d.start.m)}-15`,
+              type: "Late Fine"
+            });
+          }
+        });
+
+        const y = YEAR();
+        const dm = Math.max(1, now.getMonth());
+        state.donations = [
+          { id: uid("don"), description: "হরিপুরের প্রতিবন্ধী শিশুকে সাহায্য", date: `${y}-${pad(dm)}-22`, amount: 2000 },
+          { id: uid("don"), description: "নিশ্চিন্তপুর এর ফয়েজ কে চিকিৎসার জন্য সাহায্য", date: `${y - 1}-12-13`, amount: 2000 },
+          { id: uid("don"), description: "হীরাপুর জিহাদের গাড়ি এক্সিডেন্টে সাহায্য", date: `${y - 1}-11-18`, amount: 2000 },
+          { id: uid("don"), description: "প্রাথমিক ত্রাণ ও সহায়তা", date: `${y - 2}-11-11`, amount: 1000 }
+        ];
+        state.settings = { ...DEFAULT_SETTINGS };
+      },
+
+      /* ---- members ---- */
+      async addMember(payload) {
+        if (sb) {
+          /* always send our own id so tables without a default can still insert */
+          const withId = { id: payload.id || uid("mem"), ...payload };
+          let res = await sb.from("members").insert([withId]).select().single();
+          /* older schema without an `email` column -> retry without it */
+          if (res.error && /email/i.test(res.error.message || "")) {
+            const bare = { ...withId }; delete bare.email;
+            res = await sb.from("members").insert([bare]).select().single();
+          }
+          if (res.error) throw res.error;
+          state.members.push(res.data);
+          this.syncSheet("member", "add", res.data);
+          notifyReportDataChanged();
+          return res.data;
+        }
+        const row = { id: uid("mem"), ...payload };
+        state.members.push(row); this.saveLocal();
+        this.syncSheet("member", "add", row);
+        notifyReportDataChanged();
+        return row;
+      },
+      async updateMember(id, patch) {
+        if (sb) {
+          const { error } = await sb.from("members").update(patch).eq("id", id);
+          if (error) throw error;
+        }
+        const i = state.members.findIndex(x => x.id === id);
+        if (i > -1) state.members[i] = { ...state.members[i], ...patch };
+        if (!sb) this.saveLocal();
+        notifyReportDataChanged();
+      },
+      async deleteMember(id) {
+        if (sb) {
+          const { error } = await sb.from("members").delete().eq("id", id);
+          if (error) throw error;
+        }
+        state.members = state.members.filter(m => m.id !== id);
+        state.payments = state.payments.filter(p => p.member_id !== id);
+        if (!sb) this.saveLocal();
+        notifyReportDataChanged();
+      },
+
+      /* ---- payments ---- */
+      async addPayment(payload) {
+        if (sb) {
+          /* send our own UUID so "null value in column id" can never happen */
+          let res = await sb.from("payments")
+            .insert([{ id: payload.id || newId(), ...payload }]).select().single();
+          /* if the server generates ids itself, retry without ours */
+          if (res.error && /column\s+"?id"?/i.test(res.error.message || "")) {
+            res = await sb.from("payments").insert([payload]).select().single();
+          }
+          if (res.error) throw res.error;
+          const data = res.data;
+          state.payments.push(data);
+          const mem = state.members.find(m => m.id === data.member_id);
+          this.syncSheet("payment", "add", { ...data, member_name: mem ? mem.name : "" });
+          notifyReportDataChanged();
+          return data;
+        }
+        const row = { id: uid("pay"), ...payload };
+        state.payments.push(row); this.saveLocal();
+        const mem = state.members.find(m => m.id === row.member_id);
+        this.syncSheet("payment", "add", { ...row, member_name: mem ? mem.name : "" });
+        notifyReportDataChanged();
+        return row;
+      },
+      async deletePayment(id) {
+        if (sb) {
+          const { error } = await sb.from("payments").delete().eq("id", id);
+          if (error) throw error;
+        }
+        state.payments = state.payments.filter(p => p.id !== id);
+        if (!sb) this.saveLocal();
+        notifyReportDataChanged();
+      },
+
+      /* ---- donations ---- */
+      async addDonation(payload) {
+        if (sb) {
+          /* id was missing here before — that's the "null value in column id" error */
+          let res = await sb.from("donations")
+            .insert([{ id: payload.id || newId(), ...payload }]).select().single();
+          if (res.error && /column\s+"?id"?/i.test(res.error.message || "")) {
+            res = await sb.from("donations").insert([payload]).select().single();
+          }
+          if (res.error) throw res.error;
+          state.donations.unshift(res.data);
+          this.syncSheet("donation", "add", res.data);
+          return res.data;
+        }
+        const row = { id: uid("don"), ...payload };
+        state.donations.unshift(row); this.saveLocal();
+        this.syncSheet("donation", "add", row);
+        return row;
+      },
+      async deleteDonation(id) {
+        if (sb) {
+          const { error } = await sb.from("donations").delete().eq("id", id);
+          if (error) throw error;
+        }
+        state.donations = state.donations.filter(d => d.id !== id);
+        if (!sb) this.saveLocal();
+      },
+
+      /* ---- Google Sheet mirror (does not block the app if the sheet is down) ---- */
+      syncSheet(kind, action, row) {
+        const url = (typeof SHEET_WEBHOOK_URL === "string") ? SHEET_WEBHOOK_URL.trim() : "";
+        if (!url) return;
+        const body = JSON.stringify({ kind, action, row });
+        try {
+          if (navigator.sendBeacon) {
+            const blob = new Blob([body], { type: "text/plain;charset=UTF-8" });
+            if (navigator.sendBeacon(url, blob)) return;
+          }
+        } catch (e) { /* fall through */ }
+        fetch(url, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain;charset=UTF-8" },
+          body
+        }).catch(() => { /* sheet sync is best-effort */ });
+      },
+
+      /* ---- settings ---- */
+      async saveSettings(patch) {
+        state.settings = { ...state.settings, ...patch };
+        if (sb) {
+          const { error } = await sb.from("app_settings").upsert({ id: 1, ...state.settings });
+          if (error) throw error;
+        } else this.saveLocal();
+      }
+    };
+
+    /* =====================================================================
+       LIVE FEE-REPORT REFRESH
+       - Local CRUD recalculates immediately from the in-memory ledger.
+       - Other tabs/devices: Supabase Realtime + a visible-report polling
+         fallback; local mode also listens for the localStorage event.
+    ===================================================================== */
+    let reportSignatureSeen = "";
+    let reportUpdatedAt = Date.now();
+    let reportRenderTimer = null;
+    let reportFetchTimer = null;
+    let reportFetchBusy = false;
+    let reportRemoteCheckedAt = 0;
+    let reportRealtimeChannel = null;
+
+    function reportDataSignature() {
+      const members = state.members.map(m => [m.id, m.name]).sort((a, b) => String(a[0]).localeCompare(String(b[0])));
+      const payments = state.payments.map(p => [p.id, p.member_id, p.amount, p.date, p.type])
+        .sort((a, b) => String(a[0]).localeCompare(String(b[0])));
+      return JSON.stringify([members, payments]);
+    }
+
+    function reportFreshLabel() {
+      return "আপডেট " + new Date(reportUpdatedAt).toLocaleTimeString("bn-BD", { hour: "numeric", minute: "2-digit" });
+    }
+
+    function refreshReportView() {
+      if (!state.booted || path() !== "/report") return;
+      const view = document.getElementById("view");
+      const table = view && view.querySelector(".rp-scroll");
+      const top = view ? view.scrollTop : 0;
+      const left = table ? table.scrollLeft : 0;
+      render();
+      requestAnimationFrame(() => {
+        const nextView = document.getElementById("view");
+        const nextTable = nextView && nextView.querySelector(".rp-scroll");
+        if (nextView) nextView.scrollTop = top;
+        if (nextTable) nextTable.scrollLeft = left;
+      });
+    }
+
+    function notifyReportDataChanged(force = false) {
+      const signature = reportDataSignature();
+      if (!force && signature === reportSignatureSeen) return;
+      reportSignatureSeen = signature;
+      reportUpdatedAt = Date.now();
+      if (!state.booted || path() !== "/report") return;
+      clearTimeout(reportRenderTimer);
+      reportRenderTimer = setTimeout(refreshReportView, 40);
+    }
+
+    async function refreshReportFromServer() {
+      if (reportFetchBusy || !sb || !state.session || state.session.user?.local || document.visibilityState !== "visible") return;
+      reportFetchBusy = true;
+      reportRemoteCheckedAt = Date.now();
+      try {
+        await db.fetchAll();
+        notifyReportDataChanged();
+        reportUpdatedAt = Date.now();
+        refreshReportLabel();
+      } catch (e) {
+        console.warn("Report background refresh failed", e);
+      } finally {
+        reportFetchBusy = false;
+      }
+    }
+
+    function queueReportServerRefresh() {
+      clearTimeout(reportFetchTimer);
+      reportFetchTimer = setTimeout(refreshReportFromServer, 250);
+    }
+
+    function ensureReportRealtime() {
+      if (!sb || !state.session || state.session.user?.local || reportRealtimeChannel || !sb.channel) return;
+      try {
+        reportRealtimeChannel = sb.channel("healer-fee-report-live")
+          .on("postgres_changes", { event: "*", schema: "public", table: "members" }, queueReportServerRefresh)
+          .on("postgres_changes", { event: "*", schema: "public", table: "payments" }, queueReportServerRefresh)
+          .subscribe();
+      } catch (e) {
+        console.warn("Fee report realtime unavailable; polling fallback remains active", e);
+      }
+    }
+
+    function stopReportRealtime() {
+      if (!reportRealtimeChannel || !sb) return;
+      try { sb.removeChannel(reportRealtimeChannel); } catch (e) { }
+      reportRealtimeChannel = null;
+    }
+
+    function enterReportFresh() {
+      if (!sb || !state.session || state.session.user?.local) return;
+      ensureReportRealtime();
+      if (Date.now() - reportRemoteCheckedAt > 5000) queueReportServerRefresh();
+    }
+
+    window.addEventListener("storage", e => {
+      if (e.key !== LS_DATA) return;
+      db.loadLocal();
+      notifyReportDataChanged(true);
+    });
+
+    /* =====================================================================
+       DUES MATH
+    ===================================================================== */
+    function paymentMonthKey(p) {
+      if (p.type) {
+        const m = String(p.type).match(/\(([A-Za-z]+)\s+(\d{4})\)/);
+        if (m) {
+          const i = MONTHS.findIndex(x => x.toLowerCase() === m[1].toLowerCase());
+          if (i > -1) return { y: Number(m[2]), m: i + 1 };
+        }
+      }
+      if (p.date) {
+        const [y, mo] = String(p.date).slice(0, 10).split("-");
+        return { y: Number(y), m: Number(mo) };
+      }
+      return null;
+    }
+
+    /** sort key for a payment: the MONTH IT COVERS (e.g. "Advanced Fee (October 2025)"),
+        not the day it was entered in the app. This keeps backfilled/advance payments in
+        proper calendar order even when several were typed in on the same real date. */
+    function paymentSortIndex(p) {
+      const k = paymentMonthKey(p);
+      if (k) return monthIndex(k.y, k.m);
+      return monthIndex(1970, 1); // no date/type at all -> push to the very start
+    }
+
+    function paidSet(memberId, year, typeMatch) {
+      const set = new Set();
+      state.payments.forEach(p => {
+        if (p.member_id !== memberId) return;
+        if (typeMatch && !String(p.type || "").toLowerCase().includes(typeMatch.toLowerCase())) return;
+        const k = paymentMonthKey(p);
+        if (k && k.y === year) set.add(k.m);
+      });
+      return set;
+    }
+
+    function memberFee(memberId) {
+      const rows = state.payments
+        .filter(p => p.member_id === memberId && String(p.type || "").includes("Monthly Fee"))
+        .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+      return rows.length ? Number(rows[0].amount) : DEFAULT_FEE;
+    }
+
+    /** the member's LAST paid month, counting both Monthly Fee and Advanced Fee.
+        Returns null when the member has never paid a fee. */
+    function lastPaidIndex(memberId, typeMatch = "Monthly Fee") {
+      const wantMonthly = !typeMatch || /monthly/i.test(typeMatch);
+      let last = null;
+      state.payments.forEach(p => {
+        if (p.member_id !== memberId) return;
+        const t = String(p.type || "");
+        const ok = wantMonthly
+          ? /Monthly Fee|Advanced Fee/i.test(t)
+          : t.toLowerCase().includes(String(typeMatch).toLowerCase());
+        if (!ok) return;
+        const k = paymentMonthKey(p);
+        if (!k) return;
+        const i = monthIndex(k.y, k.m);
+        if (last === null || i > last) last = i;
+      });
+      return last;
+    }
+
+    /** Months of `year` that are due. The range starts after the member's last
+        paid month, or at FEE_START for a member with no fee payments at all. */
+    function dueMonths(memberId, year, typeMatch = "Monthly Fee") {
+      const y = YEAR();
+      const cm = nowLocal().getMonth() + 1;
+      const nowIdx = monthIndex(y, cm);
+      const last = lastPaidIndex(memberId, typeMatch);
+      const startIdx = last === null ? monthIndex(FEE_START.y, FEE_START.m) : last + 1;
+      const endIdx = year < y ? monthIndex(year, 12) : (year > y ? -1 : nowIdx);
+      /* Monthly + Advanced both count as "paid" for the month they name */
+      const paid = /monthly/i.test(typeMatch || "Monthly Fee")
+        ? new Set([...paidSet(memberId, year, "Monthly Fee"), ...paidSet(memberId, year, "Advanced Fee")])
+        : paidSet(memberId, year, typeMatch);
+      const out = [];
+      for (let m = 1; m <= 12; m++) {
+        const i = monthIndex(year, m);
+        if (i < startIdx || i > endIdx) continue;
+        if (paid.has(m)) continue;
+        out.push(m);
+      }
+      return out;
+    }
+
+    /** All unpaid fee periods since the member's last paid month, including
+        unpaid periods from previous calendar years through the current month. */
+    function allDuePeriods(memberId) {
+      const now = nowLocal();
+      const endIdx = monthIndex(now.getFullYear(), now.getMonth() + 1);
+      const last = lastPaidIndex(memberId, "Monthly Fee");
+      const startIdx = last === null ? monthIndex(FEE_START.y, FEE_START.m) : last + 1;
+      if (startIdx > endIdx) return [];
+
+      const paid = new Set();
+      state.payments.forEach(p => {
+        if (p.member_id !== memberId || !/Monthly Fee|Advanced Fee/i.test(String(p.type || ""))) return;
+        const k = paymentMonthKey(p);
+        if (k) paid.add(monthIndex(k.y, k.m));
+      });
+
+      const out = [];
+      for (let i = startIdx; i <= endIdx; i++) {
+        if (!paid.has(i)) out.push({ index: i, y: Math.floor(i / 12), m: (i % 12) + 1 });
+      }
+      return out;
+    }
+
+    function duePeriodLabel(period) {
+      return period ? `${MONTHS[period.m - 1]} ${period.y}` : "";
+    }
+
+    function duePeriodRangeLabel(periods) {
+      if (!periods || !periods.length) return "";
+      return periods.length === 1
+        ? duePeriodLabel(periods[0])
+        : `${duePeriodLabel(periods[0])} - ${duePeriodLabel(periods[periods.length - 1])}`;
+    }
+
+    function memberDues(memberId, typeMatch = "Monthly Fee") {
+      const months = typeMatch === "Monthly Fee"
+        ? allDuePeriods(memberId)
+        : dueMonths(memberId, YEAR(), typeMatch).map(m => ({ y: YEAR(), m, index: monthIndex(YEAR(), m) }));
+      const fee = typeMatch === "Monthly Fee" ? memberFee(memberId) : 100;
+      return { months, count: months.length, amount: months.length * fee, fee };
+    }
+
+    /** status map for the 12-month grid on Member detail */
+    function monthStatuses(memberId, year = YEAR()) {
+      /* paid = Monthly OR Advanced fee for that month; due = only months after the last paid one */
+      const paid = new Set([...paidSet(memberId, year, "Monthly Fee"), ...paidSet(memberId, year, "Advanced Fee")]);
+      const dueSet = new Set(dueMonths(memberId, year, "Monthly Fee"));
+      const cells = [];
+      for (let m = 1; m <= 12; m++) {
+        let st = "future";
+        if (paid.has(m)) st = "paid";
+        else if (dueSet.has(m)) st = "due";
+        cells.push({ m, st });
+      }
+      return cells;
+    }
+
+    function duesList(typeMatch = "Monthly Fee") {
+      const rows = state.members.map(m => {
+        const d = memberDues(m.id, typeMatch);
+        return { member: m, ...d };
+      }).filter(r => r.count > 0);
+      rows.sort((a, b) => b.count - a.count || a.member.name.localeCompare(b.member.name));
+      return rows;
+    }
+
+    /* =====================================================================
+       AGGREGATES
+    ===================================================================== */
+    function totals() {
+      const collected = state.payments.reduce((a, p) => a + Number(p.amount || 0), 0);
+      const donated = state.donations.reduce((a, d) => a + Number(d.amount || 0), 0);
+      return { collected, donated, fund: collected - donated, payments: state.payments.length };
+    }
+
+    /** last n calendar months as {y, m} going back from this month, most recent last */
+    function lastMonthKeys(n) {
+      const base = nowLocal();
+      const out = [];
+      for (let i = n - 1; i >= 0; i--) {
+        const d = new Date(base.getFullYear(), base.getMonth() - i, 1);
+        out.push({ y: d.getFullYear(), m: d.getMonth() + 1 });
+      }
+      return out;
+    }
+
+    /** net fund collected within one calendar month ({y, m}), payments minus donations */
+    function netForMonth(key) {
+      let collected = 0, donated = 0;
+      state.payments.forEach(p => {
+        const k = paymentMonthKey(p);
+        if (k && k.y === key.y && k.m === key.m) collected += Number(p.amount || 0);
+      });
+      state.donations.forEach(d => {
+        const ds = String(d.date || "");
+        if (Number(ds.slice(0, 4)) === key.y && Number(ds.slice(5, 7)) === key.m) donated += Number(d.amount || 0);
+      });
+      return collected - donated;
+    }
+
+    /** % change of this month's net fund vs last month's, for the hero card badge */
+    function fundTrend() {
+      const months = lastMonthKeys(2);
+      const cur = netForMonth(months[1]);
+      const prev = netForMonth(months[0]);
+      if (!prev && !cur) return null;
+      if (!prev) return { pct: 100, up: cur >= 0 };
+      const pct = Math.round(((cur - prev) / Math.abs(prev)) * 100);
+      return { pct: Math.abs(pct), up: pct >= 0 };
+    }
+
+    /** short, human category for a payment's raw type, e.g. "Monthly Fee (March 2026)" -> "Monthly dues" */
+    function paymentTypeLabel(type) {
+      const t = String(type || "");
+      if (t.includes("Monthly Fee")) return "Monthly dues";
+      if (t.includes("Advanced Fee")) return "Advance payment";
+      if (t.includes("Late Fine")) return "Late fine";
+      if (t.includes("Donation")) return "Donation";
+      return t.split(" (")[0] || "Payment";
+    }
+
+    function recentActivity(n = 3) {
+      const items = state.payments.map(p => {
+        const mem = state.members.find(m => m.id === p.member_id);
+        const k = paymentMonthKey(p);
+        return {
+          kind: "pay",
+          title: mem ? mem.name : "Member",
+          meta: k ? `${MONTHS[k.m - 1]} ${k.y}` : (p.date || ""),
+          typeLabel: paymentTypeLabel(p.type),
+          amount: Number(p.amount || 0),
+          date: p.date || "",
+          memberId: p.member_id
+        };
+      }).concat(state.donations.map(d => ({
+        kind: "don",
+        title: d.description || "Donation",
+        meta: d.date || "",
+        typeLabel: "Donation",
+        amount: Number(d.amount || 0),
+        date: d.date || "",
+        memberId: null
+      })));
+      items.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+      return items.slice(0, n);
+    }
+
+    /** d.MMM e.g. "Oct 5, 2025" to match the mockup's date style */
+    function prettyDate(iso) {
+      if (!iso) return "";
+      const d = new Date(String(iso).length <= 10 ? iso + "T12:00:00" : iso);
+      if (isNaN(d)) return esc(iso);
+      return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    }
+
+    /* =====================================================================
+       UI PRIMITIVES
+    ===================================================================== */
+    const ICONS = {
+      home: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9.5 21v-6h5v6"/></svg>',
+      users: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 19v-1.5a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4V19"/><circle cx="9" cy="7" r="3.2"/><path d="M17 7.5a2.8 2.8 0 0 1 0 5.6"/><path d="M22 19v-1.4a3.6 3.6 0 0 0-2.6-3.4"/></svg>',
+      heart: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.3 4.8 13.4a4.6 4.6 0 0 1 0-6.6 4.7 4.7 0 0 1 6.6 0l.6.6.6-.6a4.7 4.7 0 0 1 6.6 0 4.6 4.6 0 0 1 0 6.6Z"/></svg>',
+      user: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/></svg>',
+      search: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg>',
+      bell: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15.5V10a6 6 0 1 0-12 0v5.5L4.5 18h15Z"/><path d="M9.5 21a2.6 2.6 0 0 0 5 0"/></svg>',
+      wallet: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10h18"/><circle cx="17" cy="14.5" r="1.3"/></svg>',
+      cardNav: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="3"/><path d="M2.5 9.5h19"/><path d="M6 14.5h3.5"/></svg>',
+      usersSmall: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 19v-1.5a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4V19"/><circle cx="9" cy="7" r="3.2"/></svg>',
+      chevron: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>',
+      down: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>',
+      plus: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+      mail: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></svg>',
+      doc: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></svg>',
+      lock: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></svg>',
+      logout: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 17l5-5-5-5"/><path d="M20 12H9"/><path d="M12 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6"/></svg>',
+      back: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>',
+      google: '<svg width="19" height="19" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.5 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.8 6.1C12.3 13.2 17.6 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-2.8-.4-4.1H24v8.4h12.5c-.3 2.1-1.6 5.2-4.6 7.3l7.6 5.9c4.5-4.2 6.6-10.2 6.6-17.5z"/><path fill="#FBBC05" d="M10.4 28.7A14.6 14.6 0 0 1 9.6 24c0-1.6.3-3.2.8-4.7l-7.8-6.1A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.8z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.9l-7.6-5.9c-2 1.4-4.8 2.4-8.3 2.4-6.4 0-11.7-3.7-13.6-9.8l-7.8 6.1C6.5 42.6 14.6 48 24 48z"/></svg>',
+      check: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>',
+      trash: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V5h6v2"/><path d="M6 7l1 13h10l1-13"/></svg>',
+      settings: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2 2 2 0 1 1-4 0 1.7 1.7 0 0 0-2.9-1.2l-.1.1A2 2 0 1 1 4.2 17l.1-.1A1.7 1.7 0 0 0 3.1 14a2 2 0 1 1 0-4 1.7 1.7 0 0 0 1.2-2.9l-.1-.1A2 2 0 1 1 7 4.2l.1.1A1.7 1.7 0 0 0 10 3.1a2 2 0 1 1 4 0 1.7 1.7 0 0 0 2.9 1.2l.1-.1A2 2 0 1 1 19.8 7l-.1.1a1.7 1.7 0 0 0 1.2 2.9 2 2 0 1 1 0 4 1.7 1.7 0 0 0-1.5 1Z"/></svg>',
+      eye: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.6"/></svg>',
+      eyeOff: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 5.7A10.6 10.6 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a16 16 0 0 1-3.2 4.1M6.5 7.3A15.6 15.6 0 0 0 2.5 12S6 18.5 12 18.5a9.8 9.8 0 0 0 3.9-.8M9.5 9.8a2.6 2.6 0 0 0 3.7 3.6"/></svg>',
+      crown: '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M3 8.5 7.5 11 12 4l4.5 7L21 8.5 19 18H5L3 8.5Z"/></svg>',
+      bars: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 19v-5"/><path d="M12 19v-9"/><path d="M19 19V7"/></svg>',
+      plane: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M21.5 2.5 2 10.3c-.7.3-.7 1.3.1 1.5l6.7 1.9 2.3 7.1c.3.8 1.3.9 1.7.1l2-3.9 5.3 3.9c.7.5 1.7.1 1.8-.7l2.1-16.4c.1-.8-.7-1.4-1.5-1.3Zm-3.1 3.6-8.8 7.9-.4 3.4-1.7-5.3 10.1-6.6c.3-.2.6.2.3.4Z"/></svg>',
+      msgHeart: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5h16v10H9.5L5 19v-3.5H4z"/><path d="M12 8.3c.9-1.1 2.6-1.1 3.3.1.7 1.1-.1 2.1-1.6 3.4L12 13.4l-1.7-1.6c-1.5-1.3-2.3-2.3-1.6-3.4.7-1.2 2.4-1.2 3.3-.1Z" fill="currentColor" stroke="none"/></svg>',
+      arrowUp: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></svg>',
+      handHeart: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M11 14h2.5a1.5 1.5 0 0 0 0-3H9.2a3 3 0 0 0-2.1.9L3 16v4h11.5a3 3 0 0 0 2.6-1.5l3.6-6"/><path d="M12.5 8.6 10.9 7a2.1 2.1 0 0 1 3-3l.6.6.6-.6a2.1 2.1 0 0 1 3 3l-2.2 2.2a1.4 1.4 0 0 1-2 0Z"/></svg>',
+      calendar: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="16" rx="3"/><path d="M8 3v4M16 3v4M3.5 10.5h17"/><path d="M8 15h3"/></svg>',
+      bank: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 4l9 5.5"/><path d="M5 10v8M9.5 10v8M14.5 10v8M19 10v8"/><path d="M3 18h18M3 20.5h18"/></svg>',
+      alert: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2.5 19.5h19L12 3Z"/><path d="M12 9.5v4.5"/><path d="M12 16.8v.01"/></svg>',
+      gift: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="9" width="17" height="11" rx="2"/><path d="M3.5 13h17"/><path d="M12 9v11"/><path d="M12 9C12 7 10.5 5 9 5S7 6.3 7.6 7.3 10 9 12 9Z"/><path d="M12 9c0-2 1.5-4 3-4s1.4 1.3.8 2.3S14 9 12 9Z"/></svg>',
+      /* brand mark — your Drive logo, with multiple fallbacks if one URL is blocked */
+      brand: (function () {
+        const urls = [
+          "https://lh3.googleusercontent.com/d/1Sa4NuRnVRYUdI7TIyaDFvnX8Izwy8GCH=w400",
+          "https://drive.google.com/thumbnail?id=1Sa4NuRnVRYUdI7TIyaDFvnX8Izwy8GCH&sz=w400",
+          "https://drive.google.com/uc?export=view&id=1Sa4NuRnVRYUdI7TIyaDFvnX8Izwy8GCH",
+          "logo.png"
+        ];
+        return `<img src="${urls[0]}" alt="Healer Boy's" width="76" height="76" decoding="async"
+          data-fallbacks='${JSON.stringify(urls.slice(1))}'
+          onerror="(function(img){var f=[];try{f=JSON.parse(img.getAttribute('data-fallbacks')||'[]')}catch(e){} if(!f.length){img.onerror=null;return;} img.src=f.shift(); img.setAttribute('data-fallbacks', JSON.stringify(f));})(this)" />`;
+      })()
+    };
+
+    function toast(msg, kind = "") {
+      const el = document.createElement("div");
+      el.className = "toast " + kind;
+      el.textContent = msg;
+      document.getElementById("toasts").appendChild(el);
+      setTimeout(() => { el.classList.add("out"); setTimeout(() => el.remove(), 260); }, 2600);
+    }
+
+    function openSheet(html) {
+      const ov = document.getElementById("overlay"), sh = document.getElementById("sheet");
+      sh.innerHTML = '<div class="grab"></div>' + html;
+      ov.classList.add("show");
+    }
+    function closeSheet() { document.getElementById("overlay").classList.remove("show"); }
+    document.getElementById("overlay").addEventListener("click", e => {
+      if (e.target.id === "overlay") closeSheet();
+    });
+
+    function busy(btn, on, label) {
+      if (!btn) return;
+      if (on) { btn.dataset.old = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>' + (label ? `<span>${esc(label)}</span>` : ""); }
+      else { btn.disabled = false; btn.innerHTML = btn.dataset.old || btn.innerHTML; }
+    }
+
+    /* =====================================================================
+       COPY — one reusable routine (mirrors useCopy.js)
+       Returns true when the value was actually copied.
+    ===================================================================== */
+    async function copyRaw(text) {
+      const value = String(text == null ? "" : text);
+      if (!value) return false;
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(value);
+          return true;
+        }
+      } catch (err) { /* fall through */ }
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = value;
+        ta.setAttribute("readonly", "");
+        ta.style.position = "fixed"; ta.style.top = "-1000px"; ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select(); ta.setSelectionRange(0, value.length);
+        const ok = document.execCommand("copy");
+        document.body.removeChild(ta);
+        return ok;
+      } catch (err) { return false; }
+    }
+
+    function haptic(ms = 30) { try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) { } }
+
+    /* display-only grouping; the raw value stays ungrouped in the data */
+    function groupDigits(raw) {
+      return String(raw || "").replace(/\s+/g, "").replace(/(.{4})/g, "$1 ").trim();
+    }
+
+    /* screen-reader announcement for copy feedback */
+    function announceCopy(msg) {
+      const live = document.getElementById("payLive");
+      if (live) { live.textContent = ""; setTimeout(() => { live.textContent = msg; }, 40); }
+    }
+
+    /* the shared "Copied" swap: label + check icon for 1.8s */
+    function flashCopied(btn, normalHTML) {
+      if (!btn) return;
+      btn.innerHTML = ICONS.check.replace('width="16" height="16"', 'width="15" height="15"') + "<span>Copied</span>";
+      btn.classList.add("pay-copied");
+      clearTimeout(btn._copyTimer);
+      btn._copyTimer = setTimeout(() => {
+        btn.innerHTML = normalHTML;
+        btn.classList.remove("pay-copied");
+      }, 1800);
+    }
+
+    /**
+     * Reusable copy action: copies, haptics, toasts, announces, flashes the button.
+     * @param {string} key     unique key so several buttons can flash independently
+     * @param {string} value   raw text to copy
+     * @param {HTMLElement} btn  button to flash
+     * @param {string} normalHTML the button's resting innerHTML
+     * @param {string} toastMsg  toast + live-region message
+     */
+    async function useCopy(key, value, btn, normalHTML, toastMsg) {
+      const ok = await copyRaw(value);
+      if (ok) {
+        haptic(30);
+        flashCopied(btn, normalHTML);
+        toast(toastMsg || "Copied to clipboard", "ok");
+        announceCopy(toastMsg || "Copied to clipboard");
+      } else {
+        toast("Could not copy — long-press to select", "err");
+      }
+      return ok;
+    }
+
+    /* =====================================================================
+       AUTH
+    ===================================================================== */
+    const LS_SESSION = "hb_session_v2";
+
+    /* -------------------------------------------------------------------
+       AUTO-LOGOUT POLICY
+       Sessions live in sessionStorage only. The browser clears it when the
+       app (tab / PWA window) is closed, so viewer AND admin are signed out
+       automatically and land on the login page next time. A plain reload
+       inside the open app keeps the session.
+    ------------------------------------------------------------------- */
+    const sessionStore = (() => {
+      try { sessionStorage.setItem("__hb_t", "1"); sessionStorage.removeItem("__hb_t"); return sessionStorage; }
+      catch (e) { return null; }
+    })();
+
+    /* one-time migration: any old persistent session is dropped */
+    try { localStorage.removeItem(LS_SESSION); } catch (e) { }
+
+    function saveLocalSession() {
+      if (!sessionStore) return;
+      try {
+        if (state.session && state.session.user && state.session.user.local) {
+          sessionStore.setItem(LS_SESSION, JSON.stringify(state.session.user));
+        } else {
+          sessionStore.removeItem(LS_SESSION);
+        }
+      } catch (e) { }
+    }
+
+    function restoreLocalSession() {
+      if (!sessionStore) return false;
+      try {
+        const raw = sessionStore.getItem(LS_SESSION);
+        if (!raw) return false;
+        const user = JSON.parse(raw);
+        if (!user || !user.local) return false;
+        state.session = { user };
+        state.isAdmin = String(user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
+        return true;
+      } catch (e) { return false; }
+    }
+
+    function clearAllSessions() {
+      try { sessionStore && sessionStore.removeItem(LS_SESSION); } catch (e) { }
+      try { localStorage.removeItem(LS_SESSION); } catch (e) { }
+    }
+
+    async function initAuth() {
+      if (!sb) return;
+
+      // A local viewer/admin session wins: Supabase must not wipe it.
+      const hadLocal = restoreLocalSession();
+
+      const { data } = await sb.auth.getSession();
+      if (!hadLocal) setSession(data ? data.session : null);
+
+      sb.auth.onAuthStateChange((_event, s) => {
+        // Ignore Supabase null-events while a local session is in charge,
+        // otherwise INITIAL_SESSION/SIGNED_OUT instantly logs the user out.
+        const localActive = !!(state.session && state.session.user && state.session.user.local);
+        if (localActive && (!s || !s.user)) return;
+        setSession(s);
+        saveLocalSession();
+        if (s && s.user && !s.user.local) ensureReportRealtime();
+        else stopReportRealtime();
+        route();
+      });
+    }
+
+    function setSession(session) {
+      state.session = session;
+      const email = session?.user?.email || "";
+      state.isAdmin = !!email && email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+      saveLocalSession();
+    }
+
+    async function googleProviderOn() {
+      try {
+        const res = await fetch(SUPABASE_URL + "/auth/v1/settings", {
+          headers: { apikey: SUPABASE_ANON_KEY }
+        });
+        const data = await res.json();
+        return !!(data && data.external && data.external.google);
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function openAsViewer() {
+      state.session = { user: { email: "", user_metadata: { name: "Viewer" }, local: true } };
+      state.isAdmin = false;
+      saveLocalSession();
+    }
+
+    async function loadLiveData() {
+      if (!sb) return;
+      await db.fetchAll();
+    }
+
+    async function signInGoogle() {
+      // Google provider is disabled on this Supabase project. Calling it returns
+      // {"error_code":"validation_failed","msg":"Unsupported provider: provider is not enabled"}
+      // and replaces the app with that raw JSON page. Never redirect there.
+      openAsViewer();
+      try { await loadLiveData(); } catch (e) { console.error(e); }
+      route();
+      toast("Google sign-in is off, so you are in as a viewer.", "ok");
+    }
+
+    async function signInAdmin(email, password) {
+      const emailOk = email.trim().toLowerCase() === ADMIN_EMAIL.toLowerCase();
+      const passOk = password === ADMIN_PASSWORD;
+      if (!emailOk || !passOk) throw new Error("Wrong admin Gmail or password.");
+
+      // Works even if the Supabase Auth user was never confirmed.
+      state.session = { user: { email: ADMIN_EMAIL, user_metadata: { name: "Healer Boy's Admin" }, local: true } };
+      state.isAdmin = true;
+      saveLocalSession();
+
+      if (sb) {
+        try {
+          const { error } = await sb.auth.signInWithPassword({ email: ADMIN_EMAIL, password });
+          if (!error) {
+            const { data } = await sb.auth.getSession();
+            if (data && data.session) setSession(data.session);
+          }
+          await loadLiveData();
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
+
+    async function signOut() {
+      clearAllSessions();
+      if (sb) { try { await sb.auth.signOut(); } catch (e) { } }
+      state.session = null; state.isAdmin = false;
+      try { localStorage.removeItem(LS_DATA); } catch (e) { }
+      navigate("/login");
+      toast("Signed out");
+    }
+
+    function requireAuth() { return !!state.session; }
+
+    /* =====================================================================
+       EMAILJS
+    ===================================================================== */
+    async function sendReminderEmail(member, monthLabel, amount) {
+      const to_email = member.email || `${member.name.toLowerCase().replace(/[^a-z]+/g, ".")}@gmail.com`;
+      const body = `Hi ${member.name}, your fee for ${monthLabel} is still due: ${taka(amount)}. Please pay by bKash or Nagad: ${state.settings.bkash_number || "-"} / ${state.settings.nagad_number || "-"}.`;
+      if (!emailJSReady()) { await sleep(800); return { simulated: true, to_email, body }; }
+      const res = await window.emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        to_name: member.name,
+        to_email,
+        subject: "Monthly fee reminder",
+        message: body,
+        month: monthLabel,
+        amount: String(amount),
+        bkash: state.settings.bkash_number || "",
+        nagad: state.settings.nagad_number || ""
+      });
+      return { simulated: false, to_email, body, res };
+    }
+
+    async function remindOne(member, btn) {
+      if (!state.isAdmin) { toast("Only the admin can send reminders", "err"); return; }
+      const dues = memberDues(member.id);
+      if (!dues.count) { toast("No dues for this member", "ok"); return; }
+      const label = duePeriodLabel(dues.months[0]);
+      busy(btn, true, "Sending");
+      try {
+        const r = await sendReminderEmail(member, label, dues.fee);
+        toast(r.simulated ? `Reminder queued for ${member.name} (EmailJS not configured)` : `Reminder sent to ${member.name}`, r.simulated ? "" : "ok");
+      } catch (e) {
+        toast("Send failed: " + (e && e.text ? e.text : e.message), "err");
+      } finally { busy(btn, false); }
+    }
+
+    async function sendAllReminders(btn) {
+      if (!state.isAdmin) return navigate("/reminders");
+      const list = duesList("Monthly Fee");
+      if (!list.length) { toast("Nobody has dues right now", "ok"); return; }
+      busy(btn, true, `Sending 0/${list.length}`);
+      let ok = 0;
+      for (let i = 0; i < list.length; i++) {
+        const r = list[i];
+        btn.innerHTML = `<span class="spinner"></span><span>Sending ${i + 1}/${list.length}</span>`;
+        try {
+          await sendReminderEmail(r.member, duePeriodLabel(r.months[0]), r.fee);
+          ok++;
+        } catch (e) { console.error(e); }
+        await sleep(350); // be gentle with the EmailJS rate limit
+      }
+      try {
+        await db.saveSettings({ last_sent_at: new Date().toISOString(), last_sent_count: ok });
+      } catch (e) { toast("Could not save last-sent time", "err"); }
+      busy(btn, false);
+      toast(`Sent to ${ok} member${ok === 1 ? "" : "s"}`, "ok");
+      render();
+    }
+
+    /* =====================================================================
+       PDF RECEIPT (generated locally, no dependency)
+    ===================================================================== */
+    function pdfEsc(s) { return String(s).replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)"); }
+
+    function buildReceiptPdf(member) {
+      const pays = state.payments
+        .filter(p => p.member_id === member.id)
+        .sort((a, b) => paymentSortIndex(b) - paymentSortIndex(a) || (b.date || "").localeCompare(a.date || ""));
+      const total = pays.reduce((a, p) => a + Number(p.amount || 0), 0);
+      const dues = memberDues(member.id);
+      const t = totals();
+
+      const ops = [];
+      const T = (x, y, size, text, bold) =>
+        ops.push(`BT /${bold ? "F2" : "F1"} ${size} Tf ${x} ${y} Td (${pdfEsc(text)}) Tj ET`);
+      const L = (x1, y, x2) => ops.push(`${x1} ${y} m ${x2} ${y} l S`);
+
+      T(56, 780, 20, "HEALER BOY'S", true);
+      T(56, 762, 9.5, "Community fund receipt", false);
+      L(56, 752, 539);
+      T(56, 730, 11, "Member", true);
+      T(56, 714, 13, member.name, true);
+      T(56, 698, 9.5, `Member ID: ${member.id}`, false);
+      T(380, 730, 11, "Issued", true);
+      T(380, 714, 9.5, new Date().toISOString().slice(0, 10), false);
+
+      let y = 668;
+      T(56, y, 10, "DATE", true); T(160, y, 10, "DESCRIPTION", true); T(460, y, 10, "AMOUNT (BDT)", true);
+      y -= 6; L(56, y, 539); y -= 16;
+      pays.slice(0, 22).forEach(p => {
+        T(56, y, 9.5, p.date || "-", false);
+        T(160, y, 9.5, String(p.type || "Fee").slice(0, 44), false);
+        T(539, y, 9.5, Number(p.amount || 0).toLocaleString("en-US"), false);
+        y -= 15;
+      });
+      if (!pays.length) { T(56, y, 9.5, "No payments recorded yet.", false); y -= 15; }
+      y -= 6; L(56, y, 539); y -= 18;
+      T(160, y, 11, "TOTAL PAID", true); T(539, y, 11, total.toLocaleString("en-US"), true);
+      y -= 16;
+      T(160, y, 10, `Months still due (${YEAR()})`, false);
+      T(539, y, 10, dues.count ? `${dues.count} month(s) - BDT ${dues.amount.toLocaleString("en-US")}` : "None", false);
+      y -= 16;
+      T(160, y, 10, "Club fund balance", false); T(539, y, 10, t.fund.toLocaleString("en-US"), false);
+
+      L(56, y - 20, 539);
+      T(56, y - 38, 8.5, "Pay by bKash " + (state.settings.bkash_number || "-") + "  or  Nagad " + (state.settings.nagad_number || "-"), false);
+      T(56, y - 50, 8.5, "Generated by Healer Boy's fund tracker.", false);
+
+      const content = ops.join("\n");
+      const objs = [
+        "<< /Type /Catalog /Pages 2 0 R >>",
+        "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>",
+        "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+        "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>",
+        `<< /Length ${content.length} >>\nstream\n${content}\nendstream`
+      ];
+      let out = "%PDF-1.4\n";
+      const offs = [];
+      objs.forEach((o, i) => { offs.push(out.length); out += `${i + 1} 0 obj\n${o}\nendobj\n`; });
+      const xref = out.length;
+      out += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n`;
+      offs.forEach(o => { out += String(o).padStart(10, "0") + " 00000 n \n"; });
+      out += `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
+      return out;
+    }
+
+    function downloadReceipt(member) {
+      try {
+        const pdf = buildReceiptPdf(member);
+        const blob = new Blob([pdf], { type: "application/pdf" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = `receipt-${member.name.replace(/\s+/g, "-").toLowerCase()}.pdf`;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+        toast("Receipt downloaded", "ok");
+      } catch (e) { toast("Could not build PDF", "err"); }
+    }
+
+    /* =====================================================================
+       ROUTER
+    ===================================================================== */
+    const NAV = [
+      { path: "/home", label: "Home", icon: "home" },
+      { path: "/pay", label: "Payment", icon: "cardNav" },
+      { path: "/members", label: "Members", icon: "users" },
+      { path: "/donations", label: "Donation", icon: "heart" },
+      { path: "/profile", label: "Profile &amp; Settings", icon: "user", long: true }
+    ];
+    const NAV_PATHS = NAV.map(n => n.path);
+    /* sub-pages that belong to a tab: highlight the parent, keep nav visible.
+       /dues has no tab of its own any more; it opens from the Home "Dues" card. */
+    const NAV_PARENT = { "/member": "/members", "/report": "/members", "/dues": "/home", "/reminders": "/profile" };
+
+    function navIndexFor(p) {
+      const exact = NAV.findIndex(n => n.path === p);
+      if (exact > -1) return exact;
+      for (const key in NAV_PARENT) {
+        if (p === key || p.startsWith(key + "/")) {
+          const i = NAV.findIndex(n => n.path === NAV_PARENT[key]);
+          if (i > -1) return i;
+        }
+      }
+      return 0;
+    }
+
+    function path() {
+      const h = (location.hash || "").replace(/^#/, "");
+      return h || "/home";
+    }
+    function navigate(p) { location.hash = p; }
+
+    /* ---- liquid glass hooks (presentation only; no data/​auth/​logic) ---- */
+    const REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let fundCounted = false;
+
+    function navButtonHTML(n, active, duesCount) {
+      return `${ICONS[n.icon]}<span class="nav-lbl${n.long ? " nav-lbl-long" : ""}">${n.label}</span>`;
+    }
+
+    function renderNav() {
+      const nav = document.getElementById("nav");
+      const p = path();
+      const idx = navIndexFor(p);
+      const show = NAV_PATHS.includes(p) || p.startsWith("/member/") || p === "/dues" || p === "/reminders" || p === "/report";
+      nav.style.setProperty("--tab", idx);
+      nav.classList.toggle("show", show && requireAuth());
+
+      if (!nav.classList.contains("show")) {
+        nav.innerHTML = "";
+        nav.dataset.built = "";
+        return;
+      }
+
+      const duesCount = duesList("Monthly Fee").length;
+
+      if (nav.dataset.built !== "1") {
+        /* first build: pill + buttons (starts settled on the active tab) */
+        nav.innerHTML = `<div class="nav-pill" aria-hidden="true"><div class="nav-pill-in"></div></div>` +
+          NAV.map(n => {
+            const active = navIndexFor(p) === NAV.findIndex(x => x.path === n.path);
+            return `<button class="nav-btn nav-item ${active ? "active" : ""}" data-nav="${n.path}" aria-current="${active}">${navButtonHTML(n, active, duesCount)}</button>`;
+          }).join("");
+        nav.dataset.built = "1";
+        nav.querySelectorAll("[data-nav]").forEach(b => b.onclick = () => {
+          const pill = nav.querySelector(".nav-pill");
+          if (pill && !REDUCED && b.dataset.nav !== path()) {
+            pill.classList.remove("moving");
+            void pill.offsetWidth; /* restart the stretch keyframe */
+            pill.classList.add("moving");
+            setTimeout(() => pill.classList.remove("moving"), 360);
+          }
+          navigate(b.dataset.nav);
+        });
+      } else {
+        /* refresh in place so the pill element survives and can slide */
+        const cur = navIndexFor(p);
+        nav.querySelectorAll("[data-nav]").forEach((b, i) => {
+          const active = i === cur;
+          b.classList.toggle("active", active);
+          b.setAttribute("aria-current", String(active));
+        });
+        const memDef = NAV.find(n => n.path === "/members");
+        const memBtn = nav.querySelector('[data-nav="/members"]');
+        if (memBtn && memDef) memBtn.innerHTML = navButtonHTML(memDef, cur === NAV.findIndex(x => x.path === "/members"), duesCount);
+      }
+    }
+
+    /* first load only: total fund counts up from 0 (800ms ease-out) */
+    function countFundUp() {
+      const el = document.getElementById("fundBig");
+      if (!el || fundCounted) return;
+      fundCounted = true;
+      const target = totals().fund;
+      if (REDUCED || !target) { el.textContent = fmtNumOnly(target); return; }
+      const t0 = performance.now(), dur = 800;
+      el.textContent = fmtNumOnly(0);
+      (function frame(now) {
+        if (!el.isConnected) return;
+        const k = Math.min(1, (now - t0) / dur);
+        const eased = 1 - Math.pow(1 - k, 3);
+        el.textContent = fmtNumOnly(Math.round(target * eased));
+        if (k < 1) requestAnimationFrame(frame);
+      })(t0);
+    }
+
+    function route() {
+      const p = path();
+      if (!requireAuth() && p !== "/login") return navigate("/login");
+      if (requireAuth() && p === "/login") return navigate("/home");
+      /* the Profile tab is inside NAV, so it is a normal route (no admin gate) */
+      if (p === "/reminders" && !state.isAdmin) return navigate("/home");
+      render();
+      const view = document.getElementById("view");
+      if (p !== "/home") view.scrollTop = 0;
+    }
+
+    function render() {
+      renderNav();
+      const p = path();
+      const v = document.getElementById("view");
+      let html = "";
+      if (p === "/login") html = ScreenLogin();
+      else if (p === "/home") html = ScreenHome();
+      else if (p === "/members") html = ScreenMembers();
+      else if (p.startsWith("/member/")) html = ScreenMemberDetail(p.split("/")[2]);
+      else if (p === "/donations") html = ScreenDonations();
+      else if (p === "/dues") html = ScreenDues();
+      else if (p === "/reminders") html = ScreenReminders();
+      else if (p === "/report") html = ScreenReport();
+      else if (p === "/pay") html = ScreenPay();
+      else if (p === "/profile") html = ScreenProfile();
+      else html = ScreenHome();
+      v.innerHTML = html;
+      bind(p);
+      bindPaymentOptions(v);
+      if (p === "/home") countFundUp();
+      if (p === "/report") enterReportFresh();
+
+      /* floating "+ Add member": Members tab only, admin only (RLS blocks viewers anyway) */
+      const fabHost = document.getElementById("fabHost");
+      if (fabHost) {
+        if (p === "/members" && state.isAdmin) {
+          fabHost.innerHTML = `<button class="mb-fab" id="addMemberFab" type="button" aria-label="Add member">
+            ${ICONS.plus.replace('width="18" height="18"', 'width="20" height="20"')}<span>Add member</span></button>`;
+          const fab = fabHost.querySelector("#addMemberFab");
+          if (fab) fab.onclick = openAddMember;
+        } else {
+          fabHost.innerHTML = "";
+        }
+      }
+    }
+
+    /* =====================================================================
+       SCREEN 1 — LOGIN
+    ===================================================================== */
+    function ScreenLogin() {
+      return `<div class="login-wrap">
+      <div class="logo brand" aria-label="Healer Boy's">${ICONS.brand}</div>
+
+      <h1 class="login-title">Healer Boy's</h1>
+      <p class="login-byline">Developed by <strong>Imtiaj Rafi</strong></p>
+      <p class="sub" style="font-size:14px;margin-top:12px">Sign in to see the fund, members and donations.</p>
+
+      <div style="height:24px"></div>
+
+      <button class="btn btn-outline" id="googleBtn" style="background:#fff;border-color:rgba(255,255,255,.9)">
+        ${ICONS.usersSmall}<span>Continue as viewer</span>
+      </button>
+
+      <div class="divider"><span>ADMIN</span></div>
+
+      <div class="card" style="padding:16px;background:#ffffff">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+          <span style="color:var(--primary)">${ICONS.lock}</span>
+          <p class="eyebrow" style="margin:0">Admin sign in</p>
+        </div>
+        <form id="adminForm" autocomplete="on">
+          <div style="margin-bottom:12px">
+            <label class="label" for="aEmail">Healer Boy's Gmail</label>
+            <input class="field" id="aEmail" type="email" inputmode="email" autocomplete="username"
+              placeholder="Healer Boy's Gmail" required />
+          </div>
+          <div>
+            <label class="label" for="aPass">Password</label>
+            <input class="field" id="aPass" type="password" autocomplete="current-password"
+              placeholder="Your password" required />
+          </div>
+          <div id="aError" class="error-box hidden"></div>
+          <div style="height:14px"></div>
+          <button class="btn btn-primary" type="submit" id="aSubmit">Sign in as admin</button>
+        </form>
+      </div>
+    </div>`;
+    }
+
+    /* =====================================================================
+       SCREEN 2 — HOME
+    ===================================================================== */
+    function ScreenHome() {
+      const t = totals();
+      const dueRows = duesList("Monthly Fee");
+      const u = state.session?.user || {};
+      const fullName = u.user_metadata?.name || (u.email ? u.email.split("@")[0] : "") || "Member";
+      const avatarUrl = u.user_metadata?.avatar_url || u.user_metadata?.picture || "";
+      const roleLabel = state.isAdmin ? "Admin" : "Member";
+
+      return `<div class="screen home-scroll">
+      <div class="home-top">
+        <div class="home-avatar home-avatar-logo" aria-label="Healer Boy's">
+          ${ICONS.brand}
+        </div>
+        <div class="home-greet">
+          <p class="home-hello">Hello,</p>
+          <p class="home-name">${esc(fullName)}</p>
+          <button class="home-role-badge ${state.isAdmin ? "is-admin" : ""}" data-go="/profile"
+            aria-label="Open profile — signed in as ${roleLabel}">
+            ${ICONS.crown}<span>${roleLabel}</span>
+          </button>
+        </div>
+        <button class="home-bell" id="homeBellBtn" aria-label="Notifications${dueRows.length ? `, ${dueRows.length} unpaid` : ""}">
+          ${ICONS.bell}
+          ${dueRows.length ? `<span class="dot" aria-hidden="true"></span>` : ""}
+        </button>
+      </div>
+
+      ${state.demo ? `<div class="banner" style="margin-bottom:12px">
+        <span style="flex:none">${ICONS.settings}</span>
+        <span>Sample data is shown because Supabase keys are not configured yet.</span>
+      </div>` : ""}
+
+      <section class="fund-summary" aria-labelledby="fundSummaryTitle" aria-describedby="fundSummaryFormula">
+        <div class="fund-summary__head">
+          <span class="fund-summary__icon" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 7.5V6a1.5 1.5 0 0 1 1.2-1.5l9-1.8A1.5 1.5 0 0 1 17 4.2v3.3" />
+              <rect x="3" y="7.5" width="18" height="13.5" rx="3" />
+              <path d="M21 11.5h-4a2.75 2.75 0 0 0 0 5.5h4" />
+              <circle cx="17" cy="14.25" r=".75" fill="currentColor" stroke="none" />
+            </svg>
+          </span>
+          <div class="fund-summary__titles">
+            <h2 class="fund-summary__title" id="fundSummaryTitle">Total Fund</h2>
+            <p class="fund-summary__subtitle" id="fundSummaryFormula">Net Balance &middot; Fees &minus; Donations</p>
+          </div>
+          <span class="fund-summary__live" aria-hidden="true"><i></i>LIVE</span>
+        </div>
+
+        <p class="fund-summary__amount" aria-label="Net balance: ${esc(taka(t.fund))}">
+          <span class="fund-summary__currency" aria-hidden="true">৳</span><span id="fundBig">${fmtNumOnly(t.fund)}</span>
+        </p>
+
+        <div class="fund-summary__foot">
+          <div class="fund-summary__stat">
+            <p class="fund-summary__stat-label">Collected</p>
+            <p class="fund-summary__stat-value in">${taka(t.collected)}</p>
+          </div>
+          <span class="fund-summary__foot-div" aria-hidden="true"></span>
+          <div class="fund-summary__stat">
+            <p class="fund-summary__stat-label">Donated</p>
+            <p class="fund-summary__stat-value out">&minus; ${taka(t.donated)}</p>
+          </div>
+        </div>
+      </section>
+
+      <button class="paycard" data-go="/pay" aria-label="Open payment — make your contribution">
+        <span class="paycard-icon">${ICONS.cardNav.replace('width="22" height="22"', 'width="22" height="22"')}</span>
+        <span class="paycard-main">
+          <span class="paycard-title">Payment</span>
+          <span class="paycard-sub">Make your contribution</span>
+        </span>
+        <span class="paycard-art" aria-hidden="true">
+          <svg width="56" height="38" viewBox="0 0 56 38" fill="none">
+            <rect x="6" y="6" width="46" height="28" rx="6" fill="#BFDBFE" opacity=".55"/>
+            <rect x="0" y="0" width="46" height="28" rx="6" fill="#3B82F6"/>
+            <rect x="0" y="7" width="46" height="5" fill="#2563EB"/>
+            <rect x="5" y="17" width="12" height="4" rx="2" fill="#DBEAFE"/>
+            <circle cx="38" cy="20" r="4" fill="#93C5FD"/>
+          </svg>
+        </span>
+        <span class="feat-arrow paycard-arrow">${ICONS.chevron.replace('width="18" height="18"', 'width="14" height="14"')}</span>
+      </button>
+
+      <div class="feat-grid feat-grid-4">
+        <button class="feat-card c-green" data-go="/donations" aria-label="Open donations">
+          <div class="feat-top">
+            <span class="feat-icon c-green">${ICONS.handHeart}</span>
+            <span class="feat-arrow">${ICONS.chevron.replace('width="18" height="18"', 'width="14" height="14"')}</span>
+          </div>
+          <p class="feat-title">Donations</p>
+          <p class="feat-value c-green num">${taka(t.donated)}</p>
+          <p class="feat-sub">Total donations collected</p>
+        </button>
+
+        <button class="feat-card c-purple" data-go="/members" aria-label="Open members">
+          <div class="feat-top">
+            <span class="feat-icon c-purple">${ICONS.users.replace('width="22" height="22"', 'width="20" height="20"')}</span>
+            <span class="feat-arrow">${ICONS.chevron.replace('width="18" height="18"', 'width="14" height="14"')}</span>
+          </div>
+          <p class="feat-title">Members</p>
+          <p class="feat-value c-purple num">${state.members.length}</p>
+          <p class="feat-sub">Total members</p>
+        </button>
+
+        <button class="feat-card c-pink" data-go="${state.isAdmin ? "/reminders" : "/dues"}" aria-label="Open reminders">
+          <div class="feat-top">
+            <span class="feat-icon c-pink">${ICONS.calendar}</span>
+            <span class="feat-arrow">${ICONS.chevron.replace('width="18" height="18"', 'width="14" height="14"')}</span>
+          </div>
+          <p class="feat-title">Reminders</p>
+          <p class="feat-value c-pink num">${dueRows.length}</p>
+          <p class="feat-sub">Upcoming dues</p>
+        </button>
+
+        <button class="feat-card c-orange" data-go="/profile" aria-label="Open profile and settings">
+          <div class="feat-top">
+            <span class="feat-icon c-orange">${ICONS.user.replace('width="22" height="22"', 'width="20" height="20"')}</span>
+            <span class="feat-arrow">${ICONS.chevron.replace('width="18" height="18"', 'width="14" height="14"')}</span>
+          </div>
+          <p class="feat-title">Profile &amp; Settings</p>
+          <p class="feat-value c-orange">View details</p>
+          <p class="feat-sub">View account info</p>
+        </button>
+      </div>
+
+      <div class="stay-card">
+        <svg class="stay-plane" width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M21.5 2.5 2 10.3c-.7.3-.7 1.3.1 1.5l6.7 1.9 2.3 7.1c.3.8 1.3.9 1.7.1l2-3.9 5.3 3.9c.7.5 1.7.1 1.8-.7l2.1-16.4c.1-.8-.7-1.4-1.5-1.3Z" />
+        </svg>
+        <div class="stay-top">
+          <span class="stay-icon">${ICONS.msgHeart}</span>
+          <div>
+            <p class="stay-title">Stay Connected</p>
+            <p class="stay-sub">Keep track of your payments, donations and member activities.</p>
+          </div>
+        </div>
+        <button class="stay-btn" data-go="/profile">
+          <span>View Details</span>${ICONS.chevron.replace('width="18" height="18"', 'width="15" height="15"').replace("currentColor", "#fff")}
+        </button>
+      </div>
+    </div>`;
+    }
+
+    /* =====================================================================
+       MEMBERS LIST
+    ===================================================================== */
+    /* card tints: each member card fades from white into one of these at bottom-right */
+    /* =====================================================================
+       FEE REPORT — per-member paid / due table (Bengali), copy to Excel / CSV
+       Everything is computed from the real payments, nothing is typed in.
+    ===================================================================== */
+    /* FEE_START is defined with the top-level CONSTANTS */
+    const BN_DIG = "০১২৩৪৫৬৭৮৯";
+    const BN_SHORT = ["জানু", "ফেব্রু", "মার্চ", "এপ্রি", "মে", "জুন", "জুল", "আগ", "সেপ", "অক্টো", "নভেম", "ডিসে"];
+    const BN_FULL = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"];
+    const REPORT_HEAD = ["নাম", "পরিশোধিত সময়কাল", "পরিশোধিত মাস", "প্রতি মাসের ফি (টাকা)", "মোট পরিশোধিত (টাকা)", "বকেয়া সময়কাল", "বকেয়া মাস", "মোট বকেয়া (টাকা)", "স্ট্যাটাস"];
+    const bnNum = (n) => String(n).replace(/\d/g, d => BN_DIG[d]);
+    const bnMoney = (n) => bnNum(Number(n || 0).toLocaleString("en-US"));
+    const mIdx = (y, m) => y * 12 + (m - 1);
+    const idxBn = (i) => `${BN_SHORT[i % 12]} ${bnNum(Math.floor(i / 12))}`;
+    const rangeBn = (a, b) => a === b ? idxBn(a) : `${idxBn(a)} — ${idxBn(b)}`;
+
+    function feeReport() {
+      const now = nowLocal();
+      const cur = mIdx(now.getFullYear(), now.getMonth() + 1);
+      const rows = state.members.map(m => {
+        const pays = state.payments.filter(p => p.member_id === m.id);
+        const feePays = pays.filter(p => /Monthly Fee|Advanced Fee/i.test(String(p.type || "")));
+        const paid = new Set();
+        const amounts = {};
+        feePays.forEach(p => {
+          const k = paymentMonthKey(p);
+          if (!k) return;
+          paid.add(mIdx(k.y, k.m));
+          const a = Number(p.amount || 0);
+          amounts[a] = (amounts[a] || 0) + 1;
+        });
+        /* monthly fee = the amount this member pays most often */
+        let fee = DEFAULT_FEE, best = 0;
+        Object.keys(amounts).forEach(a => { if (amounts[a] > best) { best = amounts[a]; fee = Number(a); } });
+        const fines = pays.filter(p => /Late Fine/i.test(String(p.type || ""))).reduce((s, p) => s + Number(p.amount || 0), 0);
+        const totalPaid = pays.reduce((s, p) => s + Number(p.amount || 0), 0);
+        const sorted = [...paid].sort((a, b) => a - b);
+        const first = sorted.length ? sorted[0] : null;
+        const last = sorted.length ? sorted[sorted.length - 1] : null;
+        /* dues start the month AFTER the last paid month; paid-ahead members owe nothing.
+           A member who never paid owes from the fee start month. */
+        const start = last != null ? last + 1 : mIdx(FEE_START.y, FEE_START.m);
+        const missing = [];
+        for (let i = start; i <= cur; i++) if (!paid.has(i)) missing.push(i);
+        const status = missing.length ? "due" : (last != null && last > cur ? "advance" : "ok");
+        return { m, fee, fines, totalPaid, paidCount: paid.size, first, last, missing, dueAmount: missing.length * fee, status };
+      });
+      rows.sort((a, b) => a.m.name.localeCompare(b.m.name));
+      return { rows, cur, now };
+    }
+
+    function reportCells(r) {
+      const paidPeriod = r.first != null ? rangeBn(r.first, r.last) : "-";
+      const feeTxt = bnMoney(r.fee) + (r.fines ? ` (+${bnMoney(r.fines)} ফাইন)` : "");
+      const duePeriod = r.missing.length ? rangeBn(r.missing[0], r.missing[r.missing.length - 1]) : "-";
+      const status = { due: "বকেয়া আছে", advance: "অগ্রিম দেওয়া", ok: "হালনাগাদ" }[r.status];
+      return [r.m.name, paidPeriod, bnNum(r.paidCount), feeTxt, bnMoney(r.totalPaid), duePeriod, bnNum(r.missing.length), bnMoney(r.dueAmount), status];
+    }
+
+    function reportTSV() {
+      const { rows } = feeReport();
+      return [REPORT_HEAD, ...rows.map(reportCells)].map(r => r.join("\t")).join("\n");
+    }
+
+    function downloadReportCsv() {
+      const { rows } = feeReport();
+      const q = s => `"${String(s).replace(/"/g, '""')}"`;
+      const csv = "\uFEFF" + [REPORT_HEAD, ...rows.map(reportCells)].map(r => r.map(q).join(",")).join("\r\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `member-fee-report-${todayISO()}.csv`;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+      toast("CSV ডাউনলোড হয়েছে", "ok");
+    }
+
+    function ScreenReport() {
+      const { rows, now } = feeReport();
+      const totalPaid = rows.reduce((a, r) => a + r.totalPaid, 0);
+      const totalDue = rows.reduce((a, r) => a + r.dueAmount, 0);
+      const dueN = rows.filter(r => r.status === "due").length;
+      const stCls = { due: "due", advance: "adv", ok: "ok" };
+      reportSignatureSeen = reportDataSignature();
+
+      return `<div class="screen rp-screen">
+      <div class="mb-head">
+        <button class="mb-back" data-go="/members" aria-label="Back to members">${ICONS.back}</button>
+        <h1 class="mb-title" style="font-size:20px;line-height:1.3">সদস্য ফি ও বকেয়া রিপোর্ট</h1>
+      </div>
+      <p class="rp-asof">${BN_FULL[now.getMonth()]} ${bnNum(now.getFullYear())} পর্যন্ত</p>
+      <p class="rp-live" id="rpLive" role="status" aria-live="polite"><i></i>লাইভ রিপোর্ট · ${reportFreshLabel()}</p>
+
+      <div class="rp-sum">
+        <div class="rp-sum-card"><p class="rp-sum-label">মোট পরিশোধিত</p><p class="rp-sum-val paid">৳${bnMoney(totalPaid)}</p></div>
+        <div class="rp-sum-card"><p class="rp-sum-label">মোট বকেয়া</p><p class="rp-sum-val due">৳${bnMoney(totalDue)}</p></div>
+        <div class="rp-sum-card"><p class="rp-sum-label">বকেয়া সদস্য</p><p class="rp-sum-val cnt">${bnNum(dueN)} জন</p></div>
+      </div>
+
+      <div class="rp-actions">
+        <button class="rp-btn primary" id="rpCopyBtn" type="button" aria-label="রিপোর্ট কপি করুন, Excel-এ পেস্ট করার জন্য">${ICONS.doc}<span>Excel-এ কপি</span></button>
+        <button class="rp-btn" id="rpCsvBtn" type="button" aria-label="CSV ফাইল ডাউনলোড করুন">${ICONS.doc}<span>CSV ডাউনলোড</span></button>
+      </div>
+
+      <p class="rp-hint">ডানে স্ক্রল করে সব কলাম দেখুন</p>
+
+      <div class="rp-scroll" role="region" aria-label="সদস্য ফি রিপোর্ট টেবিল" tabindex="0">
+        <table class="rp">
+          <thead><tr>${REPORT_HEAD.map(h => `<th scope="col">${h}</th>`).join("")}</tr></thead>
+          <tbody>
+            ${rows.length ? rows.map(r => {
+              const c = reportCells(r);
+              return `<tr>
+                <th scope="row">${esc(c[0])}</th>
+                <td>${esc(c[1])}</td>
+                <td class="r">${esc(c[2])}</td>
+                <td>${esc(c[3])}</td>
+                <td class="r amt-paid">${esc(c[4])}</td>
+                <td>${esc(c[5])}</td>
+                <td class="r">${esc(c[6])}</td>
+                <td class="r ${r.dueAmount ? "amt-due" : ""}">${esc(c[7])}</td>
+                <td><span class="rp-st ${stCls[r.status]}">${esc(c[8])}</span></td>
+              </tr>`;
+            }).join("") : `<tr><td colspan="9" style="text-align:center;padding:24px">কোনো সদস্য নেই</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+    }
+
+    const MEMBER_TINTS = ["#EDE9FE", "#FCE7F3", "#D1FAE5", "#DBEAFE", "#FFEDD5"];
+
+    /* one pass over members: status, dues, paid totals, activity */
+    function memberRows() {
+      const yr = YEAR();
+      return state.members.map(m => {
+        const dues = memberDues(m.id);
+        const pays = state.payments.filter(p => p.member_id === m.id);
+        return {
+          m,
+          due: dues.count > 0,
+          dueAmount: dues.amount,
+          paidTotal: pays.reduce((a, p) => a + Number(p.amount || 0), 0),
+          active: pays.some(p => { const k = paymentMonthKey(p); return !!k && k.y === yr; })
+        };
+      });
+    }
+
+    function ScreenMembers() {
+      const rows = memberRows();
+      const total = rows.length;
+      const activeN = rows.filter(r => r.active).length;
+      const dueN = rows.filter(r => r.due).length;
+      const paidN = total - dueN;
+      const q = state.memberQuery.trim().toLowerCase();
+
+      let list = rows.filter(r => !q || r.m.name.toLowerCase().includes(q));
+      if (state.memberFilter === "paid") list = list.filter(r => !r.due);
+      if (state.memberFilter === "due") list = list.filter(r => r.due);
+      list = list.slice().sort((a, b) => {
+        if (state.memberSort === "due") return (b.dueAmount - a.dueAmount) || a.m.name.localeCompare(b.m.name);
+        if (state.memberSort === "name") return a.m.name.localeCompare(b.m.name);
+        /* default: whoever paid the most is first; ties fall back to name */
+        return (b.paidTotal - a.paidTotal) || a.m.name.localeCompare(b.m.name);
+      });
+      const topPayerId = (list.length && state.memberSort === "paid" && list[0].paidTotal > 0) ? list[0].m.id : null;
+      const SORT_LABEL = { paid: "top payer first", due: "highest due first", name: "A to Z" };
+
+      const filters = [["all", "All", total], ["paid", "Paid", paidN], ["due", "Due", dueN]];
+
+      return `<div class="screen mb-screen">
+      <div class="mb-head">
+        <button class="mb-back" data-go="/home" aria-label="Back to home">${ICONS.back}</button>
+        <h1 class="mb-title">Members</h1>
+        <button class="home-bell" id="membersBellBtn" aria-label="Notifications${dueN ? `, ${dueN} dues pending` : ""}">
+          ${ICONS.bell}
+          ${dueN ? `<span class="dot" aria-hidden="true"></span>` : ""}
+        </button>
+      </div>
+
+      <div class="mb-search">
+        <label for="memberSearch" class="mb-sr">Search members</label>
+        <svg class="mb-search-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg>
+        <input id="memberSearch" type="search" placeholder="Search members" autocomplete="off"
+          value="${esc(state.memberQuery)}" />
+        <button class="mb-filter-btn" id="memberSortBtn" type="button"
+          aria-label="Sort members: ${SORT_LABEL[state.memberSort]}. Tap to change.">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" aria-hidden="true"><path d="M4 7h10"/><path d="M18 7h2"/><circle cx="16" cy="7" r="2"/><path d="M4 17h2"/><path d="M10 17h10"/><circle cx="8" cy="17" r="2"/></svg>
+        </button>
+      </div>
+
+      <div class="mb-summary">
+        <p class="mb-sum-label">Total Members</p>
+        <p class="mb-sum-num num">${total}</p>
+        <div class="mb-chips">
+          <span class="mb-chip-w"><span class="mb-dot" style="background:#A7F3D0"></span>Active <b class="num">${activeN}</b></span>
+          <span class="mb-chip-w"><span class="mb-dot" style="background:#FBCFE8"></span>Dues pending <b class="num">${dueN}</b></span>
+        </div>
+      </div>
+
+      <div class="mb-filters" role="group" aria-label="Filter members by payment status">
+        ${filters.map(([k, label, n]) => `<button class="mb-chip" type="button" data-mfilter="${k}"
+          aria-pressed="${state.memberFilter === k}">${label}<span class="n num">${n}</span></button>`).join("")}
+      </div>
+
+      <button class="mb-report" type="button" data-go="/report" aria-label="Open member fee and dues report table">
+        ${ICONS.doc}<span>ফি ও বকেয়া রিপোর্ট (টেবিল)</span>
+      </button>
+
+      <div class="mb-list">
+        ${list.length ? list.map((r, i) => `
+          <button class="mb-card" type="button" data-member="${r.m.id}" style="--tint:${MEMBER_TINTS[i % MEMBER_TINTS.length]}"
+            aria-label="${esc(r.m.name)}, ${r.due ? "due " + taka(r.dueAmount) : "paid"}">
+            <span class="mb-av" ${r.m.avatar_url ? `style="background-image:url('${esc(r.m.avatar_url)}')"` : ""}>${r.m.avatar_url ? "" : initials(r.m.name)}</span>
+            <span class="mb-main">
+              <span class="mb-name">${esc(r.m.name)}${r.m.id === topPayerId ? `<span class="mb-top" title="Highest contributor">TOP</span>` : ""}</span>
+              <span class="mb-meta">
+                <span class="mb-badge">Member</span>
+                <span class="mb-paid num">Total paid ${taka(r.paidTotal)}</span>
+              </span>
+            </span>
+            ${r.due
+              ? `<span class="mb-pill due"><span class="mb-dot" style="background:currentColor"></span>Due ${taka(r.dueAmount)}</span>`
+              : `<span class="mb-pill paid">${ICONS.check.replace('width="16" height="16"', 'width="12" height="12"')}<span>Paid</span></span>`}
+          </button>`).join("")
+        : `<div class="mb-empty">No members match this filter.</div>`}
+      </div>
+
+      ${state.isAdmin ? `<form class="mb-add" id="addMemberCard" hidden>
+        <div class="mb-add-head">
+          <p class="mb-add-title">Add member</p>
+          <button type="button" class="mb-add-close" id="addMemberClose" aria-label="Close add member form">${ICONS.plus.replace('width="18" height="18"', 'width="16" height="16"').replace('<path d="M12 5v14M5 12h14"/>', '<path d="M6 6l12 12M18 6 6 18"/>')}</button>
+        </div>
+        <div class="mb-field">
+          <label class="label" for="mName">Full name</label>
+          <input class="field" id="mName" type="text" placeholder="e.g. Junaed Hossain Toni" required />
+        </div>
+        <div class="mb-field">
+          <label class="label" for="mEmail">Email (for reminders)</label>
+          <input class="field" id="mEmail" type="email" inputmode="email" placeholder="member@gmail.com" />
+        </div>
+        <div class="mb-field">
+          <label class="label" for="mAvatar">Photo (optional)</label>
+          <label class="mb-avatar-pick" for="mAvatar">
+            <span class="mb-avatar-preview" id="mAvatarPreview" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159"/><path d="M12 10.5l2.25-2.25a2.25 2.25 0 013.182 0L21.75 12"/><circle cx="9" cy="9" r="1.4"/></svg>
+            </span>
+            <span class="mb-avatar-text" id="mAvatarName">Choose a photo</span>
+            <input id="mAvatar" type="file" accept="image/*" hidden />
+          </label>
+        </div>
+        <button class="btn btn-primary" type="submit" id="mSubmitBtn">Add to members</button>
+      </form>` : ""}
+    </div>`;
+    }
+
+    /* admin: the floating "+ Add member" button reveals the form and focuses it */
+    function openAddMember() {
+      const card = document.getElementById("addMemberCard");
+      if (!card) return;
+      card.hidden = false;
+      card.scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "center" });
+      setTimeout(() => { const n = document.getElementById("mName"); if (n) n.focus(); }, 320);
+    }
+
+    /* =====================================================================
+       SCREEN 3 — MEMBER DETAIL
+    ===================================================================== */
+    /* colour + icon per payment type, for the payment-history list */
+    function payTypeMeta(type) {
+      const t = String(type || "");
+      if (t.includes("Late Fine"))   return { color: "#E11D48", soft: "#FFE4E9", icon: ICONS.alert };
+      if (t.includes("Advanced"))    return { color: "#0284C7", soft: "#E0F2FE", icon: ICONS.bank };
+      if (t.includes("Donation"))    return { color: "#DB2777", soft: "#FCE7F3", icon: ICONS.heart };
+      if (t.includes("Monthly") || t.includes("Fee")) return { color: "#4F46E5", soft: "#EEF2FF", icon: ICONS.wallet };
+      return { color: "#EA580C", soft: "#FFF7ED", icon: ICONS.doc };
+    }
+    /* friendly "May 2026" label from a month index {y,m} */
+    function payMonthLabel(p) {
+      const k = paymentMonthKey(p);
+      return k ? `${MONTHS[k.m - 1]} ${k.y}` : "";
+    }
+    /** "For month" dropdown: Sep 2024 → Aug 2027 (past, this year, and 2 years ahead) */
+    function payMonthOptions() {
+      const now = nowLocal();
+      const start = monthIndex(FEE_START.y, FEE_START.m);
+      const end = monthIndex(now.getFullYear() + 2, now.getMonth() + 1);
+      const cur = monthIndex(now.getFullYear(), now.getMonth() + 1);
+      let out = "";
+      for (let i = start; i <= end; i++) {
+        const y = Math.floor(i / 12), m = (i % 12) + 1;
+        out += `<option value="${y}-${m}">${MONTHS[m - 1]} ${y}</option>`;
+      }
+      /* remember selection between renders */
+      if (state.payMonthSel) out = out.replace(
+        `value="${state.payMonthSel}"`,
+        `value="${state.payMonthSel}" selected`);
+      else out = out.replace(`value="${now.getFullYear()}-${now.getMonth() + 1}"`,
+        `value="${now.getFullYear()}-${now.getMonth() + 1}" selected`);
+      return out;
+    }
+
+    function timeAgoLabel(iso) {
+      if (!iso) return "";
+      const d = new Date(String(iso).length <= 10 ? iso + "T12:00:00" : iso);
+      if (isNaN(d)) return "";
+      const diff = Math.floor((Date.now() - d.getTime()) / 86400000);
+      if (diff <= 0) return "today";
+      if (diff === 1) return "yesterday";
+      if (diff < 30) return diff + "d ago";
+      if (diff < 365) return Math.floor(diff / 30) + "mo ago";
+      return Math.floor(diff / 365) + "y ago";
+    }
+
+    function ScreenMemberDetail(id) {
+      const m = state.members.find(x => x.id === id);
+      if (!m) return `<div class="screen"><div class="card"><p class="sub">Member not found.</p>
+        <button class="btn btn-outline" data-go="/members" style="margin-top:12px">Back to members</button></div></div>`;
+
+      const cells = monthStatuses(m.id);
+      const paid = state.payments.filter(p => p.member_id === m.id).reduce((a, p) => a + Number(p.amount || 0), 0);
+      const dues = memberDues(m.id);
+      /* newest covered month first (e.g. Sep 2027 at the top, Sep 2024 at the bottom).
+         Sorted by the month the fee is FOR, not the day it was entered. */
+      const history = state.payments.filter(p => p.member_id === m.id)
+        .sort((a, b) => paymentSortIndex(b) - paymentSortIndex(a) || (b.date || "").localeCompare(a.date || ""));
+      const dueThis = dues.count ? duePeriodRangeLabel(dues.months) : "";
+
+      return `<div class="screen">
+      <button class="linklike" data-go="/members" style="margin:-4px 0 10px;padding-left:0">
+        <span style="display:flex;align-items:center;gap:6px">${ICONS.back}<span>Members</span></span>
+      </button>
+
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+        <div class="avatar avatar-lg" ${m.avatar_url ? `style="background-image:url('${esc(m.avatar_url)}')"` : ""}>
+          ${m.avatar_url ? "" : initials(m.name)}
+        </div>
+        <div class="row-main">
+          <h1 class="h1" style="font-size:20px">${esc(m.name)}</h1>
+          <p class="sub" style="margin:2px 0 0">Member${m.email ? " &middot; " + esc(m.email) : ""}</p>
+        </div>
+        ${state.isAdmin ? `<button class="mem-del" id="memberDeleteBtn" data-member-del="${m.id}" aria-label="Delete member ${esc(m.name)}">
+          ${ICONS.trash}<span>Delete</span>
+        </button>` : ""}
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat" style="cursor:default">
+          <p class="eyebrow">Total paid</p>
+          <p class="stat-num num" style="color:var(--fund)">${taka(paid)}</p>
+          <p class="sub" style="font-size:11.5px">${history.length} payment${history.length === 1 ? "" : "s"}</p>
+        </div>
+        <div class="stat" style="cursor:default">
+          <p class="eyebrow">Due</p>
+          <p class="stat-num num" style="color:var(--due)">${taka(dues.amount)}</p>
+          <p class="sub" style="font-size:11.5px">${dues.count} month${dues.count === 1 ? "" : "s"}${dueThis ? " &middot; " + dueThis : ""}</p>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <p class="eyebrow">Monthly dues &middot; ${YEAR()}</p>
+        <div class="month-grid" style="margin-top:12px">
+          ${cells.map(c => `<div class="month-cell ${c.st}">
+            <span class="m">${MON3[c.m - 1]}</span>
+            <span class="s">${c.st === "paid" ? "Paid" : c.st === "due" ? "Due" : "-"}</span>
+          </div>`).join("")}
+        </div>
+          <p class="sub" style="font-size:11.5px;margin-top:12px">
+          Monthly fee ${taka(dues.fee)} &middot; ${dues.count} month${dues.count === 1 ? "" : "s"} unpaid${dues.count ? ` (${esc(dueThis)})` : ""}.
+        </p>
+      </div>
+
+      <div class="stack" style="margin-top:14px">
+        <button class="btn btn-primary" id="remindBtn" ${state.isAdmin ? "" : "disabled"}>
+          ${state.isAdmin ? ICONS.mail + "<span>Send reminder by email</span>"
+        : ICONS.lock + "<span>Send reminder by email</span>"}
+        </button>
+        <button class="btn btn-outline" id="pdfBtn">${ICONS.doc}<span>Download receipt (PDF)</span></button>
+      </div>
+      ${state.isAdmin ? "" : `<p class="sub center" style="font-size:11px;margin-top:8px">Reminders can only be sent by the admin.</p>`}
+
+      ${state.isAdmin ? `<div class="card" style="margin-top:12px">
+        <p class="eyebrow">Record a payment</p>
+        <form id="payForm" style="margin-top:10px">
+          <div class="g2" style="margin-bottom:10px">
+            <div>
+              <label class="label" for="pType">Type</label>
+              <select class="field" id="pType" style="padding-right:8px">${PAY_TYPES.map(t => `<option>${t}</option>`).join("")}</select>
+            </div>
+            <div>
+              <label class="label" for="pAmount">Amount</label>
+              <input class="field num" id="pAmount" type="number" min="0" step="1" value="${dues.fee}" required />
+            </div>
+          </div>
+          <div style="margin-bottom:12px">
+            <label class="label" id="pDateLabel">Date</label>
+            <div class="pay-cal" id="payCal" data-y="${nowLocal().getFullYear()}" data-m="${nowLocal().getMonth() + 1}">
+              <div class="pay-cal-head">
+                <button type="button" class="pay-cal-nav" data-calnav="-1" aria-label="Previous month">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+                </button>
+                <p class="pay-cal-title" id="payCalTitle"></p>
+                <button type="button" class="pay-cal-nav" data-calnav="1" aria-label="Next month">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+                </button>
+              </div>
+              <div class="pay-cal-week" aria-hidden="true">
+                <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+              </div>
+              <div class="pay-cal-grid" id="payCalGrid" role="grid" aria-labelledby="pDateLabel"></div>
+            </div>
+            <p class="date-shown num" id="pDateShown">${prettyDate(todayISO())}</p>
+            <input id="pDate" type="hidden" value="${todayISO()}" />
+          </div>
+          <div style="margin-bottom:12px">
+            <label class="label" for="pMonth">For month</label>
+            <select class="field" id="pMonth" style="padding-right:8px">
+              ${payMonthOptions()}
+            </select>
+          </div>
+          <button class="btn btn-primary" type="submit">Save payment</button>
+        </form>
+      </div>` : ""}
+
+      <div class="hist-card" style="margin-top:12px">
+        <div class="hist-head">
+          <div>
+            <p class="eyebrow">Payment history</p>
+            <p class="hist-count num">${history.length} record${history.length === 1 ? "" : "s"} &middot; ${taka(paid)} total</p>
+          </div>
+        </div>
+        <div class="hist-list">
+          ${history.length ? history.map((p, i) => {
+          const meta = payTypeMeta(p.type);
+          const ago = timeAgoLabel(p.date);
+          const month = payMonthLabel(p);
+          return `<div class="hist-item" style="--tint:${meta.color};--tint-soft:${meta.soft};animation-delay:${Math.min(i * 35, 300)}ms">
+              <span class="hist-ico" aria-hidden="true">${meta.icon}</span>
+              <div class="hist-main">
+                <p class="hist-title">${esc(p.type || "Fee")}</p>
+                <p class="hist-sub">
+                  <span class="hist-chip" style="--tint:${meta.color}">${esc(month || p.date || "—")}</span>
+                  <span class="hist-date">Paid on ${esc(prettyDate(p.date) || "-")}</span>
+                  ${ago ? `<span class="hist-ago">${esc(ago)}</span>` : ""}
+                </p>
+              </div>
+              <p class="hist-amt num">+${taka(p.amount)}</p>
+              ${state.isAdmin ? `<button class="hist-del" data-delpay="${p.id}" aria-label="Delete payment">${ICONS.trash}</button>` : ""}
+            </div>`;
+        }).join("")
+        : `<p class="sub" style="padding:16px 0">No payments recorded yet.</p>`}
+        </div>
+      </div>
+    </div>`;
+    }
+
+    /* =====================================================================
+       SCREEN 4 — DUES
+    ===================================================================== */
+    function ScreenDues() {
+      const type = state.duesType;
+      const through = `${MONTHS[nowLocal().getMonth()]} ${YEAR()}`;
+      let rows = duesList(type);
+      const q = state.duesSearch.toLowerCase();
+      if (q) rows = rows.filter(r => r.member.name.toLowerCase().includes(q));
+      if (state.duesMonth) rows = rows.filter(r => r.months.some(m => m.m === state.duesMonth));
+
+      const totalDue = rows.reduce((a, r) => a + (state.duesMonth
+        ? r.months.filter(m => m.m === state.duesMonth).length * r.fee
+        : r.amount), 0);
+
+      return `<div class="screen">
+      <div class="app-header">
+        <div>
+          <p class="sub" style="margin:0">All unpaid months through ${esc(through)} &middot; ${esc(type)}</p>
+          <h1 class="h1">Dues</h1>
+        </div>
+        ${state.isAdmin ? `<button class="chip" data-go="/reminders" style="color:var(--primary);border-color:var(--primary)">${ICONS.bell}<span>Reminders</span></button>` : ""}
+      </div>
+
+      <div class="with-icon">
+        ${ICONS.search}
+        <input class="field" id="duesSearch" type="search" placeholder="Search member name"
+          value="${esc(state.duesSearch)}" aria-label="Search member name" />
+      </div>
+
+      <div class="chip-row" style="margin-top:12px">
+        <button class="chip" id="chipMonth" aria-pressed="${state.duesMonth ? "true" : "false"}">
+          Month: ${state.duesMonth ? MON3[state.duesMonth - 1] : "All"} ${ICONS.down}
+        </button>
+        <button class="chip" id="chipType" aria-pressed="true">
+          Type: ${esc(type)} ${ICONS.down}
+        </button>
+        ${state.duesMonth || state.duesSearch ? `<button class="chip" id="chipClear" style="color:var(--due)">Clear</button>` : ""}
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <div class="stat-grid" style="gap:12px">
+          <div>
+            <p class="eyebrow">Total due</p>
+            <p class="stat-num num" style="color:var(--due);font-size:26px">${taka(totalDue)}</p>
+          </div>
+          <div>
+            <p class="eyebrow">Members</p>
+            <p class="stat-num num" style="color:var(--text);font-size:26px">${rows.length}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px;padding:6px 16px">
+        ${rows.length ? rows.map(r => {
+        const showMonths = state.duesMonth ? r.months.filter(m => m.m === state.duesMonth) : r.months;
+        const amt = state.duesMonth ? showMonths.length * r.fee : r.amount;
+        const monthLabels = showMonths.slice(0, 3).map(duePeriodLabel).join(", ");
+        return `<div class="row" data-member="${r.member.id}" style="cursor:pointer">
+            <div class="avatar avatar-sm">${initials(r.member.name)}</div>
+            <div class="row-main">
+              <p class="row-title">${esc(r.member.name)}</p>
+              <p class="row-sub">${showMonths.length} month${showMonths.length === 1 ? "" : "s"} due &middot; ${esc(monthLabels)}${showMonths.length > 3 ? ` +${showMonths.length - 3}` : ""}</p>
+            </div>
+            <div style="text-align:right">
+              <p class="amount num" style="color:var(--due)">${taka(amt)}</p>
+              ${state.isAdmin ? `<button class="btn btn-outline btn-sm" data-remind="${r.member.id}" style="margin-top:4px;min-height:36px;padding:0 12px;font-size:12px">Remind</button>` : ""}
+            </div>
+          </div>`;
+      }).join("")
+        : `<p class="sub" style="padding:18px 0">Nothing due for this filter.</p>`}
+      </div>
+    </div>`;
+    }
+
+    /* =====================================================================
+       SCREEN 5 — REMINDERS (admin)
+    ===================================================================== */
+    function ScreenReminders() {
+      const s = state.settings;
+      const rows = duesList("Monthly Fee");
+      const n = rows.length;
+      const sample = rows[0] ? rows[0].member : { name: "Member name" };
+      const monthLabel = rows[0] ? duePeriodLabel(rows[0].months[0]) : `${MONTHS[nowLocal().getMonth()]} ${YEAR()}`;
+      const amount = rows[0] ? rows[0].fee : DEFAULT_FEE;
+      const last = s.last_sent_at
+        ? `${new Date(s.last_sent_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })} &middot; ${s.last_sent_count || 0} member${(s.last_sent_count || 0) === 1 ? "" : "s"}`
+        : "Not sent yet";
+
+      return `<div class="screen">
+      <div class="app-header">
+        <div>
+          <p class="sub" style="margin:0">Admin only</p>
+          <h1 class="h1">Reminders</h1>
+        </div>
+        <button class="chip" data-go="/dues">${ICONS.back}<span>Dues</span></button>
+      </div>
+
+      <div class="card">
+        <p class="eyebrow">Settings</p>
+        <button class="switch-row" id="autoSwitch" role="switch" aria-checked="${!!s.auto_email_reminder}" style="margin-top:10px">
+          <span class="switch" aria-hidden="true"></span>
+          <span class="row-main">
+            <span class="row-title">Auto email reminder</span>
+            <span class="row-sub">Only members who still have dues</span>
+          </span>
+        </button>
+        <div class="divider-line" style="margin:10px 0"></div>
+        <div class="kv"><span>Send on day</span><span>${s.send_day} of every month</span></div>
+        <div class="kv"><span>Channel</span><span>${esc(s.channel || "Email")}</span></div>
+        <div class="kv"><span>Timezone day check</span><span>UTC+${APP_TIMEZONE_OFFSET_MIN / 60}</span></div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <p class="eyebrow">Email preview</p>
+        <div style="margin-top:10px;background:#fff;border:1px solid var(--border);border-radius:14px;padding:12px">
+          <p class="sub" style="margin:0 0 4px"><span style="color:var(--muted)">Subject:</span> <strong>Monthly fee reminder</strong></p>
+          <p class="sub" style="margin:0;line-height:1.5">Hi ${esc(sample.name)}, your fee for ${esc(monthLabel)} is still due: ${taka(amount)}. Please pay by bKash or Nagad: ${esc(s.bkash_number || "-")}.</p>
+        </div>
+        <p class="sub" style="font-size:11px;margin-top:10px">
+          Sent with EmailJS. Wallet numbers come from the app_settings table.
+        </p>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <p class="eyebrow">Last sent</p>
+        <p class="row-title" style="margin-top:6px;font-size:15px">${last}</p>
+        <div class="divider-line"></div>
+        <div class="kv"><span>Members with dues</span><span>${n}</span></div>
+        <div class="kv"><span>Automatic job</span><span>${s.auto_email_reminder ? "Enabled" : "Paused"}</span></div>
+      </div>
+
+      <div style="height:14px"></div>
+      <button class="btn btn-primary" id="sendAllBtn" ${n ? "" : "disabled"}>
+        ${ICONS.mail}<span>Send now to all ${n} member${n === 1 ? "" : "s"}</span>
+      </button>
+      ${emailJSReady() ? "" : `<div class="banner amber" style="margin-top:12px">
+        <span style="flex:none">${ICONS.lock}</span>
+        <span>EmailJS keys are not set, so sends are simulated. Add SERVICE_ID, TEMPLATE_ID and PUBLIC_KEY to email for real.</span>
+      </div>`}
+
+      ${n ? `<div class="card" style="margin-top:12px">
+        <p class="eyebrow">Queue preview</p>
+        <div style="margin-top:4px">
+          ${rows.slice(0, 6).map(r => `<div class="row">
+            <div class="avatar avatar-sm">${initials(r.member.name)}</div>
+            <div class="row-main">
+              <p class="row-title" style="font-size:14px">${esc(r.member.name)}</p>
+              <p class="row-sub">${esc(duePeriodLabel(r.months[0]))} due first · ${r.count} month${r.count === 1 ? "" : "s"} overdue</p>
+            </div>
+            <p class="amount num" style="color:var(--due)">${taka(r.amount)}</p>
+          </div>`).join("")}
+          ${n > 6 ? `<p class="sub center" style="font-size:11.5px;padding:8px 0">+ ${n - 6} more</p>` : ""}
+        </div>
+      </div>` : ""}
+    </div>`;
+    }
+
+    /* =====================================================================
+       DONATIONS
+    ===================================================================== */
+    function ScreenDonations() {
+      const q = state.donQuery.toLowerCase();
+      const list = state.donations
+        .filter(d => String(d.description || "").toLowerCase().includes(q))
+        .slice().sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+      const total = state.donations.reduce((a, d) => a + Number(d.amount || 0), 0);
+      const thisMonth = state.donations.filter(d => String(d.date || "").slice(0, 7) === todayISO().slice(0, 7))
+        .reduce((a, d) => a + Number(d.amount || 0), 0);
+
+      return `<div class="screen">
+      <div class="app-header">
+        <div>
+          <p class="sub" style="margin:0">Given back to people</p>
+          <h1 class="h1">Donations</h1>
+        </div>
+        ${state.isAdmin ? `<button class="chip" id="addDonChip" style="color:var(--don);border-color:var(--don)">${ICONS.plus}<span>Add</span></button>` : ""}
+      </div>
+
+      <section class="don-hero" aria-label="Total donated">
+        <svg class="don-hero-watermark" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 20.3 4.8 13.4a4.6 4.6 0 0 1 0-6.6 4.7 4.7 0 0 1 6.6 0l.6.6.6-.6a4.7 4.7 0 0 1 6.6 0 4.6 4.6 0 0 1 0 6.6Z"/>
+        </svg>
+        <span class="don-hero-heart" aria-hidden="true">${ICONS.gift.replace('width="18" height="18"', 'width="22" height="22"')}</span>
+        <p class="don-hero-label">Total donated</p>
+        <p class="don-hero-amount num">${taka(total)}</p>
+        <div class="don-hero-chips">
+          <span class="don-hero-chip">${ICONS.calendar.replace('width="20" height="20"', 'width="14" height="14"')}<span>${taka(thisMonth)} this month</span></span>
+          <span class="don-hero-chip">${ICONS.gift.replace('width="18" height="18"', 'width="14" height="14"')}<span>${state.donations.length} gift${state.donations.length === 1 ? "" : "s"}</span></span>
+        </div>
+      </section>
+
+      <div class="with-icon" style="margin-top:12px">
+        ${ICONS.search}
+        <input class="field" id="donSearch" type="search" placeholder="Search donation note"
+          value="${esc(state.donQuery)}" aria-label="Search donation note" />
+      </div>
+
+      ${(() => {
+        if (!list.length) return `<div class="card" style="margin-top:12px"><p class="sub" style="padding:10px 0">No donations recorded yet.</p></div>`;
+        const groups = [];
+        list.forEach(d => {
+          const y = String(d.date || "").slice(0, 4) || "—";
+          let g = groups[groups.length - 1];
+          if (!g || g.year !== y) { g = { year: y, items: [], sum: 0 }; groups.push(g); }
+          g.items.push(d);
+          g.sum += Number(d.amount || 0);
+        });
+        return groups.map(g => `<div class="don-year">
+          <div class="don-year-head">
+            <span class="don-year-label">${esc(g.year)}</span>
+            <span class="don-year-sum num">${taka(g.sum)}</span>
+          </div>
+          <div class="don-timeline">
+            ${g.items.map(d => {
+            const ago = timeAgoLabel(d.date);
+            return `<article class="don-item">
+              <span class="don-dot" aria-hidden="true"></span>
+              <div class="don-card">
+                <span class="don-ico" aria-hidden="true">${ICONS.heart.replace('width="22" height="22"', 'width="20" height="20"')}</span>
+                <div class="don-body">
+                  <p class="don-note">${esc(d.description || "Donation")}</p>
+                  <p class="don-date">${prettyDate(d.date)}${ago ? " &middot; " + ago : ""}</p>
+                </div>
+                <div class="don-amt-wrap">
+                  <p class="don-amt num">${taka(d.amount)}</p>
+                  <p class="don-cap">given</p>
+                </div>
+                ${state.isAdmin ? `<button class="don-del" data-deldon="${d.id}" aria-label="Delete donation">${ICONS.trash}</button>` : ""}
+              </div>
+            </article>`;
+          }).join("")}
+          </div>
+        </div>`).join("");
+      })()}
+
+      ${state.isAdmin ? `<div class="card" id="addDonCard" style="margin-top:12px">
+        <p class="eyebrow">Record a donation</p>
+        <form id="donForm" style="margin-top:10px">
+          <div style="margin-bottom:10px">
+            <label class="label" for="dDesc">Purpose or recipient</label>
+            <input class="field" id="dDesc" type="text" placeholder="e.g. Flood relief - Sonaimuri" required />
+          </div>
+          <div class="g2" style="margin-bottom:12px">
+            <div>
+              <label class="label" for="dDate">Date</label>
+              <input class="field" id="dDate" type="date" value="${todayISO()}" required />
+            </div>
+            <div>
+              <label class="label" for="dAmount">Amount</label>
+              <input class="field num" id="dAmount" type="number" min="0" step="1" placeholder="0" required />
+            </div>
+          </div>
+          <button class="btn btn-primary" type="submit">Save donation</button>
+        </form>
+      </div>` : ""}
+    </div>`;
+    }
+
+    /* =====================================================================
+       PAYMENT OPTIONS — bank card + copy + extra channels
+    ===================================================================== */
+    function extraChannels() {
+      const out = [];
+      if (state.settings.bkash_number) out.push({ id: "bkash", name: "bKash", value: state.settings.bkash_number, dot: "#E2136E" });
+      if (state.settings.nagad_number) out.push({ id: "nagad", name: "Nagad", value: state.settings.nagad_number, dot: "#F6821F" });
+      (EXTRA_METHOD_FALLBACK || []).forEach(m => out.push(m));
+      return out;
+    }
+
+    function bankCardHTML(acc) {
+      return `<article class="bank-card ${acc.theme || "g-green"}">
+        <span class="bank-shine" aria-hidden="true"></span>
+        <div class="bank-top">
+          <div style="min-width:0">
+            <h3 class="bank-name">${esc(acc.bank)}</h3>
+            <p class="bank-addr">${esc(acc.branch || "")}</p>
+          </div>
+          ${acc.primary ? `<span class="bank-pill">PRIMARY</span>` : ""}
+        </div>
+        <div class="bank-mid">
+          <span class="bank-chip" aria-hidden="true"></span>
+          <svg class="bank-wave" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.9" stroke-linecap="round" aria-hidden="true">
+            <path d="M6 9.5a6.5 6.5 0 0 1 0 5" /><path d="M9.5 7.5a10 10 0 0 1 0 9" /><path d="M13 5.5a13.5 13.5 0 0 1 0 13" />
+          </svg>
+        </div>
+        <button class="bank-no" type="button" data-copyacc="${acc.id}"
+          aria-label="Copy account number for ${esc(acc.bank)}">${esc(groupDigits(acc.number))}</button>
+        <div class="bank-hold">
+          <span class="bank-lbl">ACCOUNT NAME</span>
+          <p class="bank-name-holder">${esc(acc.holder)}</p>
+        </div>
+      </article>`;
+    }
+
+    function miniChannelHTML(ch) {
+      return `<div class="pay-mini">
+        <div class="pay-mini-top">
+          <span class="pay-dot" style="background:${ch.dot}" aria-hidden="true"></span>
+          <p class="pay-mini-name">${esc(ch.name)}</p>
+        </div>
+        <p class="pay-mini-no">${esc(ch.value)}</p>
+        <button class="pay-mini-copy" type="button" data-copych="${ch.id}" aria-label="Copy ${esc(ch.name)} number">
+          <span>Copy</span>
+        </button>
+      </div>`;
+    }
+
+    function PaymentOptionsHTML(open) {
+      const accounts = BANK_ACCOUNTS || [];
+      const extras = extraChannels();
+      const many = accounts.length > 1;
+      const first = accounts[0];
+
+      return `<section class="pay ${open ? "open" : ""}" id="payCard" aria-expanded="${open ? "true" : "false"}">
+        <span class="pay-live" id="payLive" role="status" aria-live="polite"></span>
+
+        <button class="pay-head" type="button" id="payHead" aria-expanded="${open ? "true" : "false"}" aria-controls="payBody">
+          <span class="pay-tile" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+              stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2.5" y="5.5" width="19" height="13" rx="3" /><path d="M2.5 10h19" /><path d="M6 14.5h4" />
+            </svg>
+          </span>
+          <span class="pay-head-text">
+            <h2 class="pay-title">Payment Options</h2>
+            <p class="pay-sub">Account details &amp; channels</p>
+          </span>
+          <span class="pay-chev" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+              stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+          </span>
+        </button>
+
+        <div class="pay-body" id="payBody">
+          <div>
+            ${accounts.length ? `<div class="bank-scroll" id="bankScroll" ${many ? "" : 'style="overflow:visible"'}>
+              ${accounts.map(bankCardHTML).join("")}
+            </div>` : `<p class="pay-sub" style="margin-top:14px">No bank account added yet.</p>`}
+
+            ${many ? `<div class="bank-dots" id="bankDots" aria-hidden="true">
+              ${accounts.map((a, i) => `<i class="${i === 0 ? "on" : ""}"></i>`).join("")}
+            </div>` : ""}
+
+            ${first ? `<div class="pay-actions">
+              <button class="pay-btn pay-btn-primary" type="button" id="copyAccBtn"
+                aria-label="Copy ${esc(first.bank)} account number">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="9" y="9" width="11" height="11" rx="2.5" />
+                  <path d="M15 5.5A2.5 2.5 0 0 0 12.5 3H6a2.5 2.5 0 0 0-2.5 2.5V12" />
+                </svg>
+                <span>Copy account no.</span>
+              </button>
+              <button class="pay-btn pay-btn-outline" type="button" id="shareAccBtn"
+                aria-label="Share ${esc(first.bank)} account details">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12 15V4" /><path d="m8 8 4-4 4 4" /><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4" />
+                </svg>
+                <span>Share details</span>
+              </button>
+            </div>` : ""}
+
+            ${state.isAdmin ? `<div class="pay-wallet-admin">
+              <div class="pay-wallet-head">
+                <h3 class="pay-extra-title" style="margin:0">Wallet numbers</h3>
+                <span class="pay-admin-tag">Admin</span>
+              </div>
+              <p class="pay-wallet-hint">Add or change any time. Members see them under Extra payment methods; empty fields stay hidden.</p>
+              <form id="walletForm" class="pay-wallet-form">
+                <div class="pay-wallet-grid">
+                  <div>
+                    <label class="label" for="wBkash">bKash number</label>
+                    <input class="field mono" id="wBkash" type="text" inputmode="numeric"
+                      placeholder="01XXXXXXXXX" value="${esc(state.settings.bkash_number || "")}" />
+                  </div>
+                  <div>
+                    <label class="label" for="wNagad">Nagad number</label>
+                    <input class="field mono" id="wNagad" type="text" inputmode="numeric"
+                      placeholder="01XXXXXXXXX" value="${esc(state.settings.nagad_number || "")}" />
+                  </div>
+                </div>
+                <button class="pay-btn pay-btn-primary" type="submit" style="margin-top:12px">Save wallet numbers</button>
+              </form>
+            </div>` : ""}
+
+            ${extras.length ? `<h3 class="pay-extra-title">Extra payment methods</h3>
+              <div class="pay-extras">${extras.map(miniChannelHTML).join("")}</div>` : ""}
+          </div>
+        </div>
+      </section>`;
+    }
+
+    function ScreenPay() {
+      return `<div class="screen">
+        <div class="app-header">
+          <div>
+            <p class="sub" style="margin:0">Where to send your fee</p>
+            <h1 class="h1">Payment Options</h1>
+          </div>
+          <button class="chip" data-go="/dues" aria-label="Open dues list">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M18 15.5V10a6 6 0 1 0-12 0v5.5L4.5 18h15Z" /><path d="M9.5 21a2.6 2.6 0 0 0 5 0" />
+            </svg>
+            <span>Dues</span>
+          </button>
+        </div>
+        ${PaymentOptionsHTML(true)}
+      </div>`;
+    }
+
+    /* shared by the /pay screen and the Profile card */
+    function bindPaymentOptions(scope) {
+      const card = scope.querySelector("#payCard");
+      if (!card) return;
+      const first = BANK_ACCOUNTS[0];
+
+      const head = scope.querySelector("#payHead");
+      if (head) head.onclick = () => {
+        const open = card.classList.toggle("open");
+        card.setAttribute("aria-expanded", String(open));
+        head.setAttribute("aria-expanded", String(open));
+      };
+
+      const copyBtn = scope.querySelector("#copyAccBtn");
+      if (copyBtn && first) {
+        const normal = copyBtn.innerHTML;
+        copyBtn.onclick = () => useCopy("acc", first.number, copyBtn, normal, "Account number copied");
+      }
+
+      /* the account number printed on the card is itself a copy button */
+      scope.querySelectorAll("[data-copyacc]").forEach(b => {
+        const a = (BANK_ACCOUNTS || []).find(x => x.id === b.dataset.copyacc);
+        if (!a) return;
+        const normal = b.innerHTML;
+        b.onclick = () => useCopy(a.id, a.number, b, normal, "Account number copied");
+      });
+
+      const shareBtn = scope.querySelector("#shareAccBtn");
+      if (shareBtn && first) {
+        const normal = shareBtn.innerHTML;
+        shareBtn.onclick = async () => {
+          const text = `${first.bank}, ${first.holder}, ${first.number}`;
+          if (navigator.share) {
+            try { await navigator.share({ title: first.bank, text }); return; }
+            catch (e) { if (e && e.name === "AbortError") return; }
+          }
+          useCopy("share", text, shareBtn, normal, "Account details copied");
+        };
+      }
+
+      /* admin: add / update wallet numbers any time */
+      const wf = scope.querySelector("#walletForm");
+      if (wf) wf.onsubmit = async e => {
+        e.preventDefault();
+        const btn = wf.querySelector("button[type=submit]");
+        busy(btn, true, "Saving");
+        try {
+          await db.saveSettings({
+            bkash_number: scope.querySelector("#wBkash").value.trim(),
+            nagad_number: scope.querySelector("#wNagad").value.trim()
+          });
+          toast("Wallet numbers saved", "ok");
+          render();
+        } catch (ex) {
+          toast("Could not save: " + ex.message, "err");
+        } finally { busy(btn, false); }
+      };
+
+      scope.querySelectorAll("[data-copych]").forEach(b => {
+        const ch = extraChannels().find(x => x.id === b.dataset.copych);
+        if (!ch) return;
+        const normal = b.innerHTML;
+        b.onclick = () => useCopy(ch.id, ch.value, b, normal, `${ch.name} number copied`);
+      });
+
+      const scroll = scope.querySelector("#bankScroll");
+      const dots = scope.querySelector("#bankDots");
+      if (scroll && dots && BANK_ACCOUNTS.length > 1) {
+        scroll.addEventListener("scroll", () => {
+          const i = Math.round(scroll.scrollLeft / scroll.clientWidth);
+          dots.querySelectorAll("i").forEach((d, k) => d.classList.toggle("on", k === i));
+        }, { passive: true });
+      }
+    }
+
+    /* =====================================================================
+       PROFILE
+    ===================================================================== */
+    function ScreenProfile() {
+      const u = state.session?.user || {};
+      const name = u.user_metadata?.name || u.email || "Member";
+      const email = u.email || "";
+      const t = totals();
+      const dues = duesList("Monthly Fee").length;
+
+      return `<div class="screen">
+      <div class="app-header profile-app-header">
+        <h1 class="profile-brand-mark" aria-label="Profile and settings">${ICONS.brand}</h1>
+        <span class="role-chip ${state.isAdmin ? "role-admin" : "role-viewer"}">${state.isAdmin ? "Admin" : "Viewer"}</span>
+      </div>
+
+      <div class="card" style="display:flex;align-items:center;gap:14px">
+        <div class="avatar avatar-lg">${initials(name)}</div>
+        <div class="row-main">
+          <p class="row-title" style="font-size:16px">${esc(name)}</p>
+          <p class="row-sub">${esc(email)}</p>
+          <p class="row-sub" style="margin-top:6px">${state.isAdmin
+        ? "Full access: add, edit and delete records."
+        : "Read-only access to fund, members and donations."}</p>
+        </div>
+      </div>
+
+      <div class="stat-grid" style="margin-top:12px">
+        <div class="stat" style="cursor:default">
+          <p class="eyebrow">Fund</p>
+          <p class="stat-num num" style="color:var(--fund);font-size:20px">${taka(t.fund)}</p>
+        </div>
+        <div class="stat" style="cursor:default">
+          <p class="eyebrow">Members with dues</p>
+          <p class="stat-num num" style="color:var(--due);font-size:20px">${dues}</p>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px;padding:6px 16px">
+        <button class="row row-tap" data-go="/dues" style="width:100%;border:0;background:transparent;text-align:left">
+          <div class="avatar avatar-sm" style="background:var(--due-soft);color:var(--due)">${ICONS.bell}</div>
+          <div class="row-main">
+            <p class="row-title">Dues list</p>
+            <p class="row-sub">Who owes what this year</p>
+          </div>
+          <span style="color:var(--muted)">${ICONS.chevron}</span>
+        </button>
+        <button class="row row-tap" data-go="/pay" style="width:100%;border:0;background:transparent;text-align:left">
+          <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#F59E0B,#EA580C);color:#fff">${ICONS.wallet}</div>
+          <div class="row-main">
+            <p class="row-title">Payment options</p>
+            <p class="row-sub">Bank account, bKash and Nagad</p>
+          </div>
+          <span style="color:var(--muted)">${ICONS.chevron}</span>
+        </button>
+        <button class="row row-tap" data-go="/reminders" style="width:100%;border:0;background:transparent;text-align:left;${state.isAdmin ? "" : "opacity:.45"}">
+          <div class="avatar avatar-sm" style="background:var(--primary-soft);color:var(--primary)">${ICONS.mail}</div>
+          <div class="row-main">
+            <p class="row-title">Reminders</p>
+            <p class="row-sub">${state.isAdmin ? "Auto email settings and manual send" : "Admin only"}</p>
+          </div>
+          <span style="color:var(--muted)">${ICONS.chevron}</span>
+        </button>
+      </div>
+
+      <div style="margin-top:12px">${PaymentOptionsHTML(false)}</div>
+
+      <div style="height:14px"></div>
+      <button class="btn btn-outline" id="signOutBtn">${ICONS.logout}<span>Sign out</span></button>
+
+      <p class="sub center" style="font-size:11px;margin-top:16px">
+        Healer Boy's &middot; developed by Imtiaj Rafi
+      </p>
+    </div>`;
+    }
+
+    /* =====================================================================
+       EVENT BINDING
+    ===================================================================== */
+    function bind(p) {
+      const v = document.getElementById("view");
+
+      v.querySelectorAll("[data-go]").forEach(el => el.onclick = () => navigate(el.dataset.go));
+      v.querySelectorAll("[data-member]").forEach(el => {
+        el.addEventListener("click", e => {
+          if (e.target.closest("[data-remind],[data-delpay]")) return;
+          navigate("/member/" + el.dataset.member);
+        });
+      });
+
+      /* ---- home notification bell ---- */
+      const bellBtn = v.querySelector("#homeBellBtn");
+      if (bellBtn) bellBtn.onclick = () => {
+        const n = duesList("Monthly Fee").length;
+        toast(n ? `${n} member${n === 1 ? "" : "s"} have unpaid dues` : "You're all caught up", n ? "" : "ok");
+      };
+
+      /* ---- login ---- */
+      const g = v.querySelector("#googleBtn");
+      if (g) g.onclick = () => {
+        busy(g, true);
+        signInGoogle().catch(ex => toast(ex.message || "Google sign-in failed", "err")).finally(() => busy(g, false));
+      };
+
+      const af = v.querySelector("#adminForm");
+      if (af) af.onsubmit = async e => {
+        e.preventDefault();
+        const btn = v.querySelector("#aSubmit"), err = v.querySelector("#aError");
+        err.classList.add("hidden");
+        busy(btn, true, "Signing in");
+        try {
+          await signInAdmin(v.querySelector("#aEmail").value, v.querySelector("#aPass").value);
+          toast("Signed in as admin", "ok");
+          navigate("/home");
+        } catch (ex) {
+          err.textContent = ex.message || "Sign in failed.";
+          err.classList.remove("hidden");
+        } finally { busy(btn, false); }
+      };
+
+      /* ---- members ---- */
+      const ms = v.querySelector("#memberSearch");
+      if (ms) ms.oninput = e => { state.memberQuery = e.target.value; rerenderList("#memberSearch", "memberQuery"); };
+
+      v.querySelectorAll("[data-mfilter]").forEach(b => b.onclick = () => {
+        state.memberFilter = b.dataset.mfilter;
+        render();
+      });
+
+      const sortBtn = v.querySelector("#memberSortBtn");
+      if (sortBtn) sortBtn.onclick = () => {
+        const nextSort = { paid: "due", due: "name", name: "paid" };
+        state.memberSort = nextSort[state.memberSort] || "paid";
+        toast({ paid: "Sorted: top payer first", due: "Sorted: highest due first", name: "Sorted: A to Z" }[state.memberSort]);
+        render();
+      };
+
+      const closeAdd = v.querySelector("#addMemberClose");
+      if (closeAdd) closeAdd.onclick = () => { const c = v.querySelector("#addMemberCard"); if (c) c.hidden = true; };
+
+      const mbell = v.querySelector("#membersBellBtn");
+      if (mbell) mbell.onclick = () => {
+        const n = duesList("Monthly Fee").length;
+        toast(n ? `${n} member${n === 1 ? "" : "s"} have unpaid dues` : "You're all caught up", n ? "" : "ok");
+      };
+
+      /* avatar preview for the add-member form */
+      const mAv = v.querySelector("#mAvatar");
+      if (mAv) mAv.onchange = () => {
+        const f = mAv.files && mAv.files[0];
+        const prev = v.querySelector("#mAvatarPreview");
+        const label = v.querySelector("#mAvatarName");
+        if (!f) return;
+        if (label) label.textContent = f.name;
+        if (prev) {
+          prev.style.backgroundImage = `url('${URL.createObjectURL(f)}')`;
+          prev.style.backgroundSize = "cover";
+          prev.style.backgroundPosition = "center";
+          prev.innerHTML = "";
+        }
+      };
+
+      const mf = v.querySelector("#addMemberCard");
+      if (mf) mf.onsubmit = async e => {
+        e.preventDefault();
+        const name = v.querySelector("#mName").value.trim();
+        const email = v.querySelector("#mEmail").value.trim();
+        const file = mAv && mAv.files ? mAv.files[0] : null;
+        if (!name) return;
+        const submitBtn = v.querySelector("#mSubmitBtn");
+        busy(submitBtn, true, "Adding");
+        let avatarUrl = null;
+        if (file) {
+          avatarUrl = await uploadImageToImgbb(file);
+          if (!avatarUrl) toast("Photo upload failed — member added without photo", "warn");
+        }
+        try {
+          await db.addMember({ id: uid("mem"), name, email: email || null, avatar_url: avatarUrl });
+          toast(name + " added", "ok");
+          render();
+        } catch (ex) { toast(ex.message, "err"); }
+        finally { busy(submitBtn, false); }
+      };
+
+      /* ---- member detail ---- */
+      const rb = v.querySelector("#remindBtn");
+      if (rb) rb.onclick = () => {
+        const m = state.members.find(x => x.id === p.split("/")[2]);
+        if (m) remindOne(m, rb);
+      };
+
+      /* ---- delete member (admin, from member detail header) ---- */
+      const delBtn = v.querySelector("#memberDeleteBtn");
+      if (delBtn) delBtn.onclick = async () => {
+        const m = state.members.find(x => x.id === delBtn.dataset.memberDel);
+        if (!m) return;
+        const count = state.payments.filter(x => x.member_id === m.id).length;
+        const ok = await confirmDelete(
+          `Delete ${m.name}? ${count} payment record${count === 1 ? "" : "s"} will be removed too. This cannot be undone.`,
+          "Delete member"
+        );
+        if (!ok) return;
+        const done = await db.deleteMember(m.id);
+        if (done) {
+          toast(`${m.name} deleted`, "warn");
+          navigate("/members");
+        }
+      };
+
+      const pb = v.querySelector("#pdfBtn");
+      if (pb) pb.onclick = () => downloadReceipt(state.members.find(x => x.id === p.split("/")[2]));
+
+      /* inline calendar: tap a day, same feel as a phone calendar */
+      const payCal = v.querySelector("#payCal");
+      if (payCal) {
+        const setPayDate = (iso, redraw) => {
+          const input = v.querySelector("#pDate");
+          const shown = v.querySelector("#pDateShown");
+          if (input) input.value = iso;
+          if (shown) shown.textContent = prettyDate(iso);
+          const monthSel = v.querySelector("#pMonth");
+          if (monthSel && iso) monthSel.value = String(Number(iso.slice(5, 7)));
+          if (redraw) drawPayCal(Number(iso.slice(0, 4)), Number(iso.slice(5, 7)));
+          else {
+            v.querySelectorAll("[data-day]").forEach(b => b.classList.toggle("on", b.dataset.day === iso));
+          }
+        };
+        const drawPayCal = (year, month) => {
+          payCal.dataset.y = String(year);
+          payCal.dataset.m = String(month);
+          const title = v.querySelector("#payCalTitle");
+          if (title) title.textContent = MONTHS[month - 1] + " " + year;
+          const grid = v.querySelector("#payCalGrid");
+          if (!grid) return;
+          const selected = (v.querySelector("#pDate") || {}).value || "";
+          const today = todayISO();
+          const firstDow = new Date(year, month - 1, 1).getDay();
+          const days = new Date(year, month, 0).getDate();
+          let html = "";
+          for (let i = 0; i < firstDow; i++) html += `<span class="pay-cal-empty"></span>`;
+          for (let d = 1; d <= days; d++) {
+            const iso = `${year}-${pad(month)}-${pad(d)}`;
+            const cls = ["pay-cal-day"];
+            if (iso === selected) cls.push("on");
+            if (iso === today) cls.push("today");
+            html += `<button type="button" class="${cls.join(" ")}" data-day="${iso}" aria-label="${prettyDate(iso)}" aria-pressed="${iso === selected}">${d}</button>`;
+          }
+          grid.innerHTML = html;
+          grid.querySelectorAll("[data-day]").forEach(b => b.onclick = () => setPayDate(b.dataset.day, false));
+        };
+        v.querySelectorAll("[data-calnav]").forEach(b => b.onclick = () => {
+          let y = Number(payCal.dataset.y), m = Number(payCal.dataset.m) + Number(b.dataset.calnav);
+          if (m < 1) { m = 12; y -= 1; }
+          if (m > 12) { m = 1; y += 1; }
+          drawPayCal(y, m);
+        });
+        drawPayCal(Number(payCal.dataset.y), Number(payCal.dataset.m));
+      }
+
+      const pf = v.querySelector("#payForm");
+      /* remember the chosen "For month" so it survives a re-render */
+      const monthSel = v.querySelector("#pMonth");
+      if (monthSel) monthSel.onchange = () => { state.payMonthSel = monthSel.value; };
+
+      if (pf) pf.onsubmit = async e => {
+        e.preventDefault();
+        const memberId = p.split("/")[2];
+        const type = v.querySelector("#pType").value;
+        const amount = Number(v.querySelector("#pAmount").value || 0);
+        const mv = (v.querySelector("#pMonth").value || "").split("-");
+        const my = Number(mv[0]) || YEAR();
+        const mi = Number(mv[1]) || (nowLocal().getMonth() + 1);
+        const date = v.querySelector("#pDate").value;
+        if (!amount) return toast("Enter an amount", "err");
+        const label = `${type} (${MONTHS[mi - 1]} ${my})`;
+        state.payMonthSel = null;
+        try {
+          await db.addPayment({ member_id: memberId, amount, date, type: label });
+          toast("Payment saved", "ok");
+          render();
+        } catch (ex) { toast(ex.message, "err"); }
+      };
+
+      v.querySelectorAll("[data-delpay]").forEach(b => b.onclick = async e => {
+        e.stopPropagation();
+        if (!(await confirmDelete("Delete this payment?"))) return;
+        try { await db.deletePayment(b.dataset.delpay); toast("Payment deleted"); render(); }
+        catch (ex) { toast(ex.message, "err"); }
+      });
+
+      /* ---- donations ---- */
+      const ds = v.querySelector("#donSearch");
+      if (ds) ds.oninput = e => { state.donQuery = e.target.value; rerenderList("#donSearch", "donQuery"); };
+      v.querySelectorAll("[data-deldon]").forEach(b => b.onclick = async () => {
+        if (!(await confirmDelete("Delete this donation?"))) return;
+        try { await db.deleteDonation(b.dataset.deldon); toast("Donation deleted"); render(); }
+        catch (ex) { toast(ex.message, "err"); }
+      });
+      const adc = v.querySelector("#addDonChip");
+      if (adc) adc.onclick = () => {
+        const c = v.querySelector("#addDonCard");
+        c.classList.toggle("hidden");
+        if (!c.classList.contains("hidden")) v.querySelector("#dDesc").focus();
+      };
+      const df = v.querySelector("#donForm");
+      if (df) df.onsubmit = async e => {
+        e.preventDefault();
+        try {
+          await db.addDonation({
+            description: v.querySelector("#dDesc").value.trim(),
+            date: v.querySelector("#dDate").value,
+            amount: Number(v.querySelector("#dAmount").value || 0)
+          });
+          toast("Donation saved", "ok");
+          render();
+        } catch (ex) { toast(ex.message, "err"); }
+      };
+
+      /* ---- dues ---- */
+      const dse = v.querySelector("#duesSearch");
+      if (dse) dse.oninput = e => { state.duesSearch = e.target.value; rerenderList("#duesSearch", "duesSearch"); };
+
+      const cm = v.querySelector("#chipMonth");
+      if (cm) cm.onclick = () => openSheet(`
+        <p class="eyebrow">Filter by month</p>
+        <div style="height:6px"></div>
+        <button class="opt" data-m="0" aria-selected="${state.duesMonth === 0}"><span>All months</span>${state.duesMonth === 0 ? ICONS.check : ""}</button>
+        ${MONTHS.map((n, i) => `<button class="opt" data-m="${i + 1}" aria-selected="${state.duesMonth === i + 1}">
+          <span>${n} ${YEAR()}</span>${state.duesMonth === i + 1 ? ICONS.check : ""}</button>`).join("")}`);
+      v.querySelectorAll(".opt[data-m]").forEach(b => b.onclick = () => {
+        state.duesMonth = Number(b.dataset.m); closeSheet(); render();
+      });
+
+      const ct = v.querySelector("#chipType");
+      if (ct) ct.onclick = () => openSheet(`
+        <p class="eyebrow">Filter by type</p>
+        <div style="height:6px"></div>
+        ${PAY_TYPES.map(t => `<button class="opt" data-t="${t}" aria-selected="${state.duesType === t}">
+          <span>${t}</span>${state.duesType === t ? ICONS.check : ""}</button>`).join("")}`);
+      v.querySelectorAll(".opt[data-t]").forEach(b => b.onclick = () => {
+        state.duesType = b.dataset.t; closeSheet(); render();
+      });
+
+      const cc = v.querySelector("#chipClear");
+      if (cc) cc.onclick = () => {
+        state.duesMonth = 0; state.duesSearch = ""; state.duesType = "Monthly Fee";
+        render(); toast("Filters cleared");
+      };
+
+      v.querySelectorAll("[data-remind]").forEach(b => b.onclick = e => {
+        e.stopPropagation();
+        const m = state.members.find(x => x.id === b.dataset.remind);
+        if (m) remindOne(m, b);
+      });
+
+      /* ---- reminders ---- */
+      const asw = v.querySelector("#autoSwitch");
+      if (asw) asw.onclick = async () => {
+        const sw = asw.querySelector(".switch");
+        if (sw && !REDUCED) { sw.classList.remove("squash"); void sw.offsetWidth; sw.classList.add("squash"); }
+        const next = !state.settings.auto_email_reminder;
+        asw.setAttribute("aria-checked", String(next));
+        try {
+          await db.saveSettings({ auto_email_reminder: next });
+          toast(next ? "Auto reminder enabled" : "Auto reminder paused", next ? "ok" : "");
+        } catch (ex) {
+          toast("Could not save setting", "err");
+          asw.setAttribute("aria-checked", String(!next));
+        }
+      };
+      const sab = v.querySelector("#sendAllBtn");
+      if (sab) sab.onclick = () => sendAllReminders(sab);
+
+      /* ---- profile ---- */
+      /* ---- fee report: copy for Excel / download CSV ---- */
+      const rpCopy = v.querySelector("#rpCopyBtn");
+      if (rpCopy) {
+        const normal = rpCopy.innerHTML;
+        rpCopy.onclick = () => useCopy("report", reportTSV(), rpCopy, normal, "রিপোর্ট কপি হয়েছে — Excel বা Google Sheets-এ পেস্ট করুন");
+      }
+      const rpCsv = v.querySelector("#rpCsvBtn");
+      if (rpCsv) rpCsv.onclick = downloadReportCsv;
+
+      const so = v.querySelector("#signOutBtn");
+      if (so) so.onclick = () => confirmDelete("Sign out of Healer Boy's?", "Sign out").then(ok => { if (ok) signOut(); });
+    }
+
+    /** keep focus in search inputs while re-rendering */
+    function rerenderList(selector, key) {
+      const el = document.querySelector(selector);
+      const pos = el ? el.selectionStart : null;
+      render();
+      const next = document.querySelector(selector);
+      if (next) { next.focus(); if (pos != null) { try { next.setSelectionRange(pos, pos); } catch (e) { } } }
+    }
+
+    function confirmDelete(msg, okText = "Confirm") {
+      openSheet(`<p class="eyebrow">Please confirm</p>
+        <p class="sub" style="margin:8px 0 14px">${esc(msg)}</p>
+        <div class="g2">
+          <button class="btn btn-outline" id="cNo" type="button">Cancel</button>
+          <button class="btn btn-primary" id="cYes" type="button">${esc(okText)}</button>
+        </div>
+        <div style="height:calc(6px + var(--safe-b, 0px))"></div>`);
+      return new Promise(res => {
+        document.getElementById("cNo").onclick = () => { closeSheet(); res(false); };
+        document.getElementById("cYes").onclick = () => { closeSheet(); res(true); };
+        /* tapping the dim backdrop = cancel */
+        const ov = document.getElementById("overlay");
+        const onBg = e => { if (e.target === ov) { ov.removeEventListener("click", onBg); res(false); } };
+        ov.addEventListener("click", onBg);
+      });
+    }
+
+    /* =====================================================================
+       BOOT
+    ===================================================================== */
+    (function clearProviderError() {
+      const q = new URLSearchParams(location.search);
+      const raw = (q.get("error_description") || q.get("msg") || "") + " " + (location.hash || "");
+      if (!q.get("error") && !q.get("error_code") && !/provider is not enabled/i.test(raw)) return;
+      history.replaceState(null, "", location.pathname + (location.hash.startsWith("#/") ? location.hash.split("?")[0] : ""));
+    })();
+
+    (async function boot() {
+      const view = document.getElementById("view");
+      view.innerHTML = `<div class="screen" style="display:grid;place-items:center;min-height:70vh">
+        <div style="text-align:center">
+          <div class="logo brand" style="margin:0 auto 14px" aria-label="Healer Boy's">${ICONS.brand}</div>
+          <div class="skeleton" style="width:150px;margin:0 auto"></div>
+        </div></div>`;
+
+      /* Last-resort failsafe: if boot throws anywhere, still show the login page
+         instead of leaving the user stuck on the loading skeleton. */
+      const failsafe = setTimeout(() => {
+        if (!state.booted) {
+          console.warn("Boot failsafe fired — showing login.");
+          state.loading = false;
+          state.booted = true;
+          try { route(); } catch (e) { console.error(e); }
+        }
+      }, 12000);
+      window.addEventListener("error", () => clearTimeout(failsafe), { once: true });
+
+      db.loadLocal();               // instant paint from cache
+      state.settings = state.settings || { ...DEFAULT_SETTINGS };
+
+      /* Never let a slow network keep the loading screen up. */
+      const withTimeout = (promise, ms, label) => Promise.race([
+        promise,
+        new Promise((_, rej) => setTimeout(() => rej(new Error(label + " timed out")), ms))
+      ]);
+
+      if (sb) {
+        try { await withTimeout(initAuth(), 8000, "Sign-in check"); }
+        catch (e) { console.error(e); restoreLocalSession(); }
+      } else {
+        if (!restoreLocalSession()) setSession(null);
+      }
+
+      if (state.session) {
+        try { await withTimeout(db.fetchAll(), 10000, "Loading data"); }
+        catch (e) {
+          console.error(e);
+          toast("Showing saved data (" + e.message + ")", "err");
+          db.loadLocal();
+        }
+      }
+      state.loading = false;
+      state.booted = true;
+      clearTimeout(failsafe);
+      route();
+
+      // keep the app fresh when it regains focus
+      document.addEventListener("visibilitychange", async () => {
+        if (document.visibilityState === "visible" && sb && state.session) {
+          try { await db.fetchAll(); route(); } catch (e) { }
+        }
+      });
+
+      /* ---------------------------------------------------------------
+         AUTO-LOGOUT (belt and braces)
+         sessionStorage already dies with the window. Some Android PWA
+         shells restore it on relaunch, so we also stamp the moment the
+         app goes to the background; if it comes back after a long gap
+         (the app was really closed/killed), we sign out and show login.
+      --------------------------------------------------------------- */
+      const AWAY_LIMIT_MS = 60 * 1000; // 1 minute away == app was closed
+      const AWAY_KEY = "hb_away_at";
+
+      const stampAway = () => { try { sessionStore && sessionStore.setItem(AWAY_KEY, String(Date.now())); } catch (e) { } };
+      const checkAway = async () => {
+        let at = 0;
+        try { at = Number(sessionStore && sessionStore.getItem(AWAY_KEY)) || 0; } catch (e) { }
+        if (!at || !state.session) return;
+        if (Date.now() - at > AWAY_LIMIT_MS) {
+          await signOut();
+          toast("Signed out because the app was closed", "warn");
+        }
+        try { sessionStore && sessionStore.removeItem(AWAY_KEY); } catch (e) { }
+      };
+
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "hidden") stampAway();
+        else checkAway();
+      });
+      window.addEventListener("pagehide", stampAway);
+      window.addEventListener("pageshow", checkAway);
+      checkAway();
+    })();
+
+    window.addEventListener("hashchange", route);
+  </script>
+</body>
+
+</html>
