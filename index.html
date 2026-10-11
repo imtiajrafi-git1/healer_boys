@@ -7,16 +7,22 @@
     content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 
   <title>Healer Boy's — Fund Tracker</title>
-  <meta name="description" content="Healer Boy's club fund tracker: members, monthly fees, donations and dues." />
+  <meta name="description" content="Healer Boy's club fund tracker: executive and general members, monthly fees, donations from others and dues." />
   <meta http-equiv="Cache-Control" content="no-store" />
 
   <!-- PWA -->
   <link rel="manifest"
-    href="data:application/manifest+json;base64,eyJuYW1lIjoiSGVhbGVyIEJveSdzIEZ1bmQgVHJhY2tlciIsInNob3J0X25hbWUiOiJIZWFsZXIgQm95J3MiLCJzdGFydF91cmwiOiIuIiwic2NvcGUiOiIuIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiI0VFRTJGMCIsInRoZW1lX2NvbG9yIjoiIzQzMzhDQSIsIm9yaWVudGF0aW9uIjoicG9ydHJhaXQiLCJpY29ucyI6W3sic3JjIjoiaHR0cHM6Ly9jZG4taWNvbnMtcG5nLmZsYXRpY29uLmNvbS81MTIvMjkxMy8yOTEzMDA4LnBuZyIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9wbmcifSx7InNyYyI6Imh0dHBzOi8vY2RuLWljb25zLXBuZy5mbGF0aWNvbi5jb20vNTEyLzI5MTMvMjkxMzAwOC5wbmciLCJzaXplcyI6IjUxMng1MTIiLCJ0eXBlIjoiaW1hZ2UvcG5nIn1dfQ==" />
+    href="data:application/manifest+json;base64,eyJuYW1lIjoiSGVhbGVyIEJveSdzIOKAlCBGdW5kIFRyYWNrZXIiLCJzaG9ydF9uYW1lIjoiSGVhbGVyIEJveSdzIiwiZGVzY3JpcHRpb24iOiJIZWFsZXIgQm95J3MgY2x1YiByZWdpc3RlcjogZXhlY3V0aXZlIGFuZCBnZW5lcmFsIG1lbWJlcnMsIG1vbnRobHkgZmVlcywgZG9uYXRpb25zIGZyb20gb3RoZXJzIGFuZCBkdWVzLiIsInN0YXJ0X3VybCI6Ii4iLCJzY29wZSI6Ii4iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjMTUwQjJFIiwidGhlbWVfY29sb3IiOiIjNkQyOEQ5Iiwib3JpZW50YXRpb24iOiJwb3J0cmFpdCIsImljb25zIjpbeyJzcmMiOiJodHRwczovL2Nkbi1pY29ucy1wbmcuZmxhdGljb24uY29tLzUxMi8yOTEzLzI5MTMwMDgucG5nIiwic2l6ZXMiOiIxOTJ4MTkyIiwidHlwZSI6ImltYWdlL3BuZyJ9LHsic3JjIjoiaHR0cHM6Ly9jZG4taWNvbnMtcG5nLmZsYXRpY29uLmNvbS81MTIvMjkxMy8yOTEzMDA4LnBuZyIsInNpemVzIjoiNTEyeDUxMiIsInR5cGUiOiJpbWFnZS9wbmcifV19" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Healer Boy's" />
+  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2913/2913008.png" />
   <meta name="theme-color" content="#4338CA" />
+  <meta property="og:site_name" content="Healer Boy's" />
+  <meta property="og:title" content="Healer Boy's — Fund Tracker" />
+  <meta property="og:description" content="Executive and general members, monthly fees, donations from others and dues." />
+  <meta name="application-name" content="Healer Boy's" />
 
   <!-- Supabase v2 + EmailJS -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -1503,6 +1509,25 @@
     .don-del:hover { background: #FFE4E9; color: #E11D48; }
     .don-del:active { transform: scale(.9); }
 
+    /* edit + delete pair on a donation card */
+    .don-actions {
+      flex: none;
+      display: inline-flex;
+      gap: 2px;
+      align-items: center;
+    }
+    .don-edit { color: #9C89AE; }
+    .don-edit:hover { background: #EEF2FF; color: #4338CA; }
+
+    /* member detail: seat / tier chips under the name */
+    .mem-seat-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin: -6px 0 14px;
+    }
+    .mem-seat-row .chip { cursor: default; }
+
     .pay-cal {
       background: #fff;
       border: 1px solid #E7DCEA;
@@ -1865,6 +1890,8 @@
   <link rel="stylesheet" href="home.css" />
   <!-- Members screen + nav active underline -->
   <link rel="stylesheet" href="members.css" />
+  <!-- Members register: dark purple premium skin (executive / general / supporters) -->
+  <link rel="stylesheet" href="members-premium.css" />
   <!-- Member fee & dues report table -->
   <link rel="stylesheet" href="report.css" />
   <!-- Shared fixed bottom navigation -->
@@ -1885,7 +1912,7 @@
     <!-- floating action host (admin "+ Add member" on the Members tab) -->
     <div id="fabHost"></div>
 
-    <nav id="nav" class="bottom-nav nav-variant-b" aria-label="Main navigation"></nav>
+    <nav id="nav" class="bottom-nav nav-variant-b" aria-label="Healer Boy's main navigation"></nav>
 
     <div class="overlay" id="overlay">
       <div class="sheet" id="sheet"></div>
@@ -1913,6 +1940,21 @@
        New members / payments / donations are appended to that sheet. */
     const SHEET_WEBHOOK_URL = "";
     const APP_TIMEZONE_OFFSET_MIN = 6 * 60; // Asia/Dhaka (UTC+6) for "day of month" logic
+    /* ---------------------------------------------------------------------
+       BRAND — the "Boy's - Boys" rule used everywhere in this app
+       ---------------------------------------------------------------------
+       * The club's NAME is always written with the possessive apostrophe:
+             Healer Boy's          (titles, headers, nav, footer, metadata,
+                                    receipts, emails, PWA manifest)
+       * The plural noun (the group of boys, not the name) has no apostrophe:
+             Healer Boys           e.g. "Healer Boys members", "the Healer Boys"
+         and never "Healer Boy's members" / "Healer Boys's".
+       Use BRAND / BRAND_PLURAL instead of typing the name by hand.
+    --------------------------------------------------------------------- */
+    const BRAND = "Healer Boy's";
+    const BRAND_PLURAL = "Healer Boys";
+    const BRAND_TAGLINE = "Club fund register";
+
     const IMGBB_KEY = "b42081d0e06cf735338afa7a40400bd1"; // member photo uploads
 
     /** upload a member photo to ImgBB, return the hosted URL (or null) */
@@ -2033,8 +2075,10 @@
       loading: true,
       members: [],
       payments: [],
-      donations: [],
+      donations: [],          /* money the club GAVE away          */
+      supporters: [],         /* "Donation from others" — money given TO the club */
       settings: null,
+      suppQuery: "",          /* supporter search box */
       duesSearch: "",
       duesMonth: 0,      // 0 = all months
       duesType: "Monthly Fee",
@@ -2059,24 +2103,334 @@
     };
 
     /* =====================================================================
+       MEMBERSHIP MODEL
+       ---------------------------------------------------------------------
+       Executive members = the leadership board (capped at the 8 seats below)
+       General members   = everybody else
+       Supporters        = people who donated TO the club ("Donation from others")
+
+       Supabase stores this on members.tier / members.role_title and in the
+       supporter_donations table (see supabase/migrations/0002_...sql). The
+       constants below also double as a fallback so the register looks right
+       before that migration has been run.
+    ===================================================================== */
+    const TIER_EXECUTIVE = "executive";
+    const TIER_GENERAL = "general";
+
+    /* the eight leadership seats, in display order */
+    const EXEC_SEATS = [
+      { name: "Abdullah H. Kafi", role: "President" },
+      { name: "Junaed Hossain Toni", role: "Vice President" },
+      { name: "Imtiaj Ahmed Rafi", role: "General Secretary" },
+      { name: "Kamrul H. Rafi", role: "Joint Secretary" },
+      { name: "Khaled Mahmud", role: "Treasurer" },
+      { name: "Afrahul Haque Orko", role: "Organizing Secretary" },
+      { name: "Istique Ahmed Chomok", role: "Office Secretary" },
+      { name: "Sabbir Hossain", role: "Publicity Secretary" }
+    ];
+    const EXEC_ROLE_BY_NAME = EXEC_SEATS.reduce((o, s) => (o[s.name] = s.role, o), {});
+    const EXEC_ROLE_ORDER = EXEC_SEATS.map(s => s.role)
+      .concat(["Adviser", "Chief Coordinator", "Executive Member"]);
+    const GENERAL_ROLE = "General Member";
+
+    /* default roster (demo mode + first paint before Supabase answers):
+       8 executives, general members — Mehedi Hasan Saikot included — and the
+       supporters shown in the "Donation from others" register. */
+    const SEED_MEMBERS = [
+      { name: "Abdullah H. Kafi",     tier: TIER_EXECUTIVE, role: "President",            sort: 1,  fee: 150, start: { y: 2024, m: 9 },  count: 32 },
+      { name: "Junaed Hossain Toni",  tier: TIER_EXECUTIVE, role: "Vice President",       sort: 2,  fee: 150, start: { y: 2024, m: 9 },  count: 37 },
+      { name: "Imtiaj Ahmed Rafi",    tier: TIER_EXECUTIVE, role: "General Secretary",    sort: 3,  fee: 150, start: { y: 2024, m: 9 },  count: 10 },
+      { name: "Kamrul H. Rafi",       tier: TIER_EXECUTIVE, role: "Joint Secretary",      sort: 4,  fee: 150, start: { y: 2024, m: 9 },  count: 25 },
+      { name: "Khaled Mahmud",        tier: TIER_EXECUTIVE, role: "Treasurer",            sort: 5,  fee: 150, start: { y: 2024, m: 9 },  count: 27 },
+      { name: "Afrahul Haque Orko",   tier: TIER_EXECUTIVE, role: "Organizing Secretary", sort: 6,  fee: 150, start: { y: 2024, m: 9 },  count: 10, extra: 10 },
+      { name: "Istique Ahmed Chomok", tier: TIER_EXECUTIVE, role: "Office Secretary",     sort: 7,  fee: 150, start: { y: 2024, m: 9 },  count: 4,  fine: 100 },
+      { name: "Sabbir Hossain",       tier: TIER_EXECUTIVE, role: "Publicity Secretary",  sort: 8,  fee: 150, start: { y: 2024, m: 9 },  count: 32 },
+      { name: "Mehedi Hasan Saikot",  tier: TIER_GENERAL,   role: GENERAL_ROLE,           sort: 21, fee: 100, start: { y: 2025, m: 12 }, count: 5 },
+      { name: "Rakibul Hasan Nayem",  tier: TIER_GENERAL,   role: GENERAL_ROLE,           sort: 22, fee: 150, start: { y: 2024, m: 9 },  count: 12 },
+      { name: "Shakil Ahmed",         tier: TIER_GENERAL,   role: GENERAL_ROLE,           sort: 23, fee: 150, start: { y: 2025, m: 1 },  count: 9, fine: 50 },
+      { name: "Tanvir Islam",         tier: TIER_GENERAL,   role: GENERAL_ROLE,           sort: 24, fee: 150, start: { y: 2024, m: 11 }, count: 7 }
+    ];
+    const SEED_SUPPORTERS = [
+      { donor_name: "Md. Ruhul Amin",   amount: 5000, month: 3,  day: 14, note: "Winter relief support",  anonymous: false },
+      { donor_name: "",                 amount: 3000, month: 2,  day: 2,  note: "Well-wisher, name withheld", anonymous: true },
+      { donor_name: "Farhana Akter",    amount: 2500, month: 1,  day: 21, note: "Eid gift for the fund",  anonymous: false },
+      { donor_name: "Sylhet Doctors",   amount: 8000, month: 12, day: 9,  note: "Medical camp support",   anonymous: false },
+      { donor_name: "",                 amount: 1500, month: 11, day: 3,  note: "Anonymous supporter",    anonymous: true }
+    ];
+
+    /* the register spelling, applied to cached data and to live rows */
+    const MEMBER_NAME_FIXES = { "Mehedi Hasan Saikat": "Mehedi Hasan Saikot" };
+
+    function fixMemberName(name) {
+      const key = String(name == null ? "" : name).trim();
+      return MEMBER_NAME_FIXES[key] || key;
+    }
+
+    function normalizeMembers(rows) {
+      return (rows || []).map(m => ({ ...m, name: fixMemberName(m.name) }));
+    }
+    function normalizeSupporters(rows) {
+      return (rows || []).map(s => ({
+        ...s,
+        donor_name: s.donor_name || null,
+        amount: Number(s.amount || 0),
+        is_anonymous: !!s.is_anonymous
+      }));
+    }
+
+    /* ---- tier helpers (stored column first, seat map as fallback) ---- */
+    function memberTier(m) {
+      const t = String((m && m.tier) || "").trim().toLowerCase();
+      if (t === TIER_EXECUTIVE || t === TIER_GENERAL) return t;
+      return EXEC_ROLE_BY_NAME[fixMemberName(m && m.name)] ? TIER_EXECUTIVE : TIER_GENERAL;
+    }
+    const isExecutive = m => memberTier(m) === TIER_EXECUTIVE;
+
+    function memberRole(m) {
+      if (!m) return "";
+      const stored = String(m.role_title || "").trim();
+      if (stored && !(memberTier(m) === TIER_GENERAL && stored === "Executive Member")) return stored;
+      if (EXEC_ROLE_BY_NAME[m.name]) return EXEC_ROLE_BY_NAME[m.name];
+      return isExecutive(m) ? "Executive Member" : GENERAL_ROLE;
+    }
+    function roleRank(m) {
+      const i = EXEC_ROLE_ORDER.indexOf(memberRole(m));
+      return i < 0 ? EXEC_ROLE_ORDER.length : i;
+    }
+    function memberSortOrder(m) {
+      const n = Number(m && m.sort_order);
+      return isFinite(n) ? n : 0;
+    }
+
+    function executiveMembers() {
+      return state.members.filter(isExecutive).sort((a, b) =>
+        (memberSortOrder(a) || roleRank(a) + 1) - (memberSortOrder(b) || roleRank(b) + 1) ||
+        roleRank(a) - roleRank(b) || String(a.name).localeCompare(String(b.name)));
+    }
+    function generalMembers() {
+      return state.members.filter(m => !isExecutive(m))
+        .sort((a, b) => String(a.name).localeCompare(String(b.name)));
+    }
+
+    /* ---- supporters ("Donation from others") ---- */
+    function supporterRows() {
+      return (state.supporters || []).slice().sort((a, b) =>
+        String(b.date || "").localeCompare(String(a.date || "")) ||
+        Number(b.amount || 0) - Number(a.amount || 0));
+    }
+    function supporterName(s) {
+      const named = s && !s.is_anonymous ? String(s.donor_name || "").trim() : "";
+      return named || "Anonymous";
+    }
+    function supporterTotal() {
+      return (state.supporters || []).reduce((a, s) => a + Number(s.amount || 0), 0);
+    }
+    function supporterYearTotal(year = YEAR()) {
+      return (state.supporters || [])
+        .filter(s => String(s.date || "").slice(0, 4) === String(year))
+        .reduce((a, s) => a + Number(s.amount || 0), 0);
+    }
+
+    /* =====================================================================
+       SUPABASE SCHEMA CAPABILITIES
+       ---------------------------------------------------------------------
+       The register must work on a brand-new project AND on a project that has
+       not run supabase/migrations/0002_member_tiers_and_supporters.sql yet.
+       Each optional column/table is probed once, cached in CAPS, and the write
+       helpers below silently drop anything the database does not have yet —
+       so an insert can never fail just because a migration is pending.
+    ===================================================================== */
+    const SUPPORTER_TABLE = "supporter_donations";
+    const CAPS = {
+      probed: false,
+      memberTier: false,
+      memberRole: false,
+      memberPhone: false,
+      memberActive: false,
+      memberSort: false,
+      supporters: false
+    };
+    const CAP_KEY_BY_COLUMN = {
+      tier: "memberTier",
+      role_title: "memberRole",
+      phone: "memberPhone",
+      is_active: "memberActive",
+      sort_order: "memberSort"
+    };
+    const MEMBER_OPTIONAL_COLUMNS = ["tier", "role_title", "phone", "is_active", "sort_order", "avatar_url", "email"];
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+    async function tableHasColumn(table, column) {
+      if (!sb) return false;
+      try {
+        const { error } = await sb.from(table).select(column).limit(1);
+        return !error;
+      } catch (e) { return false; }
+    }
+
+    async function probeCapabilities(force = false) {
+      if (!sb || (CAPS.probed && !force)) return CAPS;
+      const [tier, role, phone, active, sort, supporters] = await Promise.all([
+        tableHasColumn("members", "tier"),
+        tableHasColumn("members", "role_title"),
+        tableHasColumn("members", "phone"),
+        tableHasColumn("members", "is_active"),
+        tableHasColumn("members", "sort_order"),
+        tableHasColumn(SUPPORTER_TABLE, "id")
+      ]);
+      Object.assign(CAPS, {
+        memberTier: tier, memberRole: role, memberPhone: phone,
+        memberActive: active, memberSort: sort, supporters, probed: true
+      });
+      if (!supporters) {
+        console.info(BRAND + ": `" + SUPPORTER_TABLE + "` not found yet — run upgrade-members-and-supporters.sql to sync supporters across devices.");
+      }
+      return CAPS;
+    }
+
+    /* a column the server rejected stops being sent for the rest of the session */
+    function forgetColumn(column) {
+      const key = CAP_KEY_BY_COLUMN[column];
+      if (key) CAPS[key] = false;
+    }
+
+    function mentionsColumn(message, column) {
+      return new RegExp("(^|[^a-z_])" + column + "([^a-z_]|$)", "i").test(String(message || ""));
+    }
+    const isSchemaError = msg => /schema cache|does not exist|could not find/i.test(String(msg || ""));
+    const isUuidError = msg => /uuid|invalid input syntax/i.test(String(msg || ""));
+    function isMissingTableError(error) {
+      const msg = String((error && error.message) || error || "");
+      return isSchemaError(msg) && /supporter_donations|relation|table/i.test(msg);
+    }
+    function friendlyDbError(error, table) {
+      const msg = String((error && error.message) || error || "Unknown database error");
+      if (/row-level security|permission denied|violates row-level/i.test(msg)) {
+        return "Supabase refused that write — sign in with the admin Gmail (" + ADMIN_EMAIL + ") and try again.";
+      }
+      if (isSchemaError(msg)) {
+        return "The `" + table + "` table is missing a column. Run upgrade-members-and-supporters.sql in Supabase, then retry.";
+      }
+      return msg;
+    }
+
+    /**
+     * Insert one row and never lose data to schema drift.
+     *   1. our own id is dropped when the primary key is a uuid column
+     *   2. optional columns (migration 0002) are dropped when they do not exist
+     * @returns {Promise<object>} the stored row
+     */
+    async function sbInsertOne(table, payload, optionalColumns = []) {
+      let row = { ...payload };
+      let res = await sb.from(table).insert([row]).select().single();
+      if (res.error && "id" in row && isUuidError(res.error.message)) {
+        const copy = { ...row }; delete copy.id;
+        res = await sb.from(table).insert([copy]).select().single();
+        row = copy;
+      }
+      if (res.error) {
+        const msg = String(res.error.message || "");
+        const drop = optionalColumns.filter(c => c in row && (mentionsColumn(msg, c) || isSchemaError(msg)));
+        if (drop.length) {
+          const slim = { ...row };
+          drop.forEach(c => { delete slim[c]; forgetColumn(c); });
+          res = await sb.from(table).insert([slim]).select().single();
+          row = slim;
+        }
+      }
+      if (res.error) throw new Error(friendlyDbError(res.error, table));
+      return res.data || row;
+    }
+
+    /** Update one row by id with the same column-drift protection. */
+    async function sbUpdateOne(table, id, patch, optionalColumns = []) {
+      let body = { ...patch };
+      let res = await sb.from(table).update(body).eq("id", id).select().single();
+      if (res.error) {
+        const msg = String(res.error.message || "");
+        const drop = optionalColumns.filter(c => c in body && (mentionsColumn(msg, c) || isSchemaError(msg)));
+        if (drop.length) {
+          const slim = { ...body };
+          drop.forEach(c => { delete slim[c]; forgetColumn(c); });
+          res = await sb.from(table).update(slim).eq("id", id).select().single();
+        }
+      }
+      if (res.error) throw new Error(friendlyDbError(res.error, table));
+      return res.data;
+    }
+
+    /* ---- row shapes shared by live + local mode ---- */
+    function freshRecordId(prefix, preferred) {
+      const id = String(preferred || "");
+      if (UUID_RE.test(id)) return id;
+      return sb ? newId() : uid(prefix);
+    }
+
+    function memberPayload(input, forcedId) {
+      const tier = input.tier === TIER_EXECUTIVE ? TIER_EXECUTIVE : TIER_GENERAL;
+      return {
+        id: forcedId || freshRecordId("mem", input.id),
+        name: String(input.name || "").trim(),
+        email: input.email ? String(input.email).trim() : null,
+        avatar_url: input.avatar_url || null,
+        tier,
+        role_title: input.role_title ? String(input.role_title).trim()
+          : (tier === TIER_EXECUTIVE ? "Executive Member" : GENERAL_ROLE),
+        phone: input.phone ? String(input.phone).trim() : null,
+        is_active: input.is_active !== false,
+        sort_order: Number(input.sort_order || 0)
+      };
+    }
+
+    function supporterPayload(input, forcedId) {
+      return {
+        id: forcedId || freshRecordId("sup", input.id),
+        donor_name: String(input.donor_name || "").trim() || null,
+        amount: Number(input.amount || 0),
+        date: input.date || todayISO(),
+        note: String(input.note || "").trim() || null,
+        is_anonymous: input.is_anonymous === true || !String(input.donor_name || "").trim()
+      };
+    }
+
+    function rememberMember(row) {
+      const i = state.members.findIndex(m => m.id === row.id);
+      if (i > -1) state.members[i] = { ...state.members[i], ...row };
+      else state.members.push(row);
+    }
+    function rememberSupporter(row) {
+      const i = (state.supporters || []).findIndex(s => s.id === row.id);
+      if (i > -1) state.supporters[i] = { ...state.supporters[i], ...row };
+      else state.supporters.unshift(row);
+    }
+
+    /* =====================================================================
        DATA ACCESS (Supabase when live, local snapshot in demo)
     ===================================================================== */
     const db = {
       async fetchAll() {
         if (!sb) { this.loadLocal(); return; }
-        const [m, p, d, s] = await Promise.all([
+        await probeCapabilities();
+        const jobs = [
           sb.from("members").select("*").order("name", { ascending: true }),
           sb.from("payments").select("*"),
           sb.from("donations").select("*").order("date", { ascending: false }),
           sb.from("app_settings").select("*").eq("id", 1).maybeSingle()
-        ]);
+        ];
+        if (CAPS.supporters) jobs.push(sb.from(SUPPORTER_TABLE).select("*").order("date", { ascending: false }));
+        const settled = await Promise.all(jobs.map(p => p.catch(e => ({ error: e }))));
+        const [m, p, d, s] = settled;
+        const sup = settled[4];
         if (m.error) throw m.error;
         if (p.error) throw p.error;
         if (d.error) throw d.error;
-        state.members = m.data || [];
+        state.members = normalizeMembers(m.data || []);
         state.payments = p.data || [];
         state.donations = d.data || [];
-        state.settings = { ...DEFAULT_SETTINGS, ...(s.data || {}) };
+        state.settings = { ...DEFAULT_SETTINGS, ...((s && s.data) || {}) };
+        /* a missing supporter table (migration pending) keeps whatever we cached */
+        if (sup && !sup.error && Array.isArray(sup.data)) state.supporters = normalizeSupporters(sup.data);
+        else if (CAPS.supporters === false && !(state.supporters || []).length) state.supporters = [];
         this.saveLocal();
         notifyReportDataChanged();
       },
@@ -2085,7 +2439,8 @@
         try {
           localStorage.setItem(LS_DATA, JSON.stringify({
             members: state.members, payments: state.payments,
-            donations: state.donations, settings: state.settings
+            donations: state.donations, supporters: state.supporters || [],
+            settings: state.settings
           }));
         } catch (e) { }
       },
@@ -2094,9 +2449,10 @@
         let d = null;
         try { d = JSON.parse(localStorage.getItem(LS_DATA) || "null"); } catch (e) { }
         if (d && d.members && d.members.length) {
-          state.members = d.members;
+          state.members = normalizeMembers(d.members);
           state.payments = d.payments || [];
           state.donations = d.donations || [];
+          state.supporters = normalizeSupporters(d.supporters || []);
           state.settings = { ...DEFAULT_SETTINGS, ...(d.settings || {}) };
           /* one-time cleanup: drop the old demo wallet numbers from caches */
           if (state.settings.bkash_number === "01712345678") state.settings.bkash_number = "";
@@ -2107,42 +2463,39 @@
         }
       },
 
+      /** demo / first-paint roster: 8 executives, general members, supporters */
       seed() {
-        const defs = [
-          { name: "Abdullah H. Kafi", start: { y: 2024, m: 9 }, count: 32, fee: 150 },
-          { name: "Afrahul Haque Orko", start: { y: 2024, m: 9 }, count: 10, fee: 150, extra: 10 },
-          { name: "Imtiaj Ahmed Rafi", start: { y: 2024, m: 9 }, count: 10, fee: 150 },
-          { name: "Istique Ahmed Chomok", start: { y: 2024, m: 9 }, count: 4, fee: 150, fine: 100 },
-          { name: "Junaed Hossain Toni", start: { y: 2024, m: 9 }, count: 37, fee: 150 },
-          { name: "Kamrul H. Rafi", start: { y: 2024, m: 9 }, count: 25, fee: 150 },
-          { name: "Khaled Mahmud", start: { y: 2024, m: 9 }, count: 27, fee: 150 },
-          { name: "Mehedi Hasan Saikat", start: { y: 2025, m: 12 }, count: 5, fee: 100 },
-          { name: "Sabbir Hossain", start: { y: 2024, m: 9 }, count: 32, fee: 150 }
-        ];
-        state.members = defs.map((d, i) => ({
+        const now = nowLocal();
+        const nowIdx = monthIndex(now.getFullYear(), now.getMonth() + 1);
+        const y = YEAR();
+
+        state.members = SEED_MEMBERS.map((d, i) => ({
           id: "mem_" + (i + 1),
           name: d.name,
           email: d.name.toLowerCase().replace(/[^a-z]+/g, ".") + "@gmail.com",
-          avatar_url: null
+          phone: null,
+          avatar_url: null,
+          tier: d.tier,
+          role_title: d.role,
+          sort_order: d.sort,
+          is_active: true
         }));
-        state.payments = [];
-        const now = nowLocal();
-        const nowIdx = monthIndex(now.getFullYear(), now.getMonth() + 1);
 
-        defs.forEach((d, i) => {
+        state.payments = [];
+        SEED_MEMBERS.forEach((d, i) => {
           const startIdx = monthIndex(d.start.y, d.start.m);
           for (let step = 0; step < d.count; step++) {
             const curIdx = startIdx + step;
-            const y = Math.floor(curIdx / 12);
-            const m = (curIdx % 12) + 1;
+            const yy = Math.floor(curIdx / 12);
+            const mm = (curIdx % 12) + 1;
             const isAdvance = curIdx > nowIdx;
             const amt = d.fee + (step === 0 && d.extra ? d.extra : 0);
             state.payments.push({
               id: uid("pay"),
               member_id: state.members[i].id,
               amount: amt,
-              date: `${y}-${pad(m)}-05`,
-              type: `${isAdvance ? "Advanced Fee" : "Monthly Fee"} (${MONTHS[m - 1]} ${y})`
+              date: `${yy}-${pad(mm)}-05`,
+              type: `${isAdvance ? "Advanced Fee" : "Monthly Fee"} (${MONTHS[mm - 1]} ${yy})`
             });
           }
           if (d.fine) {
@@ -2156,7 +2509,6 @@
           }
         });
 
-        const y = YEAR();
         const dm = Math.max(1, now.getMonth());
         state.donations = [
           { id: uid("don"), description: "হরিপুরের প্রতিবন্ধী শিশুকে সাহায্য", date: `${y}-${pad(dm)}-22`, amount: 2000 },
@@ -2164,46 +2516,65 @@
           { id: uid("don"), description: "হীরাপুর জিহাদের গাড়ি এক্সিডেন্টে সাহায্য", date: `${y - 1}-11-18`, amount: 2000 },
           { id: uid("don"), description: "প্রাথমিক ত্রাণ ও সহায়তা", date: `${y - 2}-11-11`, amount: 1000 }
         ];
+
+        state.supporters = SEED_SUPPORTERS.map((s, i) => ({
+          id: "sup_" + (i + 1),
+          donor_name: s.donor_name || null,
+          amount: s.amount,
+          date: `${s.month > now.getMonth() + 1 ? y - 1 : y}-${pad(s.month)}-${pad(s.day)}`,
+          note: s.note || null,
+          is_anonymous: !!s.anonymous
+        }));
+
         state.settings = { ...DEFAULT_SETTINGS };
       },
 
-      /* ---- members ---- */
+      /* ---- members (executive + general) ---- */
       async addMember(payload) {
+        const row = memberPayload(payload);
+        if (!row.name) throw new Error("A member needs a name.");
         if (sb) {
-          /* always send our own id so tables without a default can still insert */
-          const withId = { id: payload.id || uid("mem"), ...payload };
-          let res = await sb.from("members").insert([withId]).select().single();
-          /* older schema without an `email` column -> retry without it */
-          if (res.error && /email/i.test(res.error.message || "")) {
-            const bare = { ...withId }; delete bare.email;
-            res = await sb.from("members").insert([bare]).select().single();
-          }
-          if (res.error) throw res.error;
-          state.members.push(res.data);
-          this.syncSheet("member", "add", res.data);
+          await probeCapabilities();
+          const saved = await sbInsertOne("members", row, MEMBER_OPTIONAL_COLUMNS);
+          const merged = { ...row, ...(saved || {}) };
+          rememberMember(merged);
+          this.syncSheet("member", "add", merged);
           notifyReportDataChanged();
-          return res.data;
+          return merged;
         }
-        const row = { id: uid("mem"), ...payload };
-        state.members.push(row); this.saveLocal();
+        rememberMember(row);
+        this.saveLocal();
         this.syncSheet("member", "add", row);
         notifyReportDataChanged();
         return row;
       },
+
       async updateMember(id, patch) {
+        const current = state.members.find(m => m.id === id) || { id };
+        const merged = memberPayload({ ...current, ...patch }, id);
+        if (!merged.name) throw new Error("A member needs a name.");
         if (sb) {
-          const { error } = await sb.from("members").update(patch).eq("id", id);
-          if (error) throw error;
+          await probeCapabilities();
+          const saved = await sbUpdateOne("members", id, merged, MEMBER_OPTIONAL_COLUMNS);
+          const next = { ...current, ...merged, ...(saved || {}) };
+          rememberMember(next);
+          this.syncSheet("member", "update", next);
+          notifyReportDataChanged();
+          return next;
         }
-        const i = state.members.findIndex(x => x.id === id);
-        if (i > -1) state.members[i] = { ...state.members[i], ...patch };
-        if (!sb) this.saveLocal();
+        rememberMember(merged);
+        this.saveLocal();
+        this.syncSheet("member", "update", merged);
         notifyReportDataChanged();
+        return merged;
       },
+
       async deleteMember(id) {
         if (sb) {
           const { error } = await sb.from("members").delete().eq("id", id);
-          if (error) throw error;
+          if (error) throw new Error(friendlyDbError(error, "members"));
+          /* keep the ledger consistent: the member's payments go with them */
+          try { await sb.from("payments").delete().eq("member_id", id); } catch (e) { console.warn(e); }
         }
         state.members = state.members.filter(m => m.id !== id);
         state.payments = state.payments.filter(p => p.member_id !== id);
@@ -2211,67 +2582,212 @@
         notifyReportDataChanged();
       },
 
+      /** quick tier/seat change straight from a card menu */
+      async setMemberSeat(id, tier, roleTitle) {
+        const seat = tier === TIER_EXECUTIVE ? (roleTitle || "Executive Member") : GENERAL_ROLE;
+        return this.updateMember(id, { tier: tier === TIER_EXECUTIVE ? TIER_EXECUTIVE : TIER_GENERAL, role_title: seat });
+      },
+
       /* ---- payments ---- */
       async addPayment(payload) {
+        const row = { id: freshRecordId("pay", payload.id), ...payload };
         if (sb) {
-          /* send our own UUID so "null value in column id" can never happen */
-          let res = await sb.from("payments")
-            .insert([{ id: payload.id || newId(), ...payload }]).select().single();
-          /* if the server generates ids itself, retry without ours */
-          if (res.error && /column\s+"?id"?/i.test(res.error.message || "")) {
-            res = await sb.from("payments").insert([payload]).select().single();
-          }
-          if (res.error) throw res.error;
-          const data = res.data;
-          state.payments.push(data);
-          const mem = state.members.find(m => m.id === data.member_id);
-          this.syncSheet("payment", "add", { ...data, member_name: mem ? mem.name : "" });
+          const saved = await sbInsertOne("payments", row, []);
+          const stored = { ...row, ...(saved || {}) };
+          state.payments.push(stored);
+          const mem = state.members.find(m => m.id === stored.member_id);
+          this.syncSheet("payment", "add", { ...stored, member_name: mem ? mem.name : "" });
           notifyReportDataChanged();
-          return data;
+          return stored;
         }
-        const row = { id: uid("pay"), ...payload };
-        state.payments.push(row); this.saveLocal();
+        state.payments.push(row);
+        this.saveLocal();
         const mem = state.members.find(m => m.id === row.member_id);
         this.syncSheet("payment", "add", { ...row, member_name: mem ? mem.name : "" });
         notifyReportDataChanged();
         return row;
       },
+
       async deletePayment(id) {
         if (sb) {
           const { error } = await sb.from("payments").delete().eq("id", id);
-          if (error) throw error;
+          if (error) throw new Error(friendlyDbError(error, "payments"));
         }
         state.payments = state.payments.filter(p => p.id !== id);
         if (!sb) this.saveLocal();
         notifyReportDataChanged();
       },
 
-      /* ---- donations ---- */
+      /* ---- donations the club GIVES AWAY ---- */
       async addDonation(payload) {
+        const row = {
+          id: freshRecordId("don", payload.id),
+          description: String(payload.description || "").trim() || "Donation",
+          date: payload.date || todayISO(),
+          amount: Number(payload.amount || 0)
+        };
         if (sb) {
-          /* id was missing here before — that's the "null value in column id" error */
-          let res = await sb.from("donations")
-            .insert([{ id: payload.id || newId(), ...payload }]).select().single();
-          if (res.error && /column\s+"?id"?/i.test(res.error.message || "")) {
-            res = await sb.from("donations").insert([payload]).select().single();
-          }
-          if (res.error) throw res.error;
-          state.donations.unshift(res.data);
-          this.syncSheet("donation", "add", res.data);
-          return res.data;
+          const saved = await sbInsertOne("donations", row, []);
+          const stored = { ...row, ...(saved || {}) };
+          state.donations.unshift(stored);
+          this.syncSheet("donation", "add", stored);
+          return stored;
         }
-        const row = { id: uid("don"), ...payload };
-        state.donations.unshift(row); this.saveLocal();
+        state.donations.unshift(row);
+        this.saveLocal();
         this.syncSheet("donation", "add", row);
         return row;
       },
+
+      async updateDonation(id, patch) {
+        const current = state.donations.find(d => d.id === id) || { id };
+        const row = {
+          ...current,
+          description: patch.description != null ? String(patch.description).trim() : current.description,
+          date: patch.date || current.date,
+          amount: patch.amount != null ? Number(patch.amount || 0) : Number(current.amount || 0)
+        };
+        if (sb) {
+          const saved = await sbUpdateOne("donations", id, row, []);
+          const next = { ...row, ...(saved || {}) };
+          state.donations = state.donations.map(d => (d.id === id ? next : d));
+          this.syncSheet("donation", "update", next);
+          return next;
+        }
+        state.donations = state.donations.map(d => (d.id === id ? row : d));
+        this.saveLocal();
+        this.syncSheet("donation", "update", row);
+        return row;
+      },
+
       async deleteDonation(id) {
         if (sb) {
           const { error } = await sb.from("donations").delete().eq("id", id);
-          if (error) throw error;
+          if (error) throw new Error(friendlyDbError(error, "donations"));
         }
         state.donations = state.donations.filter(d => d.id !== id);
         if (!sb) this.saveLocal();
+      },
+
+      /* ---- "Donation from others" = supporters who gave TO the club ---- */
+      async addSupporter(payload) {
+        const row = supporterPayload(payload);
+        if (!row.amount) throw new Error("Enter how much the supporter gave.");
+        if (sb && CAPS.supporters !== false) {
+          try {
+            await probeCapabilities();
+            if (CAPS.supporters) {
+              const saved = await sbInsertOne(SUPPORTER_TABLE, row, []);
+              const merged = { ...row, ...(saved || {}) };
+              rememberSupporter(merged);
+              this.syncSheet("supporter", "add", merged);
+              notifyReportDataChanged();
+              return merged;
+            }
+          } catch (e) {
+            if (!isMissingTableError(e)) throw new Error(friendlyDbError(e, SUPPORTER_TABLE));
+            CAPS.supporters = false;
+            console.warn(BRAND + ": supporter_donations is missing — saving on this device.", e);
+            supporterTableWarning();
+          }
+        }
+        rememberSupporter(row);
+        this.saveLocal();
+        this.syncSheet("supporter", "add", row);
+        notifyReportDataChanged();
+        return row;
+      },
+
+      async updateSupporter(id, patch) {
+        const current = (state.supporters || []).find(s => s.id === id) || { id };
+        /* renaming an anonymous entry to a real supporter un-anonymises it,
+           unless the caller says otherwise */
+        const merged = { ...current, ...patch };
+        if (patch.donor_name && patch.is_anonymous === undefined) merged.is_anonymous = false;
+        const row = supporterPayload(merged, id);
+        if (sb && CAPS.supporters) {
+          try {
+            const saved = await sbUpdateOne(SUPPORTER_TABLE, id, row, []);
+            const next = { ...current, ...row, ...(saved || {}) };
+            rememberSupporter(next);
+            this.syncSheet("supporter", "update", next);
+            notifyReportDataChanged();
+            return next;
+          } catch (e) {
+            if (!isMissingTableError(e)) throw new Error(friendlyDbError(e, SUPPORTER_TABLE));
+            CAPS.supporters = false;
+          }
+        }
+        rememberSupporter(row);
+        this.saveLocal();
+        this.syncSheet("supporter", "update", row);
+        notifyReportDataChanged();
+        return row;
+      },
+
+      async deleteSupporter(id) {
+        if (sb && CAPS.supporters) {
+          try {
+            const { error } = await sb.from(SUPPORTER_TABLE).delete().eq("id", id);
+            if (error) throw error;
+          } catch (e) {
+            if (!isMissingTableError(e)) throw new Error(friendlyDbError(e, SUPPORTER_TABLE));
+            CAPS.supporters = false;
+          }
+        }
+        state.supporters = (state.supporters || []).filter(s => s.id !== id);
+        if (!sb) this.saveLocal();
+        notifyReportDataChanged();
+      },
+
+      /**
+       * Admin repair + sync.
+       *   * uploads supporter rows that were only held on this device because
+       *     the migration had not run yet
+       *   * re-aligns executive seats (tier / role_title / phone) with the
+       *     server for every member it knows about
+       * Safe to press any time: it only writes what actually differs.
+       * @returns {Promise<{supporters:number, members:number}>}
+       */
+      async pushLocalRegister() {
+        if (!sb) throw new Error("Supabase keys are not configured — the app is in demo mode.");
+        const out = { supporters: 0, members: 0 };
+        await probeCapabilities(true);
+
+        /* 1. supporters kept on this device */
+        if (CAPS.supporters) {
+          for (const s of (state.supporters || [])) {
+            if (UUID_RE.test(String(s.id))) continue;
+            const saved = await sbInsertOne(SUPPORTER_TABLE, supporterPayload(s, newId()), []);
+            rememberSupporter({ ...s, ...(saved || {}) });
+            out.supporters++;
+          }
+        }
+
+        /* 2. member seats that the server does not have yet */
+        if (CAPS.memberTier) {
+          const { data: remote, error } = await sb.from("members").select("id,tier,role_title,phone");
+          if (error) throw new Error(friendlyDbError(error, "members"));
+          const byId = new Map((remote || []).map(r => [String(r.id), r]));
+          for (const m of state.members) {
+            const row = byId.get(String(m.id));
+            if (!row) continue;
+            const wantTier = memberTier(m);
+            const wantRole = memberRole(m);
+            const patch = {};
+            if (String(row.tier || "") !== wantTier) patch.tier = wantTier;
+            if (String(row.role_title || "") !== wantRole) patch.role_title = wantRole;
+            if (CAPS.memberPhone && String(row.phone || "") !== String(m.phone || "")) patch.phone = m.phone || null;
+            if (!Object.keys(patch).length) continue;
+            const saved = await sbUpdateOne("members", m.id, patch, MEMBER_OPTIONAL_COLUMNS);
+            rememberMember({ ...m, ...patch, ...(saved || {}) });
+            out.members++;
+          }
+        }
+
+        this.saveLocal();
+        notifyReportDataChanged();
+        return out;
       },
 
       /* ---- Google Sheet mirror (does not block the app if the sheet is down) ---- */
@@ -2303,6 +2819,14 @@
       }
     };
 
+    /* one gentle nudge per session when the supporters migration is missing */
+    let supporterWarningShown = false;
+    function supporterTableWarning() {
+      if (supporterWarningShown) return;
+      supporterWarningShown = true;
+      toast("Saved on this device — run upgrade-members-and-supporters.sql to sync supporters.", "warn");
+    }
+
     /* =====================================================================
        LIVE FEE-REPORT REFRESH
        - Local CRUD recalculates immediately from the in-memory ledger.
@@ -2318,10 +2842,15 @@
     let reportRealtimeChannel = null;
 
     function reportDataSignature() {
-      const members = state.members.map(m => [m.id, m.name]).sort((a, b) => String(a[0]).localeCompare(String(b[0])));
+      const members = state.members
+        .map(m => [m.id, m.name, m.tier || "", m.role_title || "", m.is_active === false ? 0 : 1])
+        .sort((a, b) => String(a[0]).localeCompare(String(b[0])));
+      const supporters = (state.supporters || [])
+        .map(s => [s.id, s.donor_name || "", s.amount, s.date, s.is_anonymous ? 1 : 0])
+        .sort((a, b) => String(a[0]).localeCompare(String(b[0])));
       const payments = state.payments.map(p => [p.id, p.member_id, p.amount, p.date, p.type])
         .sort((a, b) => String(a[0]).localeCompare(String(b[0])));
-      return JSON.stringify([members, payments]);
+      return JSON.stringify([members, payments, supporters]);
     }
 
     function reportFreshLabel() {
@@ -2380,6 +2909,7 @@
         reportRealtimeChannel = sb.channel("healer-fee-report-live")
           .on("postgres_changes", { event: "*", schema: "public", table: "members" }, queueReportServerRefresh)
           .on("postgres_changes", { event: "*", schema: "public", table: "payments" }, queueReportServerRefresh)
+          .on("postgres_changes", { event: "*", schema: "public", table: "supporter_donations" }, queueReportServerRefresh)
           .subscribe();
       } catch (e) {
         console.warn("Fee report realtime unavailable; polling fallback remains active", e);
@@ -2564,7 +3094,15 @@
     function totals() {
       const collected = state.payments.reduce((a, p) => a + Number(p.amount || 0), 0);
       const donated = state.donations.reduce((a, d) => a + Number(d.amount || 0), 0);
-      return { collected, donated, fund: collected - donated, payments: state.payments.length };
+      /* "Donation from others" is money given TO the club, so it grows the fund */
+      const supported = (state.supporters || []).reduce((a, s) => a + Number(s.amount || 0), 0);
+      return {
+        collected,
+        donated,
+        supported,
+        fund: collected + supported - donated,
+        payments: state.payments.length
+      };
     }
 
     /** last n calendar months as {y, m} going back from this month, most recent last */
@@ -2589,7 +3127,12 @@
         const ds = String(d.date || "");
         if (Number(ds.slice(0, 4)) === key.y && Number(ds.slice(5, 7)) === key.m) donated += Number(d.amount || 0);
       });
-      return collected - donated;
+      let supported = 0;
+      (state.supporters || []).forEach(s => {
+        const ds = String(s.date || "");
+        if (Number(ds.slice(0, 4)) === key.y && Number(ds.slice(5, 7)) === key.m) supported += Number(s.amount || 0);
+      });
+      return collected + supported - donated;
     }
 
     /** % change of this month's net fund vs last month's, for the hero card badge */
@@ -2684,6 +3227,12 @@
       bank: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 4l9 5.5"/><path d="M5 10v8M9.5 10v8M14.5 10v8M19 10v8"/><path d="M3 18h18M3 20.5h18"/></svg>',
       alert: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2.5 19.5h19L12 3Z"/><path d="M12 9.5v4.5"/><path d="M12 16.8v.01"/></svg>',
       gift: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="9" width="17" height="11" rx="2"/><path d="M3.5 13h17"/><path d="M12 9v11"/><path d="M12 9C12 7 10.5 5 9 5S7 6.3 7.6 7.3 10 9 12 9Z"/><path d="M12 9c0-2 1.5-4 3-4s1.4 1.3.8 2.3S14 9 12 9Z"/></svg>',
+      pencil: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10-10a2.5 2.5 0 0 0-3.5-3.5L4.5 16.5 4 20Z"/><path d="M13.5 6.5 17.5 10.5"/></svg>',
+      mask: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5c2.6-1.2 5.6-1.8 9-1.8s6.4.6 9 1.8c0 6-3.4 10.8-9 10.8S3 13.5 3 7.5Z"/><path d="M7.5 10.5c.9-.7 2.1-.7 3 0"/><path d="M13.5 10.5c.9-.7 2.1-.7 3 0"/></svg>',
+      dots: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5.5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="18.5" cy="12" r="1.9"/></svg>',
+      shield: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v6c0 4 3 7.3 7 9 4-1.7 7-5 7-9V6l-7-3Z"/><path d="m9.2 12 2 2 3.6-4"/></svg>',
+      star: '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="m12 3.6 2.6 5.4 5.9.8-4.3 4.1 1 5.9-5.2-2.8-5.2 2.8 1-5.9L3.5 9.8l5.9-.8L12 3.6Z"/></svg>',
+      hands: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.8c1.2-1.5 3.6-1.4 4.6.2.9 1.5-.1 2.8-2.2 4.6L12 10.9 9.6 8.6C7.5 6.8 6.5 5.5 7.4 4c1-1.6 3.4-1.7 4.6-.2Z"/><path d="M4 14.5v4.2a1.8 1.8 0 0 0 1.8 1.8h12.4a1.8 1.8 0 0 0 1.8-1.8v-4.2"/><path d="M4 14.5 7.5 18h9L20 14.5"/></svg>',
       /* brand mark — your Drive logo, with multiple fallbacks if one URL is blocked */
       brand: (function () {
         const urls = [
@@ -2911,7 +3460,7 @@
       if (!emailOk || !passOk) throw new Error("Wrong admin Gmail or password.");
 
       // Works even if the Supabase Auth user was never confirmed.
-      state.session = { user: { email: ADMIN_EMAIL, user_metadata: { name: "Healer Boy's Admin" }, local: true } };
+      state.session = { user: { email: ADMIN_EMAIL, user_metadata: { name: BRAND + " Admin" }, local: true } };
       state.isAdmin = true;
       saveLocalSession();
 
@@ -2945,12 +3494,12 @@
     ===================================================================== */
     async function sendReminderEmail(member, monthLabel, amount) {
       const to_email = member.email || `${member.name.toLowerCase().replace(/[^a-z]+/g, ".")}@gmail.com`;
-      const body = `Hi ${member.name}, your fee for ${monthLabel} is still due: ${taka(amount)}. Please pay by bKash or Nagad: ${state.settings.bkash_number || "-"} / ${state.settings.nagad_number || "-"}.`;
+      const body = `Hi ${member.name}, your ${BRAND} fee for ${monthLabel} is still due: ${taka(amount)}. Please pay by bKash or Nagad: ${state.settings.bkash_number || "-"} / ${state.settings.nagad_number || "-"}.`;
       if (!emailJSReady()) { await sleep(800); return { simulated: true, to_email, body }; }
       const res = await window.emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
         to_name: member.name,
         to_email,
-        subject: "Monthly fee reminder",
+        subject: BRAND + " — monthly fee reminder",
         message: body,
         month: monthLabel,
         amount: String(amount),
@@ -3015,7 +3564,7 @@
         ops.push(`BT /${bold ? "F2" : "F1"} ${size} Tf ${x} ${y} Td (${pdfEsc(text)}) Tj ET`);
       const L = (x1, y, x2) => ops.push(`${x1} ${y} m ${x2} ${y} l S`);
 
-      T(56, 780, 20, "HEALER BOY'S", true);
+      T(56, 780, 20, BRAND.toUpperCase(), true);
       T(56, 762, 9.5, "Community fund receipt", false);
       L(56, 752, 539);
       T(56, 730, 11, "Member", true);
@@ -3044,7 +3593,7 @@
 
       L(56, y - 20, 539);
       T(56, y - 38, 8.5, "Pay by bKash " + (state.settings.bkash_number || "-") + "  or  Nagad " + (state.settings.nagad_number || "-"), false);
-      T(56, y - 50, 8.5, "Generated by Healer Boy's fund tracker.", false);
+      T(56, y - 50, 8.5, `Generated by ${BRAND} fund tracker.`, false);
 
       const content = ops.join("\n");
       const objs = [
@@ -3213,6 +3762,11 @@
       else if (p === "/profile") html = ScreenProfile();
       else html = ScreenHome();
       v.innerHTML = html;
+      /* the Members register wears the dark violet skin; every other screen
+         keeps the light lavender "liquid glass" look */
+      v.classList.toggle("view-dark", p === "/members");
+      const navEl = document.getElementById("nav");
+      if (navEl) navEl.classList.toggle("nav-dark", p === "/members");
       bind(p);
       bindPaymentOptions(v);
       if (p === "/home") countFundUp();
@@ -3222,7 +3776,7 @@
       const fabHost = document.getElementById("fabHost");
       if (fabHost) {
         if (p === "/members" && state.isAdmin) {
-          fabHost.innerHTML = `<button class="mb-fab" id="addMemberFab" type="button" aria-label="Add member">
+          fabHost.innerHTML = `<button class="mb-fab" id="addMemberFab" type="button" aria-label="Add a member to the Healer Boy's register">
             ${ICONS.plus.replace('width="18" height="18"', 'width="20" height="20"')}<span>Add member</span></button>`;
           const fab = fabHost.querySelector("#addMemberFab");
           if (fab) fab.onclick = openAddMember;
@@ -3292,8 +3846,8 @@
           ${ICONS.brand}
         </div>
         <div class="home-greet">
-          <p class="home-hello">Hello,</p>
-          <p class="home-name">${esc(fullName)}</p>
+          <p class="home-hello">${esc(BRAND)}</p>
+          <p class="home-name">Hello, ${esc(fullName)}</p>
           <button class="home-role-badge ${state.isAdmin ? "is-admin" : ""}" data-go="/profile"
             aria-label="Open profile — signed in as ${roleLabel}">
             ${ICONS.crown}<span>${roleLabel}</span>
@@ -3323,7 +3877,7 @@
           </span>
           <div class="fund-summary__titles">
             <h2 class="fund-summary__title" id="fundSummaryTitle">Total Fund</h2>
-            <p class="fund-summary__subtitle" id="fundSummaryFormula">Net Balance &middot; Fees &minus; Donations</p>
+            <p class="fund-summary__subtitle" id="fundSummaryFormula">Net Balance &middot; Fees + Support &minus; Donations</p>
           </div>
           <span class="fund-summary__live" aria-hidden="true"><i></i>LIVE</span>
         </div>
@@ -3381,7 +3935,7 @@
           </div>
           <p class="feat-title">Members</p>
           <p class="feat-value c-purple num">${state.members.length}</p>
-          <p class="feat-sub">Total members</p>
+          <p class="feat-sub">${executiveMembers().length} executive &middot; ${generalMembers().length} general</p>
         </button>
 
         <button class="feat-card c-pink" data-go="${state.isAdmin ? "/reminders" : "/dues"}" aria-label="Open reminders">
@@ -3556,7 +4110,8 @@
     </div>`;
     }
 
-    const MEMBER_TINTS = ["#EDE9FE", "#FCE7F3", "#D1FAE5", "#DBEAFE", "#FFEDD5"];
+    /* accent colours for the register cards (dark violet skin) */
+    const MEMBER_TINTS = ["#8B5CF6", "#EC4899", "#38BDF8", "#34D399", "#FBBF24"];
 
     /* one pass over members: status, dues, paid totals, activity */
     function memberRows() {
@@ -3564,16 +4119,135 @@
       return state.members.map(m => {
         const dues = memberDues(m.id);
         const pays = state.payments.filter(p => p.member_id === m.id);
+        const feePays = pays.filter(p => String(p.type || "").includes("Monthly Fee"));
         return {
           m,
           due: dues.count > 0,
           dueAmount: dues.amount,
+          dueMonths: dues.count,
+          fee: dues.fee,
           paidTotal: pays.reduce((a, p) => a + Number(p.amount || 0), 0),
+          feeCount: feePays.length,
+          payCount: pays.length,
           active: pays.some(p => { const k = paymentMonthKey(p); return !!k && k.y === yr; })
         };
       });
     }
 
+    /* =====================================================================
+       REGISTER PIECES — avatars, tags, pills, admin controls, section heads
+    ===================================================================== */
+    function mbdAvatar(m, extra = "", tint = "") {
+      const url = m && m.avatar_url ? String(m.avatar_url) : "";
+      const style = url ? `background-image:url('${esc(url)}')` : (tint ? `--tint:${tint}` : "");
+      return `<span class="mbd-av ${extra}" ${style ? `style="${style}"` : ""}>
+        ${url ? `<img src="${esc(url)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">` : `<span aria-hidden="true">${esc(initials(m && m.name))}</span>`}
+      </span>`;
+    }
+
+    function mbdStatusPill(r) {
+      if (r.due) {
+        return `<span class="mbd-pill due">${ICONS.alert.replace('width="18" height="18"', 'width="12" height="12"')}<span>Due ${taka(r.dueAmount)}</span></span>`;
+      }
+      return `<span class="mbd-pill paid">${ICONS.check.replace('width="16" height="16"', 'width="12" height="12"')}<span>Paid</span></span>`;
+    }
+
+    /* one compact "manage" control per card keeps the mobile rows breathable;
+       edit + delete live one tap away inside the manage sheet */
+    function mbdManageButton(kind, id, label) {
+      if (!state.isAdmin) return "";
+      return `<button class="mbd-icon" type="button" data-manage-${kind}="${esc(id)}" aria-label="Manage ${esc(label)}">${ICONS.dots}</button>`;
+    }
+
+    function mbdSectionHead(id, icon, tone, title, sub, count, countLabel) {
+      return `<div class="mbd-sec-head">
+        <span class="mbd-sec-ico ${tone}" aria-hidden="true">${icon}</span>
+        <div class="mbd-sec-titles">
+          <h2 class="mbd-sec-title" id="${id}">${esc(title)}</h2>
+          <p class="mbd-sec-sub">${esc(sub)}</p>
+        </div>
+        <span class="mbd-counter ${tone}"><span class="num">${count}</span> ${esc(countLabel)}</span>
+      </div>`;
+    }
+
+    function mbdAddButton(attr, label) {
+      if (!state.isAdmin) return "";
+      return `<button class="mbd-add mbd-add-wide" type="button" ${attr}>${ICONS.plus}<span>${esc(label)}</span></button>`;
+    }
+
+    /* ---- executive card: leadership badge, seat, paid/due tags ---- */
+    function execCardHTML(r, i) {
+      const m = r.m;
+      const role = memberRole(m);
+      return `<article class="mbd-exec ${state.isAdmin ? "is-admin" : ""}" style="--i:${i}" data-member="${esc(m.id)}" tabindex="0" role="button"
+        aria-label="${esc(m.name)}, ${esc(role)}, ${r.due ? "due " + taka(r.dueAmount) : "all fees paid"}">
+        <span class="mbd-exec-glow" aria-hidden="true"></span>
+        ${state.isAdmin ? `<span class="mbd-exec-actions">${mbdManageButton("member", m.id, m.name)}</span>` : ""}
+        <div class="mbd-exec-top">
+          ${mbdAvatar(m, "mbd-av-exec")}
+          <div class="mbd-exec-id">
+            <p class="mbd-exec-name">${esc(m.name)}</p>
+            <p class="mbd-role">${ICONS.crown}<span>${esc(role)}</span></p>
+          </div>
+        </div>
+        <div class="mbd-exec-meta">
+          <span class="mbd-tag gold">${ICONS.star}Leadership</span>
+          <span class="mbd-tag info">Total paid <b class="num">${taka(r.paidTotal)}</b></span>
+          <span class="mbd-tag">${r.feeCount} fee${r.feeCount === 1 ? "" : "s"}</span>
+          ${r.due
+            ? `<span class="mbd-tag warn">Due <b class="num">${taka(r.dueAmount)}</b>&nbsp;·&nbsp;${r.dueMonths} month${r.dueMonths === 1 ? "" : "s"}</span>`
+            : `<span class="mbd-tag ok">${ICONS.check.replace('width="16" height="16"', 'width="12" height="12"')}All cleared</span>`}
+        </div>
+      </article>`;
+    }
+
+    /* ---- general member row ---- */
+    function generalRowHTML(r, i, isTop) {
+      const m = r.m;
+      return `<article class="mbd-gen" style="--i:${i}" data-member="${esc(m.id)}" tabindex="0" role="button"
+        aria-label="${esc(m.name)}, ${r.due ? "due " + taka(r.dueAmount) : "paid"}">
+        ${mbdAvatar(m, "mbd-av-sm", MEMBER_TINTS[i % MEMBER_TINTS.length])}
+        <div class="mbd-gen-id">
+          <p class="mbd-gen-name">${esc(m.name)}${isTop ? ` <span class="mbd-tag gold" style="padding:2px 7px;font-size:9.5px">TOP</span>` : ""}</p>
+          <p class="mbd-gen-meta">
+            <span>${esc(memberRole(m))}</span>
+            <i class="mbd-sep" aria-hidden="true"></i>
+            <span>Total paid <b class="num" style="color:#E9D5FF">${taka(r.paidTotal)}</b></span>
+            <i class="mbd-sep" aria-hidden="true"></i>
+            <span>${r.feeCount} fee${r.feeCount === 1 ? "" : "s"}</span>
+          </p>
+        </div>
+        <div class="mbd-gen-right">
+          ${mbdStatusPill(r)}
+          ${mbdManageButton("member", m.id, m.name)}
+        </div>
+      </article>`;
+    }
+
+    /* ---- supporter card ("Donation from others") ---- */
+    function supporterCardHTML(s, i) {
+      const anon = !!s.is_anonymous || !String(s.donor_name || "").trim();
+      const name = supporterName(s);
+      const ago = timeAgoLabel(s.date);
+      return `<article class="mbd-supp-card ${anon ? "anon" : ""}" style="--i:${i}">
+        <span class="mbd-av mbd-av-supp" aria-hidden="true">${anon ? ICONS.mask : esc(initials(name))}</span>
+        <div class="mbd-supp-body">
+          <p class="mbd-supp-name">${esc(name)}${anon && String(s.donor_name || "").trim() ? ` <span class="mbd-tag" style="padding:2px 7px;font-size:9.5px">name withheld</span>` : ""}</p>
+          ${s.note ? `<p class="mbd-supp-note">${esc(s.note)}</p>` : ""}
+          <p class="mbd-supp-date">${prettyDate(s.date)}${ago ? " · " + ago : ""}</p>
+        </div>
+        <div class="mbd-supp-amt">
+          <p class="num">${taka(s.amount)}</p>
+          <span>${anon ? "gift" : "gave"}</span>
+        </div>
+        <span class="mbd-supp-actions">${mbdManageButton("supporter", s.id, name)}</span>
+      </article>`;
+    }
+
+    /* =====================================================================
+       SCREEN 2 — MEMBERS REGISTER
+       Executive Members → General Members → Donation from others
+    ===================================================================== */
     function ScreenMembers() {
       const rows = memberRows();
       const total = rows.length;
@@ -3582,115 +4256,573 @@
       const paidN = total - dueN;
       const q = state.memberQuery.trim().toLowerCase();
 
-      let list = rows.filter(r => !q || r.m.name.toLowerCase().includes(q));
-      if (state.memberFilter === "paid") list = list.filter(r => !r.due);
-      if (state.memberFilter === "due") list = list.filter(r => r.due);
-      list = list.slice().sort((a, b) => {
+      const execAll = rows.filter(r => isExecutive(r.m))
+        .sort((a, b) => roleRank(a.m) - roleRank(b.m) || a.m.name.localeCompare(b.m.name));
+      const genAll = rows.filter(r => !isExecutive(r.m));
+
+      const sorter = (a, b) => {
         if (state.memberSort === "due") return (b.dueAmount - a.dueAmount) || a.m.name.localeCompare(b.m.name);
         if (state.memberSort === "name") return a.m.name.localeCompare(b.m.name);
         /* default: whoever paid the most is first; ties fall back to name */
         return (b.paidTotal - a.paidTotal) || a.m.name.localeCompare(b.m.name);
-      });
-      const topPayerId = (list.length && state.memberSort === "paid" && list[0].paidTotal > 0) ? list[0].m.id : null;
-      const SORT_LABEL = { paid: "top payer first", due: "highest due first", name: "A to Z" };
+      };
+      const byQuery = r => !q
+        || r.m.name.toLowerCase().includes(q)
+        || memberRole(r.m).toLowerCase().includes(q);
+      const byFilter = r => state.memberFilter === "all"
+        || (state.memberFilter === "paid" ? !r.due : r.due);
 
+      const execList = execAll.filter(r => byQuery(r) && byFilter(r));
+      const genList = genAll.filter(r => byQuery(r) && byFilter(r)).sort(sorter);
+      const topPayerId = (genList.length && state.memberSort === "paid" && genList[0].paidTotal > 0)
+        ? genList[0].m.id : null;
+
+      const suppAll = supporterRows();
+      const suppList = suppAll.filter(s => !q
+        || supporterName(s).toLowerCase().includes(q)
+        || String(s.note || "").toLowerCase().includes(q));
+      const suppTotal = supporterTotal();
+      const suppYear = supporterYearTotal();
+      const anonCount = suppAll.filter(s => s.is_anonymous || !String(s.donor_name || "").trim()).length;
+
+      const SORT_LABEL = { paid: "top payer first", due: "highest due first", name: "A to Z" };
       const filters = [["all", "All", total], ["paid", "Paid", paidN], ["due", "Due", dueN]];
 
-      return `<div class="screen mb-screen">
-      <div class="mb-head">
-        <button class="mb-back" data-go="/home" aria-label="Back to home">${ICONS.back}</button>
-        <h1 class="mb-title">Members</h1>
-        <button class="home-bell" id="membersBellBtn" aria-label="Notifications${dueN ? `, ${dueN} dues pending` : ""}">
-          ${ICONS.bell}
-          ${dueN ? `<span class="dot" aria-hidden="true"></span>` : ""}
+      return `<div class="screen mb-screen mbd-screen">
+      <div class="mbd-top">
+        <button class="mbd-back" type="button" data-go="/home" aria-label="Back to home">${ICONS.back}</button>
+        <div class="mbd-head-txt">
+          <h1 class="mbd-title">Members</h1>
+          <p class="mbd-title-sub">${esc(BRAND)} &middot; club register</p>
+        </div>
+        <button class="mbd-bell" id="membersBellBtn" type="button" aria-label="Notifications${dueN ? `, ${dueN} dues pending` : ""}">
+          ${ICONS.bell}${dueN ? `<span class="dot" aria-hidden="true"></span>` : ""}
         </button>
       </div>
 
-      <div class="mb-search">
-        <label for="memberSearch" class="mb-sr">Search members</label>
-        <svg class="mb-search-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-          stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg>
-        <input id="memberSearch" type="search" placeholder="Search members" autocomplete="off"
-          value="${esc(state.memberQuery)}" />
-        <button class="mb-filter-btn" id="memberSortBtn" type="button"
+      <section class="mbd-hero" aria-label="Member totals">
+        <span class="mbd-hero-glow" aria-hidden="true"></span>
+        <p class="mbd-hero-label">Total members</p>
+        <p class="mbd-hero-num num">${total}</p>
+        <p class="mbd-hero-sub">${execAll.length} executive &middot; ${genAll.length} general &middot; ${suppAll.length} supporter${suppAll.length === 1 ? "" : "s"}</p>
+        <div class="mbd-hero-chips">
+          <span class="mbd-chip"><i class="gold"></i>Executive <b class="num">${execAll.length}</b></span>
+          <span class="mbd-chip"><i class="sky"></i>General <b class="num">${genAll.length}</b></span>
+          <span class="mbd-chip"><i class="mint"></i>Paid <b class="num">${paidN}</b></span>
+          <span class="mbd-chip"><i class="rose"></i>Dues pending <b class="num">${dueN}</b></span>
+          <span class="mbd-chip"><i class="violet"></i>Active <b class="num">${activeN}</b></span>
+        </div>
+      </section>
+
+      <div class="mbd-tools">
+        <label class="mbd-search" for="memberSearch">
+          <span class="mb-sr">Search members or supporters</span>
+          ${ICONS.search}
+          <input id="memberSearch" type="search" placeholder="Search members or supporters" autocomplete="off"
+            value="${esc(state.memberQuery)}" />
+        </label>
+        <button class="mbd-sort" id="memberSortBtn" type="button"
           aria-label="Sort members: ${SORT_LABEL[state.memberSort]}. Tap to change.">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" aria-hidden="true"><path d="M4 7h10"/><path d="M18 7h2"/><circle cx="16" cy="7" r="2"/><path d="M4 17h2"/><path d="M10 17h10"/><circle cx="8" cy="17" r="2"/></svg>
         </button>
       </div>
 
-      <div class="mb-summary">
-        <p class="mb-sum-label">Total Members</p>
-        <p class="mb-sum-num num">${total}</p>
-        <div class="mb-chips">
-          <span class="mb-chip-w"><span class="mb-dot" style="background:#A7F3D0"></span>Active <b class="num">${activeN}</b></span>
-          <span class="mb-chip-w"><span class="mb-dot" style="background:#FBCFE8"></span>Dues pending <b class="num">${dueN}</b></span>
-        </div>
-      </div>
-
-      <div class="mb-filters" role="group" aria-label="Filter members by payment status">
-        ${filters.map(([k, label, n]) => `<button class="mb-chip" type="button" data-mfilter="${k}"
+      <div class="mbd-filters" role="group" aria-label="Filter members by payment status">
+        ${filters.map(([k, label, n]) => `<button class="mbd-filter" type="button" data-mfilter="${k}"
           aria-pressed="${state.memberFilter === k}">${label}<span class="n num">${n}</span></button>`).join("")}
       </div>
 
-      <button class="mb-report" type="button" data-go="/report" aria-label="Open member fee and dues report table">
+      <!-- ================= EXECUTIVE MEMBERS ================= -->
+      <section class="mbd-sec" aria-labelledby="mbdExecTitle">
+        ${mbdSectionHead("mbdExecTitle", ICONS.crown.replace('width="12" height="12"', 'width="19" height="19"'), "gold",
+          "Executive Members", "Leadership board · 8 seats", execList.length, "member" + (execList.length === 1 ? "" : "s"))}
+        ${mbdAddButton('data-add-exec="1"', "Add executive member")}
+        ${execList.length ? `<div class="mbd-exec-list">${execList.map(execCardHTML).join("")}</div>`
+          : `<div class="mbd-empty">${q || state.memberFilter !== "all" ? "No executive member matches this view." : "No executive members yet — add the leadership board above."}</div>`}
+      </section>
+
+      <!-- ================= GENERAL MEMBERS ================= -->
+      <section class="mbd-sec" aria-labelledby="mbdGenTitle">
+        ${mbdSectionHead("mbdGenTitle", ICONS.users.replace('width="22" height="22"', 'width="19" height="19"'), "",
+          "General Members", "Registered members · fees & dues", genList.length, "member" + (genList.length === 1 ? "" : "s"))}
+        ${mbdAddButton('data-add-gen="1"', "Add general member")}
+        ${genList.length ? `<div class="mbd-gen-list">${genList.map((r, i) => generalRowHTML(r, i, r.m.id === topPayerId)).join("")}</div>`
+          : `<div class="mbd-empty">${q || state.memberFilter !== "all" ? "No general member matches this view." : "No general members yet — add the first one above."}</div>`}
+      </section>
+
+      <!-- ================= DONATION FROM OTHERS ================= -->
+      <section class="mbd-sec" aria-labelledby="mbdSuppTitle">
+        ${mbdSectionHead("mbdSuppTitle", ICONS.hands.replace('width="18" height="18"', 'width="19" height="19"'), "rose",
+          "Donation from others", "Supporters who gave to the club", suppList.length, "supporter" + (suppList.length === 1 ? "" : "s"))}
+        ${mbdAddButton('data-add-supporter="1"', "Add supporter donation")}
+        <div class="mbd-supp-total">
+          <span class="mbd-supp-total-glow" aria-hidden="true"></span>
+          <span class="mbd-supp-total-ico" aria-hidden="true">${ICONS.hands}</span>
+          <div class="mbd-supp-total-txt">
+            <p class="mbd-supp-total-label">Total from supporters</p>
+            <p class="mbd-supp-total-num num">${taka(suppTotal)}</p>
+            <p class="mbd-supp-total-sub">${taka(suppYear)} in ${YEAR()} &middot; ${suppAll.length} entr${suppAll.length === 1 ? "y" : "ies"} &middot; ${anonCount} anonymous</p>
+          </div>
+        </div>
+        ${suppList.length ? `<div class="mbd-supp-list">${suppList.map(supporterCardHTML).join("")}</div>`
+          : `<div class="mbd-empty">${q ? "No supporter matches this search." : "No supporter donations recorded yet."}</div>`}
+      </section>
+
+      <button class="mbd-report" type="button" data-go="/report" aria-label="Open the member fee and dues report table">
         ${ICONS.doc}<span>ফি ও বকেয়া রিপোর্ট (টেবিল)</span>
       </button>
 
-      <div class="mb-list">
-        ${list.length ? list.map((r, i) => `
-          <button class="mb-card" type="button" data-member="${r.m.id}" style="--tint:${MEMBER_TINTS[i % MEMBER_TINTS.length]}"
-            aria-label="${esc(r.m.name)}, ${r.due ? "due " + taka(r.dueAmount) : "paid"}">
-            <span class="mb-av" ${r.m.avatar_url ? `style="background-image:url('${esc(r.m.avatar_url)}')"` : ""}>${r.m.avatar_url ? "" : initials(r.m.name)}</span>
-            <span class="mb-main">
-              <span class="mb-name">${esc(r.m.name)}${r.m.id === topPayerId ? `<span class="mb-top" title="Highest contributor">TOP</span>` : ""}</span>
-              <span class="mb-meta">
-                <span class="mb-badge">Member</span>
-                <span class="mb-paid num">Total paid ${taka(r.paidTotal)}</span>
-              </span>
-            </span>
-            ${r.due
-              ? `<span class="mb-pill due"><span class="mb-dot" style="background:currentColor"></span>Due ${taka(r.dueAmount)}</span>`
-              : `<span class="mb-pill paid">${ICONS.check.replace('width="16" height="16"', 'width="12" height="12"')}<span>Paid</span></span>`}
-          </button>`).join("")
-        : `<div class="mb-empty">No members match this filter.</div>`}
-      </div>
-
-      ${state.isAdmin ? `<form class="mb-add" id="addMemberCard" hidden>
-        <div class="mb-add-head">
-          <p class="mb-add-title">Add member</p>
-          <button type="button" class="mb-add-close" id="addMemberClose" aria-label="Close add member form">${ICONS.plus.replace('width="18" height="18"', 'width="16" height="16"').replace('<path d="M12 5v14M5 12h14"/>', '<path d="M6 6l12 12M18 6 6 18"/>')}</button>
-        </div>
-        <div class="mb-field">
-          <label class="label" for="mName">Full name</label>
-          <input class="field" id="mName" type="text" placeholder="e.g. Junaed Hossain Toni" required />
-        </div>
-        <div class="mb-field">
-          <label class="label" for="mEmail">Email (for reminders)</label>
-          <input class="field" id="mEmail" type="email" inputmode="email" placeholder="member@gmail.com" />
-        </div>
-        <div class="mb-field">
-          <label class="label" for="mAvatar">Photo (optional)</label>
-          <label class="mb-avatar-pick" for="mAvatar">
-            <span class="mb-avatar-preview" id="mAvatarPreview" aria-hidden="true">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159"/><path d="M12 10.5l2.25-2.25a2.25 2.25 0 013.182 0L21.75 12"/><circle cx="9" cy="9" r="1.4"/></svg>
-            </span>
-            <span class="mb-avatar-text" id="mAvatarName">Choose a photo</span>
-            <input id="mAvatar" type="file" accept="image/*" hidden />
-          </label>
-        </div>
-        <button class="btn btn-primary" type="submit" id="mSubmitBtn">Add to members</button>
-      </form>` : ""}
+      <p class="mbd-note">
+        ${state.isAdmin
+          ? `Admin mode &middot; tap <b>+</b> to add, ${ICONS.dots} on any card to edit, re-seat or delete. Everything saves to Supabase instantly.`
+          : `Signed in as viewer &middot; ${esc(BRAND)} register`}
+      </p>
     </div>`;
     }
 
-    /* admin: the floating "+ Add member" button reveals the form and focuses it */
-    function openAddMember() {
-      const card = document.getElementById("addMemberCard");
-      if (!card) return;
-      card.hidden = false;
-      card.scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "center" });
-      setTimeout(() => { const n = document.getElementById("mName"); if (n) n.focus(); }, 320);
+    /* admin: the floating "+ Add member" button opens the register sheet */
+    function openAddMember(tier) {
+      openMemberSheet(null, { tier: tier === TIER_EXECUTIVE ? TIER_EXECUTIVE : TIER_GENERAL });
+    }
+
+    /* =====================================================================
+       ADMIN SHEETS — add / edit / delete members + supporter donations
+       (RLS still enforces "admin only" on the server; these are the UI)
+    ===================================================================== */
+    function openMemberSheet(member = null, opts = {}) {
+      if (!state.isAdmin) { toast("Only the admin can change the register", "err"); return; }
+      const isEdit = !!member;
+      const tier = member ? memberTier(member) : (opts.tier === TIER_EXECUTIVE ? TIER_EXECUTIVE : TIER_GENERAL);
+      const role = member ? memberRole(member) : "Executive Member";
+      const stats = member ? memberRows().find(r => r.m.id === member.id) : null;
+      const email = (member && member.email) || "";
+      const phone = (member && member.phone) || "";
+      const avatar = (member && member.avatar_url) || "";
+      const sortDefault = member ? Number(member.sort_order || 0)
+        : (tier === TIER_EXECUTIVE ? EXEC_SEATS.length + 1 : 30);
+
+      openSheet(`<p class="eyebrow">${isEdit ? "Edit member" : "Add member"}</p>
+        <p class="sub" style="margin:6px 0 12px">${isEdit
+            ? `${esc(member.name)} &middot; ${esc(memberRole(member))}`
+            : `New record in the ${esc(BRAND)} register — saved to Supabase, no refresh needed.`}</p>
+        <form id="mbdMemberForm" class="mbd-form" autocomplete="off" novalidate>
+          <div class="mbd-photo-row">
+            <label class="mbd-photo-prev" id="mbdPhotoPrev" for="mbdPhoto" title="Choose a photo">
+              ${avatar ? `<img src="${esc(avatar)}" alt="" />` : esc(initials(member ? member.name : "?"))}
+            </label>
+            <div style="flex:1;min-width:0">
+              <p class="mbd-hint" style="margin:0 0 6px">Photo (optional)</p>
+              <label class="btn btn-outline" for="mbdPhoto" style="height:40px;padding:0 14px;display:inline-flex;align-items:center;gap:8px;font-size:13px">
+                ${ICONS.plus.replace('width="18" height="18"', 'width="15" height="15"')}<span id="mbdPhotoName">Choose photo</span>
+              </label>
+              <input id="mbdPhoto" type="file" accept="image/*" hidden />
+            </div>
+          </div>
+
+          <div>
+            <label class="label" for="mbdName">Full name</label>
+            <input class="field" id="mbdName" type="text" required value="${esc(member ? member.name : "")}"
+              placeholder="e.g. Mehedi Hasan Saikot" />
+          </div>
+
+          <div>
+            <label class="label">Membership type</label>
+            <div class="mbd-seg" id="mbdTierSeg" role="group" aria-label="Membership type">
+              <button type="button" data-tier="${TIER_GENERAL}" aria-pressed="${tier !== TIER_EXECUTIVE}">General member</button>
+              <button type="button" data-tier="${TIER_EXECUTIVE}" aria-pressed="${tier === TIER_EXECUTIVE}">Executive</button>
+            </div>
+          </div>
+
+          <div id="mbdRoleWrap" class="${tier === TIER_EXECUTIVE ? "" : "hidden"}">
+            <label class="label" for="mbdRole">Designation / seat</label>
+            <select class="field" id="mbdRole" style="padding-right:8px">
+              ${EXEC_ROLE_ORDER.map(r => `<option value="${esc(r)}" ${r === role ? "selected" : ""}>${esc(r)}</option>`).join("")}
+            </select>
+          </div>
+
+          <div class="mbd-form-row">
+            <div>
+              <label class="label" for="mbdPhone">Phone</label>
+              <input class="field" id="mbdPhone" type="tel" inputmode="tel" value="${esc(phone)}" placeholder="01XXXXXXXXX" />
+            </div>
+            <div>
+              <label class="label" for="mbdSort">Display order</label>
+              <input class="field num" id="mbdSort" type="number" min="0" step="1" value="${sortDefault}" />
+            </div>
+          </div>
+
+          <div>
+            <label class="label" for="mbdEmail">Email (fee reminders)</label>
+            <input class="field" id="mbdEmail" type="email" inputmode="email" value="${esc(email)}" placeholder="member@gmail.com" />
+          </div>
+
+          <p class="mbd-preview" id="mbdPreview">${isEdit && stats
+            ? `Total paid <b>${taka(stats.paidTotal)}</b> &middot; ${stats.feeCount} fee${stats.feeCount === 1 ? "" : "s"} &middot; <b>${stats.due ? "Due " + taka(stats.dueAmount) + ` (${stats.dueMonths} month${stats.dueMonths === 1 ? "" : "s"})` : "All cleared"}</b>`
+            : `Tip: pick <b>Executive</b> to show the member with the leadership badge, or leave the photo empty to use initials.`}</p>
+
+          <div class="mbd-form-actions">
+            ${isEdit
+              ? `<button class="btn btn-outline" type="button" id="mbdMemberDelete" style="color:#9F1239;border-color:#F5C6D0">Delete</button>`
+              : `<button class="btn btn-outline" type="button" id="mbdMemberCancel">Cancel</button>`}
+            <button class="btn btn-primary" type="submit" id="mbdMemberSave">${isEdit ? "Save changes" : "Add member"}</button>
+          </div>
+        </form>
+        <div style="height:calc(6px + var(--safe-b, 0px))"></div>`);
+
+      let selectedTier = tier;
+      const tierSeg = document.getElementById("mbdTierSeg");
+      const roleWrap = document.getElementById("mbdRoleWrap");
+      const preview = document.getElementById("mbdPreview");
+      const photoInput = document.getElementById("mbdPhoto");
+      const photoPrev = document.getElementById("mbdPhotoPrev");
+      const photoName = document.getElementById("mbdPhotoName");
+
+      tierSeg.querySelectorAll("[data-tier]").forEach(b => b.onclick = () => {
+        selectedTier = b.dataset.tier;
+        tierSeg.querySelectorAll("[data-tier]").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+        if (roleWrap) roleWrap.classList.toggle("hidden", selectedTier !== TIER_EXECUTIVE);
+        if (preview) preview.innerHTML = selectedTier === TIER_EXECUTIVE
+          ? `Executive members appear at the top with the leadership badge and their seat name.`
+          : `General members are listed with their fee counter and paid/due status.`;
+      });
+
+      if (photoInput) photoInput.onchange = () => {
+        const f = photoInput.files && photoInput.files[0];
+        if (!f) return;
+        if (photoName) photoName.textContent = f.name.length > 18 ? f.name.slice(0, 16) + "…" : f.name;
+        if (photoPrev) {
+          photoPrev.style.backgroundImage = `url('${URL.createObjectURL(f)}')`;
+          photoPrev.innerHTML = "";
+        }
+      };
+
+      const cancel = document.getElementById("mbdMemberCancel");
+      if (cancel) cancel.onclick = closeSheet;
+
+      const del = document.getElementById("mbdMemberDelete");
+      if (del) del.onclick = async () => {
+        if (!(await confirmDelete(`Remove ${member.name} from the register? Their payment history is removed too.`, "Delete member"))) return;
+        try {
+          await db.deleteMember(member.id);
+          closeSheet();
+          toast(member.name + " removed", "warn");
+          if (path().startsWith("/member/")) navigate("/members"); else render();
+        } catch (ex) { toast(ex.message, "err"); }
+      };
+
+      const form = document.getElementById("mbdMemberForm");
+      form.onsubmit = async e => {
+        e.preventDefault();
+        const name = document.getElementById("mbdName").value.trim();
+        if (!name) { toast("A member needs a name", "err"); return; }
+        const saveBtn = document.getElementById("mbdMemberSave");
+        busy(saveBtn, true, isEdit ? "Saving" : "Adding");
+        let avatarUrl = avatar || null;
+        const file = photoInput && photoInput.files ? photoInput.files[0] : null;
+        if (file) {
+          const up = await uploadImageToImgbb(file);
+          if (up) avatarUrl = up;
+          else toast("Photo upload failed — saved without the new photo", "warn");
+        }
+        const payload = {
+          name,
+          tier: selectedTier,
+          role_title: selectedTier === TIER_EXECUTIVE
+            ? (document.getElementById("mbdRole") || {}).value || "Executive Member"
+            : GENERAL_ROLE,
+          phone: document.getElementById("mbdPhone").value.trim(),
+          sort_order: Number(document.getElementById("mbdSort").value || 0),
+          email: document.getElementById("mbdEmail").value.trim(),
+          avatar_url: avatarUrl
+        };
+        try {
+          if (isEdit) {
+            await db.updateMember(member.id, payload);
+            toast(name + " updated", "ok");
+          } else {
+            await db.addMember(payload);
+            toast(name + " added to the register", "ok");
+          }
+          closeSheet();
+          render();
+        } catch (ex) {
+          toast(ex.message, "err");
+        } finally { busy(saveBtn, false); }
+      };
+
+      setTimeout(() => { const n = document.getElementById("mbdName"); if (n && !isEdit) n.focus(); }, 260);
+    }
+
+    function openSupporterSheet(row = null) {
+      if (!state.isAdmin) { toast("Only the admin can change the register", "err"); return; }
+      const isEdit = !!row;
+      const anon = row ? (!!row.is_anonymous || !String(row.donor_name || "").trim()) : false;
+
+      openSheet(`<p class="eyebrow">${isEdit ? "Edit supporter donation" : "Add supporter donation"}</p>
+        <p class="sub" style="margin:6px 0 12px">“Donation from others” &middot; money given to ${esc(BRAND)} by supporters.</p>
+        <form id="mbdSuppForm" class="mbd-form" autocomplete="off" novalidate>
+          <div>
+            <label class="label" for="mbdDonor">Supporter name</label>
+            <input class="field" id="mbdDonor" type="text" value="${esc(row && !row.is_anonymous ? row.donor_name || "" : "")}"
+              placeholder="Leave empty to show as Anonymous" />
+          </div>
+          <label class="mbd-check" for="mbdAnon">
+            <input type="checkbox" id="mbdAnon" ${anon ? "checked" : ""} />
+            <span>Show as an anonymous supporter</span>
+          </label>
+          <div class="mbd-form-row">
+            <div>
+              <label class="label" for="mbdSuppAmount">Amount (৳)</label>
+              <input class="field num" id="mbdSuppAmount" type="number" min="0" step="1" required
+                value="${row ? Number(row.amount || 0) : ""}" placeholder="0" />
+            </div>
+            <div>
+              <label class="label" for="mbdSuppDate">Date</label>
+              <input class="field" id="mbdSuppDate" type="date" required
+                value="${row && row.date ? String(row.date).slice(0, 10) : todayISO()}" />
+            </div>
+          </div>
+          <div>
+            <label class="label" for="mbdSuppNote">Note</label>
+            <input class="field" id="mbdSuppNote" type="text" value="${esc(row && row.note ? row.note : "")}"
+              placeholder="e.g. Winter relief support" />
+          </div>
+          <p class="mbd-preview" id="mbdSuppPreview">${isEdit
+            ? `Total from supporters becomes <b>${taka(supporterTotal() - Number(row.amount || 0) + Number(row.amount || 0))}</b> after saving.`
+            : `Grows the “Donation from others” total and the club fund.`}</p>
+          <div class="mbd-form-actions">
+            ${isEdit
+              ? `<button class="btn btn-outline" type="button" id="mbdSuppDelete" style="color:#9F1239;border-color:#F5C6D0">Delete</button>`
+              : `<button class="btn btn-outline" type="button" id="mbdSuppCancel">Cancel</button>`}
+            <button class="btn btn-primary" type="submit" id="mbdSuppSave">${isEdit ? "Save changes" : "Add donation"}</button>
+          </div>
+        </form>
+        <div style="height:calc(6px + var(--safe-b, 0px))"></div>`);
+
+      const anonBox = document.getElementById("mbdAnon");
+      const donor = document.getElementById("mbdDonor");
+      if (anonBox && donor) anonBox.onchange = () => {
+        donor.disabled = anonBox.checked;
+        if (anonBox.checked) donor.value = "";
+      };
+      if (anonBox && anonBox.checked && donor) donor.disabled = true;
+
+      const cancel = document.getElementById("mbdSuppCancel");
+      if (cancel) cancel.onclick = closeSheet;
+
+      const del = document.getElementById("mbdSuppDelete");
+      if (del) del.onclick = async () => {
+        if (!(await confirmDelete(`Delete the ${taka(row.amount)} supporter entry from ${supporterName(row)}?`, "Delete"))) return;
+        try {
+          await db.deleteSupporter(row.id);
+          closeSheet(); toast("Supporter entry deleted"); render();
+        } catch (ex) { toast(ex.message, "err"); }
+      };
+
+      document.getElementById("mbdSuppForm").onsubmit = async e => {
+        e.preventDefault();
+        const amount = Number(document.getElementById("mbdSuppAmount").value || 0);
+        if (!amount) { toast("Enter the amount the supporter gave", "err"); return; }
+        const saveBtn = document.getElementById("mbdSuppSave");
+        busy(saveBtn, true, isEdit ? "Saving" : "Adding");
+        const payload = {
+          donor_name: document.getElementById("mbdDonor").value.trim(),
+          amount,
+          date: document.getElementById("mbdSuppDate").value || todayISO(),
+          note: document.getElementById("mbdSuppNote").value.trim(),
+          is_anonymous: document.getElementById("mbdAnon").checked || !document.getElementById("mbdDonor").value.trim()
+        };
+        try {
+          if (isEdit) { await db.updateSupporter(row.id, payload); toast("Supporter donation updated", "ok"); }
+          else { await db.addSupporter(payload); toast("Supporter donation added", "ok"); }
+          closeSheet(); render();
+        } catch (ex) { toast(ex.message, "err"); }
+        finally { busy(saveBtn, false); }
+      };
+    }
+
+    function openDonationSheet(row = null) {
+      if (!state.isAdmin) { toast("Only the admin can change donations", "err"); return; }
+      const isEdit = !!row;
+      openSheet(`<p class="eyebrow">${isEdit ? "Edit donation" : "Record a donation"}</p>
+        <p class="sub" style="margin:6px 0 12px">Money ${esc(BRAND)} gave away — shown on the Donations screen.</p>
+        <form id="mbdDonForm" class="mbd-form" autocomplete="off" novalidate>
+          <div>
+            <label class="label" for="mbdDonDesc">Purpose or recipient</label>
+            <input class="field" id="mbdDonDesc" type="text" required value="${esc(row ? row.description || "" : "")}"
+              placeholder="e.g. Flood relief - Sonaimuri" />
+          </div>
+          <div class="mbd-form-row">
+            <div>
+              <label class="label" for="mbdDonDate">Date</label>
+              <input class="field" id="mbdDonDate" type="date" required value="${row && row.date ? String(row.date).slice(0, 10) : todayISO()}" />
+            </div>
+            <div>
+              <label class="label" for="mbdDonAmount">Amount (৳)</label>
+              <input class="field num" id="mbdDonAmount" type="number" min="0" step="1" required
+                value="${row ? Number(row.amount || 0) : ""}" placeholder="0" />
+            </div>
+          </div>
+          <div class="mbd-form-actions">
+            ${isEdit
+              ? `<button class="btn btn-outline" type="button" id="mbdDonDelete" style="color:#9F1239;border-color:#F5C6D0">Delete</button>`
+              : `<button class="btn btn-outline" type="button" id="mbdDonCancel">Cancel</button>`}
+            <button class="btn btn-primary" type="submit" id="mbdDonSave">${isEdit ? "Save changes" : "Save donation"}</button>
+          </div>
+        </form>
+        <div style="height:calc(6px + var(--safe-b, 0px))"></div>`);
+
+      const cancel = document.getElementById("mbdDonCancel");
+      if (cancel) cancel.onclick = closeSheet;
+      const del = document.getElementById("mbdDonDelete");
+      if (del) del.onclick = async () => {
+        if (!(await confirmDelete("Delete this donation?", "Delete"))) return;
+        try { await db.deleteDonation(row.id); closeSheet(); toast("Donation deleted"); render(); }
+        catch (ex) { toast(ex.message, "err"); }
+      };
+      document.getElementById("mbdDonForm").onsubmit = async e => {
+        e.preventDefault();
+        const amount = Number(document.getElementById("mbdDonAmount").value || 0);
+        const description = document.getElementById("mbdDonDesc").value.trim();
+        if (!description || !amount) { toast("A purpose and an amount are required", "err"); return; }
+        const saveBtn = document.getElementById("mbdDonSave");
+        busy(saveBtn, true, "Saving");
+        const payload = { description, amount, date: document.getElementById("mbdDonDate").value || todayISO() };
+        try {
+          if (isEdit) { await db.updateDonation(row.id, payload); toast("Donation updated", "ok"); }
+          else { await db.addDonation(payload); toast("Donation saved", "ok"); }
+          closeSheet(); render();
+        } catch (ex) { toast(ex.message, "err"); }
+        finally { busy(saveBtn, false); }
+      };
+    }
+
+    /** compact admin sheet: everything you can do with one member */
+    function openManageMemberSheet(id) {
+      if (!state.isAdmin) return;
+      const m = state.members.find(x => x.id === id);
+      if (!m) return;
+      const r = memberRows().find(x => x.m.id === id)
+        || { paidTotal: 0, due: false, dueAmount: 0, dueMonths: 0, feeCount: 0 };
+      const exec = isExecutive(m);
+      openSheet(`<p class="eyebrow">Manage &middot; ${esc(memberRole(m))}</p>
+        <p class="row-title" style="margin:6px 0 10px;font-size:17px">${esc(m.name)}</p>
+        <div class="kv"><span>Membership</span><span>${exec ? "Executive member" : "General member"}</span></div>
+        <div class="kv"><span>Total paid</span><span>${taka(r.paidTotal)} &middot; ${r.feeCount} fee${r.feeCount === 1 ? "" : "s"}</span></div>
+        <div class="kv"><span>Due</span><span>${r.due ? taka(r.dueAmount) + ` &middot; ${r.dueMonths} month${r.dueMonths === 1 ? "" : "s"}` : "Nothing due"}</span></div>
+        <div class="kv"><span>Phone</span><span>${esc(m.phone || "—")}</span></div>
+        <div class="kv"><span>Email</span><span>${esc(m.email || "—")}</span></div>
+        <div class="divider-line"></div>
+        <button class="opt" type="button" data-manage-act="edit"><span>Edit details &amp; photo</span>${ICONS.pencil}</button>
+        <button class="opt" type="button" data-manage-act="pay"><span>Add a payment</span>${ICONS.wallet}</button>
+        <button class="opt" type="button" data-manage-act="seat"><span>${exec ? "Move to general members" : "Promote to executive"}</span>${ICONS.crown}</button>
+        <button class="opt" type="button" data-manage-act="open"><span>Open full profile</span>${ICONS.chevron}</button>
+        <button class="opt" type="button" data-manage-act="delete" style="color:#9F1239"><span>Delete member</span>${ICONS.trash}</button>
+        <div style="height:calc(6px + var(--safe-b, 0px))"></div>`);
+
+      document.getElementById("sheet").querySelectorAll("[data-manage-act]").forEach(b => b.onclick = async () => {
+        const act = b.dataset.manageAct;
+        if (act === "edit") { closeSheet(); openMemberSheet(m); return; }
+        if (act === "pay" || act === "open") { closeSheet(); navigate("/member/" + m.id); return; }
+        if (act === "seat") {
+          busy(b, true, "Saving");
+          try {
+            await db.setMemberSeat(m.id, exec ? TIER_GENERAL : TIER_EXECUTIVE,
+              exec ? GENERAL_ROLE : "Executive Member");
+            closeSheet();
+            toast(m.name + (exec ? " moved to general members" : " promoted to executive"), "ok");
+            render();
+          } catch (ex) { toast(ex.message, "err"); busy(b, false); }
+          return;
+        }
+        if (act === "delete") {
+          if (!(await confirmDelete(`Remove ${m.name} from the register? Their payment history is removed too.`, "Delete member"))) return;
+          try {
+            await db.deleteMember(m.id);
+            closeSheet();
+            toast(m.name + " removed", "warn");
+            if (path().startsWith("/member/")) navigate("/members"); else render();
+          } catch (ex) { toast(ex.message, "err"); }
+        }
+      });
+    }
+
+    /** compact admin sheet for one supporter donation */
+    function openManageSupporterSheet(id) {
+      if (!state.isAdmin) return;
+      const s = (state.supporters || []).find(x => x.id === id);
+      if (!s) return;
+      const anon = !!s.is_anonymous || !String(s.donor_name || "").trim();
+      openSheet(`<p class="eyebrow">Manage &middot; supporter</p>
+        <p class="row-title" style="margin:6px 0 10px;font-size:17px">${esc(supporterName(s))}</p>
+        <div class="kv"><span>Amount</span><span>${taka(s.amount)}</span></div>
+        <div class="kv"><span>Date</span><span>${prettyDate(s.date)}</span></div>
+        <div class="kv"><span>Note</span><span>${esc(s.note || "—")}</span></div>
+        <div class="kv"><span>Visibility</span><span>${anon ? "Anonymous" : "Named"}</span></div>
+        <div class="divider-line"></div>
+        <button class="opt" type="button" data-supp-act="edit"><span>Edit donation</span>${ICONS.pencil}</button>
+        <button class="opt" type="button" data-supp-act="delete" style="color:#9F1239"><span>Delete donation</span>${ICONS.trash}</button>
+        <div style="height:calc(6px + var(--safe-b, 0px))"></div>`);
+
+      document.getElementById("sheet").querySelectorAll("[data-supp-act]").forEach(b => b.onclick = async () => {
+        if (b.dataset.suppAct === "edit") { closeSheet(); openSupporterSheet(s); return; }
+        if (!(await confirmDelete(`Delete the ${taka(s.amount)} supporter entry from ${supporterName(s)}?`, "Delete"))) return;
+        try { await db.deleteSupporter(s.id); closeSheet(); toast("Supporter entry deleted"); render(); }
+        catch (ex) { toast(ex.message, "err"); }
+      });
+    }
+
+    /* ---- one binder for every admin control on the register ---- */
+    function bindRegisterAdmin(v) {
+      v.querySelectorAll("[data-manage-member]").forEach(b => b.onclick = e => {
+        e.stopPropagation();
+        openManageMemberSheet(b.dataset.manageMember);
+      });
+      v.querySelectorAll("[data-manage-supporter]").forEach(b => b.onclick = e => {
+        e.stopPropagation();
+        openManageSupporterSheet(b.dataset.manageSupporter);
+      });
+      v.querySelectorAll("[data-add-exec]").forEach(b => b.onclick = () => openMemberSheet(null, { tier: TIER_EXECUTIVE }));
+      v.querySelectorAll("[data-add-gen]").forEach(b => b.onclick = () => openMemberSheet(null, { tier: TIER_GENERAL }));
+      v.querySelectorAll("[data-add-supporter]").forEach(b => b.onclick = () => openSupporterSheet(null));
+      v.querySelectorAll("[data-add-donation]").forEach(b => b.onclick = () => openDonationSheet(null));
+
+      v.querySelectorAll("[data-edit-member]").forEach(b => b.onclick = e => {
+        e.stopPropagation();
+        const m = state.members.find(x => x.id === b.dataset.editMember);
+        if (m) openMemberSheet(m);
+      });
+
+      v.querySelectorAll("[data-del-member]").forEach(b => b.onclick = async e => {
+        e.stopPropagation();
+        const m = state.members.find(x => x.id === b.dataset.delMember);
+        if (!m) return;
+        if (!(await confirmDelete(`Remove ${m.name} from the register? Their payment history is removed too.`, "Delete member"))) return;
+        try { await db.deleteMember(m.id); toast(m.name + " removed", "warn"); render(); }
+        catch (ex) { toast(ex.message, "err"); }
+      });
+
+      v.querySelectorAll("[data-edit-supporter]").forEach(b => b.onclick = e => {
+        e.stopPropagation();
+        const s = (state.supporters || []).find(x => x.id === b.dataset.editSupporter);
+        if (s) openSupporterSheet(s);
+      });
+
+      v.querySelectorAll("[data-del-supporter]").forEach(b => b.onclick = async e => {
+        e.stopPropagation();
+        const s = (state.supporters || []).find(x => x.id === b.dataset.delSupporter);
+        if (!s) return;
+        if (!(await confirmDelete(`Delete the ${taka(s.amount)} supporter entry from ${supporterName(s)}?`, "Delete"))) return;
+        try { await db.deleteSupporter(s.id); toast("Supporter entry deleted"); render(); }
+        catch (ex) { toast(ex.message, "err"); }
+      });
+
+      v.querySelectorAll("[data-edit-donation]").forEach(b => b.onclick = e => {
+        e.stopPropagation();
+        const d = state.donations.find(x => x.id === b.dataset.editDonation);
+        if (d) openDonationSheet(d);
+      });
     }
 
     /* =====================================================================
@@ -3767,11 +4899,22 @@
         </div>
         <div class="row-main">
           <h1 class="h1" style="font-size:20px">${esc(m.name)}</h1>
-          <p class="sub" style="margin:2px 0 0">Member${m.email ? " &middot; " + esc(m.email) : ""}</p>
+          <p class="sub" style="margin:2px 0 0">${isExecutive(m) ? "Executive" : "General"} member${m.email ? " &middot; " + esc(m.email) : ""}${m.phone ? " &middot; " + esc(m.phone) : ""}</p>
         </div>
-        ${state.isAdmin ? `<button class="mem-del" id="memberDeleteBtn" data-member-del="${m.id}" aria-label="Delete member ${esc(m.name)}">
-          ${ICONS.trash}<span>Delete</span>
-        </button>` : ""}
+        ${state.isAdmin ? `<span style="display:flex;gap:8px;flex:none">
+          <button class="chip" id="memberEditBtn" type="button" aria-label="Edit ${esc(m.name)}">${ICONS.pencil}<span>Edit</span></button>
+          <button class="mem-del" id="memberDeleteBtn" data-member-del="${m.id}" aria-label="Delete member ${esc(m.name)}">
+            ${ICONS.trash}<span>Delete</span>
+          </button>
+        </span>` : ""}
+      </div>
+
+      <div class="mem-seat-row">
+        <span class="chip" style="color:${isExecutive(m) ? "#92400E" : "#4338CA"};border-color:${isExecutive(m) ? "#FCD34D" : "#C7D2FE"};background:${isExecutive(m) ? "#FEF3C7" : "#EEF2FF"}">
+          ${ICONS.crown}<span>${esc(memberRole(m))}</span>
+        </span>
+        <span class="chip">${isExecutive(m) ? "Executive board" : "General member"}</span>
+        <span class="chip">${state.payments.filter(x => x.member_id === m.id).length} payment${state.payments.filter(x => x.member_id === m.id).length === 1 ? "" : "s"}</span>
       </div>
 
       <div class="stat-grid">
@@ -4057,7 +5200,7 @@
       return `<div class="screen">
       <div class="app-header">
         <div>
-          <p class="sub" style="margin:0">Given back to people</p>
+          <p class="sub" style="margin:0">${esc(BRAND)} &middot; given back to people</p>
           <h1 class="h1">Donations</h1>
         </div>
         ${state.isAdmin ? `<button class="chip" id="addDonChip" style="color:var(--don);border-color:var(--don)">${ICONS.plus}<span>Add</span></button>` : ""}
@@ -4113,7 +5256,10 @@
                   <p class="don-amt num">${taka(d.amount)}</p>
                   <p class="don-cap">given</p>
                 </div>
-                ${state.isAdmin ? `<button class="don-del" data-deldon="${d.id}" aria-label="Delete donation">${ICONS.trash}</button>` : ""}
+                ${state.isAdmin ? `<span class="don-actions">
+                  <button class="don-del don-edit" data-edit-donation="${d.id}" aria-label="Edit donation">${ICONS.pencil}</button>
+                  <button class="don-del" data-deldon="${d.id}" aria-label="Delete donation">${ICONS.trash}</button>
+                </span>` : ""}
               </div>
             </article>`;
           }).join("")}
@@ -4377,6 +5523,26 @@
     /* =====================================================================
        PROFILE
     ===================================================================== */
+    /** admin utility: push anything held locally up to Supabase */
+    function registerSyncCard() {
+      const pending = (state.supporters || []).filter(s => !UUID_RE.test(String(s.id))).length;
+      const subtitle = !sb
+        ? "Demo mode — Supabase keys are not configured yet"
+        : pending
+          ? `${pending} supporter entr${pending === 1 ? "y" : "ies"} waiting to upload`
+          : "Re-align executive seats, supporters and dues";
+      return `<div class="card" style="margin-top:12px;padding:6px 16px">
+        <button class="row row-tap" id="syncRegisterBtn" type="button" style="width:100%;border:0;background:transparent;text-align:left">
+          <div class="avatar avatar-sm" style="background:var(--primary-soft);color:var(--primary)">${ICONS.shield}</div>
+          <div class="row-main">
+            <p class="row-title">Sync register to Supabase</p>
+            <p class="row-sub">${esc(subtitle)}</p>
+          </div>
+          <span style="color:var(--muted)">${ICONS.chevron}</span>
+        </button>
+      </div>`;
+    }
+
     function ScreenProfile() {
       const u = state.session?.user || {};
       const name = u.user_metadata?.name || u.email || "Member";
@@ -4412,6 +5578,8 @@
         </div>
       </div>
 
+      ${state.isAdmin ? registerSyncCard() : ""}
+
       <div class="card" style="margin-top:12px;padding:6px 16px">
         <button class="row row-tap" data-go="/dues" style="width:100%;border:0;background:transparent;text-align:left">
           <div class="avatar avatar-sm" style="background:var(--due-soft);color:var(--due)">${ICONS.bell}</div>
@@ -4445,7 +5613,10 @@
       <button class="btn btn-outline" id="signOutBtn">${ICONS.logout}<span>Sign out</span></button>
 
       <p class="sub center" style="font-size:11px;margin-top:16px">
-        Healer Boy's &middot; developed by Imtiaj Rafi
+        ${esc(BRAND)} &middot; ${esc(BRAND_TAGLINE)} &middot; developed by Imtiaj Rafi
+      </p>
+      <p class="sub center" style="font-size:10.5px;margin-top:4px">
+        ${esc(BRAND_PLURAL)} register v3
       </p>
     </div>`;
     }
@@ -4458,9 +5629,13 @@
 
       v.querySelectorAll("[data-go]").forEach(el => el.onclick = () => navigate(el.dataset.go));
       v.querySelectorAll("[data-member]").forEach(el => {
-        el.addEventListener("click", e => {
-          if (e.target.closest("[data-remind],[data-delpay]")) return;
+        const openMember = e => {
+          if (e.target.closest("[data-remind],[data-delpay],[data-manage-member],[data-manage-supporter],[data-edit-member],[data-del-member],[data-edit-supporter],[data-del-supporter]")) return;
           navigate("/member/" + el.dataset.member);
+        };
+        el.addEventListener("click", openMember);
+        el.addEventListener("keydown", e => {
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openMember(e); }
         });
       });
 
@@ -4476,6 +5651,18 @@
       if (g) g.onclick = () => {
         busy(g, true);
         signInGoogle().catch(ex => toast(ex.message || "Google sign-in failed", "err")).finally(() => busy(g, false));
+      };
+
+      const syncBtn = v.querySelector("#syncRegisterBtn");
+      if (syncBtn) syncBtn.onclick = async () => {
+        busy(syncBtn, true, "Syncing");
+        try {
+          const r = await db.pushLocalRegister();
+          toast(r.supporters + r.members
+            ? `Synced ${r.supporters} supporter${r.supporters === 1 ? "" : "s"} and ${r.members} seat${r.members === 1 ? "" : "s"}`
+            : "Everything is already in sync", "ok");
+          render();
+        } catch (ex) { toast(ex.message, "err"); busy(syncBtn, false); }
       };
 
       const af = v.querySelector("#adminForm");
@@ -4511,58 +5698,26 @@
         render();
       };
 
-      const closeAdd = v.querySelector("#addMemberClose");
-      if (closeAdd) closeAdd.onclick = () => { const c = v.querySelector("#addMemberCard"); if (c) c.hidden = true; };
-
       const mbell = v.querySelector("#membersBellBtn");
       if (mbell) mbell.onclick = () => {
         const n = duesList("Monthly Fee").length;
         toast(n ? `${n} member${n === 1 ? "" : "s"} have unpaid dues` : "You're all caught up", n ? "" : "ok");
       };
 
-      /* avatar preview for the add-member form */
-      const mAv = v.querySelector("#mAvatar");
-      if (mAv) mAv.onchange = () => {
-        const f = mAv.files && mAv.files[0];
-        const prev = v.querySelector("#mAvatarPreview");
-        const label = v.querySelector("#mAvatarName");
-        if (!f) return;
-        if (label) label.textContent = f.name;
-        if (prev) {
-          prev.style.backgroundImage = `url('${URL.createObjectURL(f)}')`;
-          prev.style.backgroundSize = "cover";
-          prev.style.backgroundPosition = "center";
-          prev.innerHTML = "";
-        }
-      };
-
-      const mf = v.querySelector("#addMemberCard");
-      if (mf) mf.onsubmit = async e => {
-        e.preventDefault();
-        const name = v.querySelector("#mName").value.trim();
-        const email = v.querySelector("#mEmail").value.trim();
-        const file = mAv && mAv.files ? mAv.files[0] : null;
-        if (!name) return;
-        const submitBtn = v.querySelector("#mSubmitBtn");
-        busy(submitBtn, true, "Adding");
-        let avatarUrl = null;
-        if (file) {
-          avatarUrl = await uploadImageToImgbb(file);
-          if (!avatarUrl) toast("Photo upload failed — member added without photo", "warn");
-        }
-        try {
-          await db.addMember({ id: uid("mem"), name, email: email || null, avatar_url: avatarUrl });
-          toast(name + " added", "ok");
-          render();
-        } catch (ex) { toast(ex.message, "err"); }
-        finally { busy(submitBtn, false); }
-      };
+      /* ---- register admin controls (members, supporters, donations) ---- */
+      bindRegisterAdmin(v);
 
       /* ---- member detail ---- */
       const rb = v.querySelector("#remindBtn");
       if (rb) rb.onclick = () => {
         const m = state.members.find(x => x.id === p.split("/")[2]);
         if (m) remindOne(m, rb);
+      };
+
+      const meb = v.querySelector("#memberEditBtn");
+      if (meb) meb.onclick = () => {
+        const m = state.members.find(x => x.id === p.split("/")[2]);
+        if (m) openMemberSheet(m);
       };
 
       /* ---- delete member (admin, from member detail header) ---- */
@@ -4672,25 +5827,13 @@
         try { await db.deleteDonation(b.dataset.deldon); toast("Donation deleted"); render(); }
         catch (ex) { toast(ex.message, "err"); }
       });
+      v.querySelectorAll("[data-edit-donation]").forEach(b => b.onclick = e => {
+        e.stopPropagation();
+        const d = state.donations.find(x => x.id === b.dataset.editDonation);
+        if (d) openDonationSheet(d);
+      });
       const adc = v.querySelector("#addDonChip");
-      if (adc) adc.onclick = () => {
-        const c = v.querySelector("#addDonCard");
-        c.classList.toggle("hidden");
-        if (!c.classList.contains("hidden")) v.querySelector("#dDesc").focus();
-      };
-      const df = v.querySelector("#donForm");
-      if (df) df.onsubmit = async e => {
-        e.preventDefault();
-        try {
-          await db.addDonation({
-            description: v.querySelector("#dDesc").value.trim(),
-            date: v.querySelector("#dDate").value,
-            amount: Number(v.querySelector("#dAmount").value || 0)
-          });
-          toast("Donation saved", "ok");
-          render();
-        } catch (ex) { toast(ex.message, "err"); }
-      };
+      if (adc) adc.onclick = () => openDonationSheet(null);
 
       /* ---- dues ---- */
       const dse = v.querySelector("#duesSearch");

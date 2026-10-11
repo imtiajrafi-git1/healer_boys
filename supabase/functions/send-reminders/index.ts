@@ -162,7 +162,7 @@ Deno.serve(async (req) => {
         `${row.member.name.toLowerCase().replace(/[^a-z]+/g, ".")}@gmail.com`;
 
       const body =
-        `Hi ${row.member.name}, your fee for ${monthLabel} is still due: BDT ${row.fee}. ` +
+        `Hi ${row.member.name}, your Healer Boy's fee for ${monthLabel} is still due: BDT ${row.fee}. ` +
         `Please pay by bKash or Nagad: ${cfg.bkash_number || "-"} / ${cfg.nagad_number || "-"}.`;
 
       try {
@@ -177,7 +177,7 @@ Deno.serve(async (req) => {
             template_params: {
               to_name: row.member.name,
               to_email,
-              subject: "Monthly fee reminder",
+              subject: "Healer Boy's — monthly fee reminder",
               month: monthLabel,
               amount: String(row.fee),
               bkash: cfg.bkash_number,

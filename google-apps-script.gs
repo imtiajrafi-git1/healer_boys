@@ -20,7 +20,9 @@ const SHEETS = {
 const HEADERS = {
   member: ["Time", "Action", "ID", "Name", "Email", "Avatar URL"],
   payment: ["Time", "Action", "ID", "Member ID", "Member Name", "Type", "Amount", "Date"],
-  donation: ["Time", "Action", "ID", "Description", "Amount", "Date"]
+  donation: ["Time", "Action", "ID", "Description", "Amount", "Date"],
+  /* "Donation from others" — Healer Boy's supporters */
+  supporter: ["Time", "Action", "ID", "Supporter", "Anonymous", "Amount", "Date", "Note"]
 };
 
 function doPost(e) {
@@ -45,6 +47,11 @@ function doPost(e) {
       values = [stamp, action, row.id || "", row.name || "", row.email || "", row.avatar_url || ""];
     } else if (kind === "payment") {
       values = [stamp, action, row.id || "", row.member_id || "", row.member_name || "", row.type || "", Number(row.amount || 0), row.date || ""];
+    } else if (kind === "supporter") {
+      values = [stamp, action, row.id || "",
+        row.is_anonymous ? "" : (row.donor_name || ""),
+        row.is_anonymous ? "yes" : "no",
+        Number(row.amount || 0), row.date || "", row.note || ""];
     } else {
       values = [stamp, action, row.id || "", row.description || "", Number(row.amount || 0), row.date || ""];
     }
