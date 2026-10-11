@@ -58,7 +58,9 @@
 }
 
 .mbd-screen {
-  padding: 16px 16px 158px;
+  /* the floating "+ Add member" button sits 104–158px above the bottom nav,
+     so the register keeps 176px of clearance for the last card */
+  padding: 16px 16px 176px;
   color: var(--mbd-text);
   font-family: "Plus Jakarta Sans", system-ui, sans-serif;
 }
