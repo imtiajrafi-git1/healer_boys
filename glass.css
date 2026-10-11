@@ -128,69 +128,6 @@
 }
 
 /* Content layers sit above the blobs */
-#view { position: relative; z-index: 1; }
-#nav  { position: relative; z-index: 10; }
-
-/* ----------------------------------------------------------------------------
-   4. Floating glass bottom navigation + sliding pill indicator
----------------------------------------------------------------------------- */
-#nav {
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, .6), rgba(255, 255, 255, 0) 46%),
-    rgba(255, 255, 255, .62);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
-  border-radius: 28px;
-  box-shadow:
-    0 18px 40px -14px rgba(67, 56, 202, .3),
-    inset 0 1px 0 rgba(255, 255, 255, .95),
-    inset 0 -1px 0 rgba(255, 255, 255, .35);
-  height: 76px;
-  padding: 0;
-  margin: 6px 12px calc(12px + var(--safe-b, 0px));
-}
-
-@supports not (backdrop-filter: blur(1px)) {
-  #nav { background: rgba(250, 246, 250, .97); }
-}
-
-/* the pill that slides between tabs (transform only) */
-.nav-pill {
-  position: absolute;
-  top: 6px; bottom: 6px; left: 0;
-  width: 20%;
-  transform: translateX(calc(var(--tab, 0) * 100%));
-  transition: transform .3s var(--ease-spring);
-  pointer-events: none;
-  z-index: 0;
-}
-
-.nav-pill-in {
-  position: absolute;
-  inset: 0 8px;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, .78);
-  border: 1px solid rgba(255, 255, 255, .9);
-  box-shadow:
-    0 8px 20px -8px rgba(67, 56, 202, .35),
-    inset 0 1px 0 rgba(255, 255, 255, .95);
-}
-
-/* liquid stretch while the pill travels */
-.nav-pill.moving .nav-pill-in {
-  animation: pillStretch .3s var(--ease-spring);
-}
-
-@keyframes pillStretch {
-  0%   { transform: scaleX(1)    scaleY(1);    }
-  35%  { transform: scaleX(1.18) scaleY(.9);   }
-  70%  { transform: scaleX(.96)  scaleY(1.03); }
-  100% { transform: scaleX(1)    scaleY(1);    }
-}
-
-.nav-btn { position: relative; z-index: 1; }
-
 /* ----------------------------------------------------------------------------
    5. Screen entry — staggered fade + rise (transform/opacity only)
 ---------------------------------------------------------------------------- */
@@ -311,9 +248,6 @@
     opacity: 1;
   }
   .screen { animation: fadeOnly .18s ease-out both; }
-
-  .nav-pill { transition: none; }
-  .nav-pill.moving .nav-pill-in { animation: none; }
 
   .switch.squash::after { animation: none; }
   .switch::after { transition: transform .12s ease; }

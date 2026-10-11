@@ -541,18 +541,6 @@
 .mb-fab:active { transform: scale(.95); }
 .mb-fab:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 
-/* --------------------------------------------- nav: active underline -- */
-.nav-btn.active::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: 4px;
-  width: 22px;
-  height: 3px;
-  margin-left: -11px;
-  border-radius: 99px;
-  background: #4f46e5;
-}
 
 /* ----------------------------------------------------- reduced motion -- */
 @media (prefers-reduced-motion: reduce) {

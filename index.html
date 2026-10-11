@@ -878,70 +878,6 @@
       transform: translateX(20px);
     }
 
-    /* ============ BOTTOM NAV ============ */
-    #nav {
-      height: calc(84px + var(--safe-b));
-      padding-bottom: var(--safe-b);
-      background: var(--white);
-      border-top: 1px solid #EFE6F1;
-      display: none;
-      flex: none;
-    }
-
-    #nav.show {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-    }
-
-    .nav-btn {
-      min-height: 44px;
-      background: transparent;
-      border: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      font-size: 11px;
-      font-weight: 600;
-      color: #8B7A99;
-      cursor: pointer;
-      padding: 8px 2px 0;
-      min-width: 0;
-    }
-
-    .nav-lbl {
-      max-width: 100%;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      padding: 0 1px;
-    }
-
-    /* the 5th tab has a longer label — shrink it slightly so it never clips */
-    .nav-lbl-long { font-size: 9.5px; letter-spacing: -.01em; }
-
-    .nav-btn.active {
-      color: var(--primary);
-      font-weight: 800;
-    }
-
-    .nav-dot {
-      position: absolute;
-      top: 6px;
-      right: calc(50% - 18px);
-      min-width: 16px;
-      height: 16px;
-      padding: 0 4px;
-      border-radius: 999px;
-      background: var(--due);
-      color: #fff;
-      font-size: 9.5px;
-      font-weight: 800;
-      display: grid;
-      place-items: center;
-    }
-
     /* ============ HEADER ============ */
     .app-header {
       display: flex;
@@ -1889,7 +1825,7 @@
     <!-- floating action host (admin "+ Add member" on the Members tab) -->
     <div id="fabHost"></div>
 
-    <nav id="nav" class="bottom-nav nav-variant-b" aria-label="Main navigation"></nav>
+    <nav id="nav" class="dock" aria-label="Main"></nav>
 
     <div class="overlay" id="overlay">
       <div class="sheet" id="sheet"></div>
@@ -2124,13 +2060,14 @@
           sb.from("donations").select("*").order("date", { ascending: false }),
           sb.from("app_settings").select("*").eq("id", 1).maybeSingle()
         ]);
-        if (m.error) throw m.error;
-        if (p.error) throw p.error;
-        if (d.error) throw d.error;
-        state.members = normalizeMemberTypes(m.data || []);
-        state.payments = p.data || [];
-        state.donations = d.data || [];
-        state.supporterDonations = [];
+        /* Legacy tables are optional now. A missing/locked legacy table must
+           not prevent the normalized member tables from loading. */
+        /* Keep the already-loaded snapshot when an optional/legacy table
+           answers successfully with no rows. This prevents an empty legacy
+           table from wiping the seeded/normalized member view. */
+        if (!m.error && (m.data || []).length) state.members = normalizeMemberTypes(m.data);
+        if (!p.error && (p.data || []).length) state.payments = p.data;
+        if (!d.error && (d.data || []).length) state.donations = d.data;
         const normalizedApi = window.HealerMembersApi;
         if (normalizedApi) {
           const [executives, general, donations, supporters] = await Promise.all([
@@ -2142,9 +2079,9 @@
             state.members = [...executives.data.map(row => ({ ...legacyByName.get(row.name), ...row, id: legacyByName.get(row.name)?.id || row.id, normalized_id: row.id, avatar_url: row.photo_url || legacyByName.get(row.name)?.avatar_url || null, member_type: "executive" })), ...general.data.map(row => ({ ...legacyByName.get(row.name), ...row, id: legacyByName.get(row.name)?.id || row.id, normalized_id: row.id, avatar_url: row.photo_url || legacyByName.get(row.name)?.avatar_url || null, member_type: "general", profile: row.profile || "" }))];
           }
           if (!donations.error && donations.data.length) state.donations = donations.data.map(row => ({ ...row, description: row.note || row.description || "Donation", date: row.created_at?.slice(0, 10) || row.date }));
-          if (!supporters.error) state.supporterDonations = supporters.data.map(row => ({ ...row, description: row.note || row.description || "Supporter gift", date: row.created_at?.slice(0, 10) || row.date }));
+          if (!supporters.error && (supporters.data || []).length) state.supporterDonations = supporters.data.map(row => ({ ...row, description: row.note || row.description || "Supporter gift", date: row.donation_month || row.created_at?.slice(0, 10) || row.date }));
         }
-        state.settings = { ...DEFAULT_SETTINGS, ...(s.data || {}) };
+        if (!s.error) state.settings = { ...DEFAULT_SETTINGS, ...(s.data || {}) };
         this.saveLocal();
         notifyReportDataChanged();
       },
@@ -2242,28 +2179,39 @@
       /* ---- members ---- */
       async addMember(payload) {
         if (sb) {
-          let normalized = null;
           const normalizedApi = window.HealerMembersApi;
-          if (normalizedApi) {
-            const apiResult = payload.member_type === "executive"
-              ? await normalizedApi.addExecutiveMember(payload)
-              : await normalizedApi.addGeneralMember(payload);
-            if (apiResult.error) throw apiResult.error;
-            normalized = apiResult.data;
+          if (!normalizedApi) throw new Error("Supabase member API is unavailable.");
+          const apiResult = payload.member_type === "executive"
+            ? await normalizedApi.addExecutiveMember(payload)
+            : await normalizedApi.addGeneralMember(payload);
+          const normalizedError = apiResult.error || null;
+          const normalized = apiResult.data || null;
+          let legacyRow = null;
+          /* The normalized table is the source of truth. Mirroring into the
+             legacy table is optional, so an old/missing table cannot block the
+             admin from adding a member. */
+          try {
+            const withId = { id: payload.id || newId(), ...payload };
+            let res = await sb.from("members").insert([withId]).select().single();
+            if (res.error && /email/i.test(res.error.message || "")) {
+              const bare = { ...withId }; delete bare.email;
+              res = await sb.from("members").insert([bare]).select().single();
+            }
+            if (!res.error) legacyRow = res.data;
+          } catch (e) { /* legacy mirror is optional */ }
+          if (normalizedError && !legacyRow) throw normalizedError;
+          if (!normalized && legacyRow) {
+            const row = { ...legacyRow, member_type: payload.member_type };
+            state.members.push(row);
+            this.syncSheet("member", "add", row);
+            notifyReportDataChanged();
+            return row;
           }
-          /* always send our own id so tables without a default can still insert */
-          const withId = { id: normalized?.id || payload.id || newId(), ...payload };
-          let res = await sb.from("members").insert([withId]).select().single();
-          /* older schema without an `email` column -> retry without it */
-          if (res.error && /email/i.test(res.error.message || "")) {
-            const bare = { ...withId }; delete bare.email;
-            res = await sb.from("members").insert([bare]).select().single();
-          }
-          if (res.error) throw res.error;
-          state.members.push({ ...res.data, normalized_id: normalized?.id || null });
-          this.syncSheet("member", "add", res.data);
+          const row = { ...(legacyRow || normalized), ...normalized, id: legacyRow?.id || normalized.id, normalized_id: normalized.id, member_type: payload.member_type };
+          state.members.push(row);
+          this.syncSheet("member", "add", row);
           notifyReportDataChanged();
-          return res.data;
+          return row;
         }
         const row = { id: uid("mem"), ...payload };
         state.members.push(row); this.saveLocal();
@@ -2281,9 +2229,11 @@
             : await normalizedApi.updateGeneralMember(existing.normalized_id, merged);
           if (apiResult.error) throw apiResult.error;
         }
-        if (sb) {
+        if (sb && !existing?.normalized_id) {
           const { error } = await sb.from("members").update(patch).eq("id", id);
           if (error) throw error;
+        } else if (sb && existing?.normalized_id) {
+          try { await sb.from("members").update(patch).eq("id", id); } catch (e) { /* optional legacy mirror */ }
         }
         const i = state.members.findIndex(x => x.id === id);
         if (i > -1) state.members[i] = { ...state.members[i], ...patch };
@@ -2300,8 +2250,7 @@
           if (apiResult.error) throw apiResult.error;
         }
         if (sb) {
-          const { error } = await sb.from("members").delete().eq("id", id);
-          if (error) throw error;
+          try { await sb.from("members").delete().eq("id", id); } catch (e) { /* optional legacy mirror */ }
         }
         state.members = state.members.filter(m => m.id !== id);
         state.payments = state.payments.filter(p => p.member_id !== id);
@@ -3266,15 +3215,16 @@
     ===================================================================== */
     const NAV = [
       { path: "/home", label: "Home", icon: "home" },
-      { path: "/pay", label: "Payment", icon: "cardNav" },
-      { path: "/members", label: "Members", icon: "users" },
-      { path: "/donations", label: "Donations", icon: "heart" },
-      { path: "/profile", label: "Profile &amp; Settings", icon: "user", long: true }
+      { path: "/pay", label: "Payment", icon: "payment" },
+      { path: "/members", label: "Members", icon: "members" },
+      { path: "/donations", label: "Donation", icon: "donation" },
+      { path: "/profile", label: "Profile", icon: "profile" }
     ];
     const NAV_PATHS = NAV.map(n => n.path);
     /* sub-pages that belong to a tab: highlight the parent, keep nav visible.
        /dues has no tab of its own any more; it opens from the Home "Dues" card. */
     const NAV_PARENT = { "/member": "/members", "/report": "/members", "/dues": "/home", "/reminders": "/profile" };
+    const REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     function navIndexFor(p) {
       const exact = NAV.findIndex(n => n.path === p);
@@ -3294,12 +3244,22 @@
     }
     function navigate(p) { location.hash = p; }
 
-    /* ---- liquid glass hooks (presentation only; no data/​auth/​logic) ---- */
-    const REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const NAV_SVGS = {
+      home: '<svg viewBox="0 0 24 24"><path d="M3.5 10.8 12 3.5l8.5 7.3V19a1.5 1.5 0 0 1-1.5 1.5h-3.5v-6h-7v6H5A1.5 1.5 0 0 1 3.5 19z"/></svg>',
+      payment: '<svg viewBox="0 0 24 24"><rect x="2.8" y="5.5" width="18.4" height="13" rx="2.6"/><path d="M2.8 10h18.4M6.5 15h3"/></svg>',
+      members: '<svg viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.2"/><path d="M3 19.5c.4-3.2 2.9-5 6-5s5.6 1.8 6 5"/><path d="M16 5.6a3 3 0 0 1 0 5.8M18 14.9c1.7.6 2.8 2 3 4.3"/></svg>',
+      donation: '<svg viewBox="0 0 24 24"><path d="M12 20s-7.5-4.4-7.5-10.2A4.3 4.3 0 0 1 12 7.4a4.3 4.3 0 0 1 7.5 2.4C19.5 15.6 12 20 12 20z"/></svg>',
+      profile: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M4.8 20c.5-3.6 3.4-5.6 7.2-5.6s6.7 2 7.2 5.6"/></svg>'
+    };
     let fundCounted = false;
 
-    function navButtonHTML(n, active, duesCount) {
-      return `${ICONS[n.icon]}<span class="nav-lbl${n.long ? " nav-lbl-long" : ""}">${n.label}</span>`;
+    function navButtonHTML(n, active) {
+      const notice = n.path === "/donations" && state.donations.some(d => {
+        const date = String(d.date || d.created_at || "").slice(0, 10);
+        const age = date ? Date.now() - new Date(`${date}T00:00:00`).getTime() : Infinity;
+        return age >= 0 && age < 30 * 24 * 60 * 60 * 1000;
+      });
+      return `${NAV_SVGS[n.icon]}<span class="lbl">${n.label}</span>${notice && !active ? '<i class="dot" aria-hidden="true"></i>' : ""}`;
     }
 
     function renderNav() {
@@ -3307,7 +3267,6 @@
       const p = path();
       const idx = navIndexFor(p);
       const show = NAV_PATHS.includes(p) || p.startsWith("/member/") || p === "/dues" || p === "/reminders" || p === "/report";
-      nav.style.setProperty("--tab", idx);
       nav.classList.toggle("show", show && requireAuth());
 
       if (!nav.classList.contains("show")) {
@@ -3316,38 +3275,20 @@
         return;
       }
 
-      const duesCount = duesList("Monthly Fee").length;
-
-      if (nav.dataset.built !== "1") {
-        /* first build: pill + buttons (starts settled on the active tab) */
-        nav.innerHTML = `<div class="nav-pill" aria-hidden="true"><div class="nav-pill-in"></div></div>` +
-          NAV.map(n => {
-            const active = navIndexFor(p) === NAV.findIndex(x => x.path === n.path);
-            return `<button class="nav-btn nav-item ${active ? "active" : ""}" data-nav="${n.path}" aria-current="${active}">${navButtonHTML(n, active, duesCount)}</button>`;
-          }).join("");
-        nav.dataset.built = "1";
-        nav.querySelectorAll("[data-nav]").forEach(b => b.onclick = () => {
-          const pill = nav.querySelector(".nav-pill");
-          if (pill && !REDUCED && b.dataset.nav !== path()) {
-            pill.classList.remove("moving");
-            void pill.offsetWidth; /* restart the stretch keyframe */
-            pill.classList.add("moving");
-            setTimeout(() => pill.classList.remove("moving"), 360);
-          }
-          navigate(b.dataset.nav);
+      nav.innerHTML = NAV.map(n => {
+        const active = navIndexFor(p) === NAV.findIndex(x => x.path === n.path);
+        const aria = n.path === "/profile" ? "Profile and settings" : n.path === "/donations" ? "Donation, new campaign" : n.label;
+        return `<button class="tab${active ? " on" : ""}" data-nav="${n.path}" aria-label="${aria}"${active ? ' aria-current="page"' : ""}>${navButtonHTML(n, active)}</button>`;
+      }).join("");
+      nav.querySelectorAll("[data-nav]").forEach(b => b.onclick = () => {
+        nav.querySelectorAll(".tab").forEach(tab => {
+          tab.classList.remove("on");
+          tab.removeAttribute("aria-current");
         });
-      } else {
-        /* refresh in place so the pill element survives and can slide */
-        const cur = navIndexFor(p);
-        nav.querySelectorAll("[data-nav]").forEach((b, i) => {
-          const active = i === cur;
-          b.classList.toggle("active", active);
-          b.setAttribute("aria-current", String(active));
-        });
-        const memDef = NAV.find(n => n.path === "/members");
-        const memBtn = nav.querySelector('[data-nav="/members"]');
-        if (memBtn && memDef) memBtn.innerHTML = navButtonHTML(memDef, cur === NAV.findIndex(x => x.path === "/members"), duesCount);
-      }
+        b.classList.add("on");
+        b.setAttribute("aria-current", "page");
+        navigate(b.dataset.nav);
+      });
     }
 
     /* first load only: total fund counts up from 0 (800ms ease-out) */
@@ -3441,9 +3382,9 @@
         </div>
         <form id="adminForm" autocomplete="on">
           <div style="margin-bottom:12px">
-            <label class="label" for="aEmail">HEALER BOYS Gmail</label>
+            <label class="label" for="aEmail">Healer Boys Gmail</label>
             <input class="field" id="aEmail" type="email" inputmode="email" autocomplete="username"
-              placeholder="HEALER BOYS Gmail" required />
+              placeholder="Healer Boys Gmail" required />
           </div>
           <div>
             <label class="label" for="aPass">Password</label>
