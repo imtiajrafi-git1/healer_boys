@@ -1881,21 +1881,21 @@
   </style>
 
   <!-- Liquid glass skin (styling only) — shared .glass class lives here -->
-  <link rel="stylesheet" href="glass.css" />
+  <link rel="stylesheet" href="glass.css?v=3" />
   <!-- Premium card system — designer-grade refinements -->
-  <link rel="stylesheet" href="cards.css" />
+  <link rel="stylesheet" href="cards.css?v=3" />
   <!-- Payment Options card (bank card + copy) -->
-  <link rel="stylesheet" href="payment.css" />
+  <link rel="stylesheet" href="payment.css?v=3" />
   <!-- Home screen (greeting header, fund hero, recent payments, stay connected) -->
-  <link rel="stylesheet" href="home.css" />
+  <link rel="stylesheet" href="home.css?v=3" />
   <!-- Members screen + nav active underline -->
-  <link rel="stylesheet" href="members.css" />
+  <link rel="stylesheet" href="members.css?v=3" />
   <!-- Members register: dark purple premium skin (executive / general / supporters) -->
-  <link rel="stylesheet" href="members-premium.css" />
+  <link rel="stylesheet" href="members-premium.css?v=3" />
   <!-- Member fee & dues report table -->
-  <link rel="stylesheet" href="report.css" />
+  <link rel="stylesheet" href="report.css?v=3" />
   <!-- Shared fixed bottom navigation -->
-  <link rel="stylesheet" href="bottom-nav.css" />
+  <link rel="stylesheet" href="bottom-nav.css?v=3" />
 </head>
 
 <body>
@@ -3830,9 +3830,12 @@
         ${ICONS.usersSmall}<span>Continue as viewer</span>
       </button>
 
-      <button class="btn btn-outline" id="demoBtn" style="margin-top:10px;border-style:dashed">
-        ${ICONS.star}<span>See the demo register (sample data)</span>
+      <button class="btn btn-primary" id="demoBtn" style="margin-top:12px">
+        ${ICONS.star.replace('width="14" height="14"', 'width="16" height="16"')}<span>Open the demo register — sample data</span>
       </button>
+      <p class="sub center" style="font-size:11px;margin:8px 0 0">
+        Demo mode: 8 executives, general members and supporter donations. Nothing is saved to Supabase.
+      </p>
 
       <div class="divider"><span>ADMIN</span></div>
 

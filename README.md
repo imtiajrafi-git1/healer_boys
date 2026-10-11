@@ -158,7 +158,22 @@ demo/offline only — live mode always reads what is in Supabase.
 
 ---
 
-## 5. Files
+## 5. Running the preview locally
+
+```bash
+python3 serve.py            # http://0.0.0.0:8080
+```
+
+`serve.py` is the preview-friendly static server: every response carries
+`Cache-Control: no-store` (so a refresh always shows the current build — no stale CSS
+while iterating), `/demo` redirects straight into the demo register, and the request log
+prints the `Host` header so it is obvious when the sandbox proxy is the one being served.
+Plain `python3 -m http.server 8080` still works; the CSS links carry `?v=3`, which is the
+belt-and-braces answer for the deployments that *do* cache (GitHub Pages and friends).
+
+---
+
+## 6. Files
 
 | File | Role |
 | --- | --- |
@@ -171,6 +186,8 @@ demo/offline only — live mode always reads what is in Supabase.
 | `upgrade-members-and-supporters.sql` | paste-and-run copy of the migration above |
 | `fix-members-payments.sql`, `supabase/migrations/0001_…`, `supabase/functions/send-reminders`, `supabase/config.toml` | earlier fixes, settings/cron, e-mail job |
 | `google-apps-script.gs`, `useCopy.js` | optional Sheets mirror + the copy helper the app mirrors |
+| `serve.py` | preview server: no-store responses, `/demo` shortcut, host logging |
+| `DEMO.md` | Bangla step-by-step walkthrough of the demo mode |
 
 ---
 
