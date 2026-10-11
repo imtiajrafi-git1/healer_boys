@@ -50,7 +50,7 @@ begin
     select schemaname, tablename, policyname
     from pg_policies
     where schemaname = 'public'
-      and tablename in ('members', 'payments', 'donations', 'app_settings')
+      and tablename in ('members', 'payments', 'donations', 'supporter_donations', 'app_settings')
   loop
     execute format('drop policy if exists %I on %I.%I;', r.policyname, r.schemaname, r.tablename);
   end loop;
@@ -62,12 +62,14 @@ end $$;
 alter table public.members    enable row level security;
 alter table public.payments   enable row level security;
 alter table public.donations  enable row level security;
+alter table public.supporter_donations enable row level security;
 alter table public.app_settings enable row level security;
 
 -- force RLS even for the table owner (defence in depth)
 alter table public.members      force row level security;
 alter table public.payments     force row level security;
 alter table public.donations    force row level security;
+alter table public.supporter_donations force row level security;
 alter table public.app_settings force row level security;
 
 -- ----------------------------------------------------------------------------
@@ -76,6 +78,7 @@ alter table public.app_settings force row level security;
 revoke insert, update, delete, truncate on public.members   from anon;
 revoke insert, update, delete, truncate on public.payments  from anon;
 revoke insert, update, delete, truncate on public.donations from anon;
+revoke insert, update, delete, truncate on public.supporter_donations from anon;
 revoke insert, update, delete, truncate on public.app_settings from anon;
 
 -- ----------------------------------------------------------------------------
@@ -89,6 +92,9 @@ create policy "payments_select_authenticated"
 
 create policy "donations_select_authenticated"
   on public.donations for select to authenticated using (true);
+
+create policy "supporter_donations_select_authenticated"
+  on public.supporter_donations for select to anon, authenticated using (true);
 
 create policy "app_settings_select_authenticated"
   on public.app_settings for select to authenticated using (true);
@@ -108,6 +114,10 @@ create policy "donations_insert_admin"
   on public.donations for insert to authenticated
   with check (public.is_admin());
 
+create policy "supporter_donations_insert_admin"
+  on public.supporter_donations for insert to authenticated
+  with check (public.is_admin());
+
 -- ----------------------------------------------------------------------------
 -- 6. UPDATE — admin only
 -- ----------------------------------------------------------------------------
@@ -123,6 +133,11 @@ create policy "payments_update_admin"
 
 create policy "donations_update_admin"
   on public.donations for update to authenticated
+  using (public.is_admin())
+  with check (public.is_admin());
+
+create policy "supporter_donations_update_admin"
+  on public.supporter_donations for update to authenticated
   using (public.is_admin())
   with check (public.is_admin());
 
@@ -145,6 +160,10 @@ create policy "payments_delete_admin"
 
 create policy "donations_delete_admin"
   on public.donations for delete to authenticated
+  using (public.is_admin());
+
+create policy "supporter_donations_delete_admin"
+  on public.supporter_donations for delete to authenticated
   using (public.is_admin());
 
 -- ----------------------------------------------------------------------------
