@@ -1989,7 +1989,25 @@
     /* Extra channels: name + value. Wallet numbers still come from app_settings. */
     const EXTRA_METHOD_FALLBACK = [];
 
-    const LIVE = /^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(SUPABASE_URL) && !SUPABASE_ANON_KEY.startsWith("YOUR-");
+    /* ---------------------------------------------------------------------
+       DEMO MODE — a safe, one-click walkthrough of the register
+       ---------------------------------------------------------------------
+         ?demo=1          demo data, normal login screen
+         #/demo           demo data + signed in as demo admin -> Members tab
+
+       Demo mode never talks to Supabase (sb stays null): every read and write
+       goes to a separate localStorage bucket, so a demo can never touch or
+       overwrite the real register. */
+    const DEMO_QUERY = /(\?|&)demo=1(&|$)/.test(location.search) || /[?&]demo=1/.test(location.hash);
+    const DEMO_ROUTE = /^#\/demo\b/.test(location.hash);
+    const DEMO_FLAG = (() => {
+      try { return sessionStorage.getItem("hb_demo_mode") === "1"; } catch (e) { return false; }
+    })();
+    const DEMO_MODE = DEMO_QUERY || DEMO_ROUTE || DEMO_FLAG;
+    /* stay in demo while the tab lives, so refresh / in-app tabs keep working */
+    if (DEMO_MODE) { try { sessionStorage.setItem("hb_demo_mode", "1"); } catch (e) { } }
+
+    const LIVE = !DEMO_MODE && /^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(SUPABASE_URL) && !SUPABASE_ANON_KEY.startsWith("YOUR-");
 
     /* =====================================================================
        CONSTANTS
@@ -2065,8 +2083,9 @@
     /* =====================================================================
        STATE
     ===================================================================== */
-    const LS_DATA = "hb_data_v2";
-    const LS_SETTINGS = "hb_settings_v2";
+    /* the demo bucket lives apart from the real cache on purpose */
+    const LS_DATA = DEMO_MODE ? "hb_demo_data_v1" : "hb_data_v2";
+    const LS_SETTINGS = DEMO_MODE ? "hb_demo_settings_v1" : "hb_settings_v2";
 
     const state = {
       session: null,
@@ -3346,7 +3365,9 @@
     /* =====================================================================
        AUTH
     ===================================================================== */
-    const LS_SESSION = "hb_session_v2";
+    /* demo sessions live in their own key: leaving demo mode can never leave a
+       "demo admin" signed in on the real register */
+    const LS_SESSION = DEMO_MODE ? "hb_demo_session_v1" : "hb_session_v2";
 
     /* -------------------------------------------------------------------
        AUTO-LOGOUT POLICY
@@ -3483,6 +3504,12 @@
       if (sb) { try { await sb.auth.signOut(); } catch (e) { } }
       state.session = null; state.isAdmin = false;
       try { localStorage.removeItem(LS_DATA); } catch (e) { }
+      if (DEMO_MODE) {
+        /* leave the demo behind and reload the real app, untouched */
+        try { sessionStorage.removeItem("hb_demo_mode"); } catch (e) { }
+        location.href = location.pathname;
+        return;
+      }
       navigate("/login");
       toast("Signed out");
     }
@@ -3803,6 +3830,10 @@
         ${ICONS.usersSmall}<span>Continue as viewer</span>
       </button>
 
+      <button class="btn btn-outline" id="demoBtn" style="margin-top:10px;border-style:dashed">
+        ${ICONS.star}<span>See the demo register (sample data)</span>
+      </button>
+
       <div class="divider"><span>ADMIN</span></div>
 
       <div class="card" style="padding:16px;background:#ffffff">
@@ -3861,7 +3892,9 @@
 
       ${state.demo ? `<div class="banner" style="margin-bottom:12px">
         <span style="flex:none">${ICONS.settings}</span>
-        <span>Sample data is shown because Supabase keys are not configured yet.</span>
+        <span>${DEMO_MODE
+          ? `Demo mode - sample register only. Nothing is written to Supabase; every demo change stays on this device.`
+          : `Sample data is shown because Supabase keys are not configured yet.`}</span>
       </div>` : ""}
 
       <section class="fund-summary" aria-labelledby="fundSummaryTitle" aria-describedby="fundSummaryFormula">
@@ -4377,6 +4410,7 @@
         ${state.isAdmin
           ? `Admin mode &middot; tap <b>+</b> to add, ${ICONS.dots} on any card to edit, re-seat or delete. Everything saves to Supabase instantly.`
           : `Signed in as viewer &middot; ${esc(BRAND)} register`}
+        ${DEMO_MODE ? ` &middot; <b>demo data</b>` : ""}
       </p>
     </div>`;
     }
@@ -5526,8 +5560,10 @@
     /** admin utility: push anything held locally up to Supabase */
     function registerSyncCard() {
       const pending = (state.supporters || []).filter(s => !UUID_RE.test(String(s.id))).length;
-      const subtitle = !sb
-        ? "Demo mode — Supabase keys are not configured yet"
+      const subtitle = DEMO_MODE
+        ? "Demo mode — sample data, Supabase untouched. Sign out to leave the demo."
+        : !sb
+        ? "Supabase keys are not configured yet (offline sample data)"
         : pending
           ? `${pending} supporter entr${pending === 1 ? "y" : "ies"} waiting to upload`
           : "Re-align executive seats, supporters and dues";
@@ -5647,6 +5683,9 @@
       };
 
       /* ---- login ---- */
+      const demo = v.querySelector("#demoBtn");
+      if (demo) demo.onclick = () => { location.href = location.pathname + "#/demo"; };
+
       const g = v.querySelector("#googleBtn");
       if (g) g.onclick = () => {
         busy(g, true);
@@ -5977,6 +6016,14 @@
         if (!restoreLocalSession()) setSession(null);
       }
 
+      /* #/demo signs in as the demo admin — after the normal restore, so
+         nothing overwrites it. Demo data only: sb is null in demo mode. */
+      if (DEMO_ROUTE && !state.session) {
+        state.session = { user: { email: ADMIN_EMAIL, user_metadata: { name: BRAND + " Demo Admin" }, local: true } };
+        state.isAdmin = true;
+        saveLocalSession();
+      }
+
       if (state.session) {
         try { await withTimeout(db.fetchAll(), 10000, "Loading data"); }
         catch (e) {
@@ -5988,6 +6035,7 @@
       state.loading = false;
       state.booted = true;
       clearTimeout(failsafe);
+      if (DEMO_ROUTE && path() !== "/members") navigate("/members");
       route();
 
       // keep the app fresh when it regains focus

@@ -174,7 +174,29 @@ demo/offline only — live mode always reads what is in Supabase.
 
 ---
 
-## 6. Fund maths
+## 6. Demo mode (walkthrough without touching the database)
+
+Two ways in, both defined by the `DEMO_MODE` switch near the Supabase config:
+
+* **Login screen → “See the demo register (sample data)”** (or the URL fragment `#/demo`) —
+  signs in as the demo admin and lands straight on the Members register.
+* **`?demo=1`** — demo data with the normal login screen (sign in yourself to explore).
+
+In demo mode `sb` is never created, so **nothing is ever written to Supabase**; all state
+lives in a separate bucket (`hb_demo_data_v1` / `hb_demo_settings_v1` / `hb_demo_session_v1`
+versus the real `hb_data_v2` / `hb_settings_v2` / `hb_session_v2`). The demo includes the
+8 executives with their seats, 4 general members (**Mehedi Hasan Saikot** included),
+4 donations the club gave away and 5 supporter donations worth ৳20,000.
+
+Leaving the demo is one tap: **Profile → Sign out** drops the demo flag and reloads the
+real app. The flag itself is kept in `sessionStorage`, so it disappears with the tab and
+can never leak into a normal visit.
+
+`DEMO.md` is the Bangla walkthrough of the same flow.
+
+---
+
+## 7. Fund maths
 
 ```
 fund = fees collected (payments) + support from others (supporter_donations)
