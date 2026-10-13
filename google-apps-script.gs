@@ -9,18 +9,20 @@
  * 4. Copy the Web app URL into index.html as SHEET_WEBHOOK_URL.
  *
  * Apps from the Healer Boys app append a row here:
- *   Members | Payments | Donations
+ *   Members | Payments | Donations | Supporters
  */
 const SHEETS = {
   member: "Members",
   payment: "Payments",
-  donation: "Donations"
+  donation: "Donations",
+  supporter: "Supporters"
 };
 
 const HEADERS = {
   member: ["Time", "Action", "ID", "Name", "Email", "Avatar URL"],
   payment: ["Time", "Action", "ID", "Member ID", "Member Name", "Type", "Amount", "Date"],
-  donation: ["Time", "Action", "ID", "Description", "Amount", "Date"]
+  donation: ["Time", "Action", "ID", "Description", "Amount", "Date"],
+  supporter: ["Time", "Action", "ID", "Supporter", "Description", "Amount", "Contribution Month"]
 };
 
 function doPost(e) {
@@ -45,6 +47,8 @@ function doPost(e) {
       values = [stamp, action, row.id || "", row.name || "", row.email || "", row.avatar_url || ""];
     } else if (kind === "payment") {
       values = [stamp, action, row.id || "", row.member_id || "", row.member_name || "", row.type || "", Number(row.amount || 0), row.date || ""];
+    } else if (kind === "supporter") {
+      values = [stamp, action, row.id || "", row.donor_name || row.supporter_name || (row.is_anonymous ? "Anonymous" : ""), row.description || row.note || "", Number(row.amount || 0), row.donation_month || row.date || ""];
     } else {
       values = [stamp, action, row.id || "", row.description || "", Number(row.amount || 0), row.date || ""];
     }
