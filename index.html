@@ -704,7 +704,7 @@
 
     .fund-summary__currency { font-size: .68em; font-weight: 800; }
 
-    /* --- footer: collected / donated breakdown strip --- */
+    /* --- footer: collected / supporter gifts / donated breakdown strip --- */
     .fund-summary__foot {
       display: grid;
       grid-template-columns: 1fr auto 1fr;
@@ -716,8 +716,12 @@
       border-top: 1px solid rgba(205, 191, 214, .35);
     }
 
+    .fund-summary__foot.has-supporters { grid-template-columns: 1fr auto 1fr auto 1fr; }
+
     .fund-summary__stat { min-width: 0; }
     .fund-summary__stat + .fund-summary__stat { text-align: right; }
+    .fund-summary__foot .fund-summary__stat:last-child { text-align: right; }
+    .fund-summary__foot.has-supporters .fund-summary__stat:nth-child(3) { text-align: center; }
 
     .fund-summary__stat-label {
       margin: 0;
@@ -1933,15 +1937,17 @@
       "Junaed Hossain Toni", "Kamrul H. Rafi", "Khaled Mahmud", "Sabbir Hossain"
     ]);
     function normalizeMemberTypes(rows) {
-      const out = rows.map(row => ({ ...row, member_type: EXECUTIVE_NAMES.has(row.name) ? "executive" : "general", profile: row.profile || "" }));
-      let exec = out.filter(row => row.member_type === "executive");
-      if (exec.length < 8) {
-        out.filter(row => row.member_type !== "executive" && row.name !== "Mehedi Hasan Saikot").slice(0, 8 - exec.length)
-          .forEach(row => { row.member_type = "executive"; });
-      } else if (exec.length > 8) {
-        out.filter(row => row.member_type === "executive" && !EXECUTIVE_NAMES.has(row.name)).forEach(row => { row.member_type = "general"; });
-      }
-      return out;
+      /* Respect the stored member_type whenever the row carries one. The name
+         heuristic only classifies legacy rows that predate the column, so a
+         member added through the General/Executive card is never re-routed
+         into the wrong group on the next load. */
+      return rows.map(row => {
+        const stored = String(row.member_type || "").trim().toLowerCase();
+        const type = (stored === "executive" || stored === "general")
+          ? stored
+          : (EXECUTIVE_NAMES.has(row.name) ? "executive" : "general");
+        return { ...row, member_type: type, profile: row.profile || "" };
+      });
     }
     const YEAR = () => new Date().getFullYear();
 
@@ -2013,6 +2019,31 @@
     ===================================================================== */
     const LS_DATA = "hb_data_v2";
     const LS_SETTINGS = "hb_settings_v2";
+    const LS_PENDING = "hb_pending_v1";
+
+    /* ---- pending-sync queue -------------------------------------------
+       When Supabase rejects a write because a table/column is missing from
+       the schema cache ("Could not find the table ... in the schema cache"),
+       the row is kept locally and queued here. The queue is flushed after
+       every successful fetch (and when the app regains focus), so nothing is
+       lost and the supervisor/admin panel receives the data as soon as the
+       database schema is repaired with fix-supabase-schema.sql. */
+    function loadPendingOps() {
+      try { return JSON.parse(localStorage.getItem(LS_PENDING) || "[]") || []; }
+      catch (e) { return []; }
+    }
+    function queuePendingOp(op) {
+      const ops = loadPendingOps();
+      op.pending_id = op.pending_id || newId();
+      op.queued_at = new Date().toISOString();
+      ops.push(op);
+      try { localStorage.setItem(LS_PENDING, JSON.stringify(ops)); } catch (e) { }
+      return op.pending_id;
+    }
+    function removePendingOp(pendingId) {
+      const ops = loadPendingOps().filter(o => o.pending_id !== pendingId);
+      try { localStorage.setItem(LS_PENDING, JSON.stringify(ops)); } catch (e) { }
+    }
 
     const state = {
       session: null,
@@ -2076,14 +2107,73 @@
           ]);
           const legacyByName = new Map((m.data || []).map(row => [row.name, row]));
           if (!executives.error && !general.error && (executives.data.length || general.data.length)) {
-            state.members = [...executives.data.map(row => ({ ...legacyByName.get(row.name), ...row, id: legacyByName.get(row.name)?.id || row.id, normalized_id: row.id, avatar_url: row.photo_url || legacyByName.get(row.name)?.avatar_url || null, member_type: "executive" })), ...general.data.map(row => ({ ...legacyByName.get(row.name), ...row, id: legacyByName.get(row.name)?.id || row.id, normalized_id: row.id, avatar_url: row.photo_url || legacyByName.get(row.name)?.avatar_url || null, member_type: "general", profile: row.profile || "" }))];
+            const serverMembers = [...executives.data.map(row => ({ ...legacyByName.get(row.name), ...row, id: legacyByName.get(row.name)?.id || row.id, normalized_id: row.id, avatar_url: row.photo_url || legacyByName.get(row.name)?.avatar_url || null, member_type: "executive" })), ...general.data.map(row => ({ ...legacyByName.get(row.name), ...row, id: legacyByName.get(row.name)?.id || row.id, normalized_id: row.id, avatar_url: row.photo_url || legacyByName.get(row.name)?.avatar_url || null, member_type: "general", profile: row.profile || "" }))];
+            /* keep rows that are waiting for the schema fix unless the server
+               already has a member with the same name */
+            const serverNames = new Set(serverMembers.map(r => r.name));
+            const pendingMembers = state.members.filter(r => r.pending_sync && !serverNames.has(r.name));
+            state.members = [...serverMembers, ...pendingMembers];
           }
-          if (!donations.error && donations.data.length) state.donations = donations.data.map(row => ({ ...row, description: row.note || row.description || "Donation", date: row.created_at?.slice(0, 10) || row.date }));
-          if (!supporters.error && (supporters.data || []).length) state.supporterDonations = supporters.data.map(row => ({ ...row, description: row.note || row.description || "Supporter gift", date: row.donation_month || row.created_at?.slice(0, 10) || row.date }));
+          if (!donations.error && donations.data.length) {
+            const serverDonations = donations.data.map(row => ({ ...row, description: row.note || row.description || "Donation", date: row.created_at?.slice(0, 10) || row.date }));
+            const serverNotes = new Set(serverDonations.map(r => r.description));
+            state.donations = [...serverDonations, ...state.donations.filter(r => r.pending_sync && !serverNotes.has(r.description))];
+          }
+          /* Donation From Others: the server is the source of truth whenever
+             the table answers (even with zero rows); a schema-cache error keeps
+             the locally saved / queued rows on screen. */
+          if (!supporters.error) {
+            const serverRows = (supporters.data || []).map(row => ({ ...row, description: row.note || row.description || "Supporter gift", date: row.donation_month || row.created_at?.slice(0, 10) || row.date }));
+            const syncedKeys = new Set(serverRows.map(r => `${r.donor_name || ""}|${r.description}|${r.donation_month || r.date || ""}|${r.amount}`));
+            const localOnly = state.supporterDonations.filter(r => r.pending_sync && !syncedKeys.has(`${r.donor_name || r.supporter_name || ""}|${r.description || r.note || ""}|${r.donation_month || r.date || ""}|${r.amount}`));
+            state.supporterDonations = [...serverRows, ...localOnly];
+          }
         }
         if (!s.error) state.settings = { ...DEFAULT_SETTINGS, ...(s.data || {}) };
         this.saveLocal();
         notifyReportDataChanged();
+        /* deliver anything that was saved locally while the schema cache was
+           broken; each op removes itself from the queue once Supabase accepts it */
+        this.flushPendingOps();
+      },
+
+      /* replay queued writes against Supabase. Ops that still hit a schema
+         error stay queued; other failures are dropped from the queue but were
+         already saved locally so the admin can retry manually. */
+      async flushPendingOps() {
+        if (!sb || !state.session || state.session.user?.local) return;
+        if (this._flushing) return;
+        const ops = loadPendingOps();
+        if (!ops.length) return;
+        this._flushing = true;
+        const api = window.HealerMembersApi;
+        let synced = 0;
+        try {
+          for (const op of ops) {
+            try {
+              let res = null;
+              if (op.kind === "supporter" && api?.addSupporterDonation) res = await api.addSupporterDonation(op.payload);
+              else if (op.kind === "donation" && api?.addDonation) res = await api.addDonation(op.payload);
+              else if (op.kind === "member" && api) {
+                res = op.payload.member_type === "executive"
+                  ? await api.addExecutiveMember(op.payload)
+                  : await api.addGeneralMember(op.payload);
+              }
+              if (!res) { removePendingOp(op.pending_id); continue; }
+              if (res.error) {
+                if (res.error.schemaError) continue; /* still broken — keep queued */
+                removePendingOp(op.pending_id);
+                continue;
+              }
+              removePendingOp(op.pending_id);
+              synced++;
+            } catch (e) { /* keep the op queued for the next pass */ }
+          }
+        } finally { this._flushing = false; }
+        if (synced) {
+          try { await this.fetchAll(); } catch (e) { }
+          toast(`${synced} pending ${synced === 1 ? "record" : "records"} synced to the database`, "ok");
+        }
       },
 
       saveLocal() {
@@ -2131,8 +2221,8 @@
           name: d.name,
           email: d.name.toLowerCase().replace(/[^a-z]+/g, ".") + "@gmail.com",
           avatar_url: null,
-          member_type: d.name === "Mehedi Hasan Saikot" ? "general" : "executive",
-          profile: d.name === "Mehedi Hasan Saikot" ? "General member" : ""
+          member_type: d.name === "Mehedi Hasan Saikat" ? "general" : "executive",
+          profile: d.name === "Mehedi Hasan Saikat" ? "General member" : ""
         }));
         state.payments = [];
         const now = nowLocal();
@@ -2181,34 +2271,62 @@
         if (sb) {
           const normalizedApi = window.HealerMembersApi;
           if (!normalizedApi) throw new Error("Supabase member API is unavailable.");
-          const apiResult = payload.member_type === "executive"
+          const memberType = payload.member_type === "executive" ? "executive" : "general";
+          /* DB writes carry a real UUID so inserts work in both text and uuid id columns */
+          const id = /^[0-9a-f-]{36}$/i.test(String(payload.id || "")) ? payload.id : newId();
+          const apiResult = memberType === "executive"
             ? await normalizedApi.addExecutiveMember(payload)
             : await normalizedApi.addGeneralMember(payload);
           const normalizedError = apiResult.error || null;
           const normalized = apiResult.data || null;
-          let legacyRow = null;
           /* The normalized table is the source of truth. Mirroring into the
-             legacy table is optional, so an old/missing table cannot block the
-             admin from adding a member. */
+             legacy table is optional; it retries while dropping exactly the
+             column the schema cache complains about (e.g. photo_url vs
+             avatar_url), so an old table can never block adding a member. */
+          let legacyRow = null;
           try {
-            const withId = { id: payload.id || newId(), ...payload };
-            let res = await sb.from("members").insert([withId]).select().single();
-            if (res.error && /email/i.test(res.error.message || "")) {
-              const bare = { ...withId }; delete bare.email;
-              res = await sb.from("members").insert([bare]).select().single();
-            }
-            if (!res.error) legacyRow = res.data;
+            legacyRow = await this.legacyMemberInsert({
+              id,
+              name: payload.name,
+              email: payload.email || null,
+              avatar_url: payload.avatar_url || payload.photo_url || null,
+              member_type: memberType,
+              profile: payload.profile || (memberType === "general" ? "General member" : "")
+            });
           } catch (e) { /* legacy mirror is optional */ }
-          if (normalizedError && !legacyRow) throw normalizedError;
+          if (normalizedError && !legacyRow) {
+            if (normalizedError.schemaError) {
+              /* keep the admin's work: save locally + sync to the supervisor
+                 panel as soon as fix-supabase-schema.sql has been run */
+              const row = { id, ...payload, member_type: memberType, normalized_id: null, pending_sync: true };
+              state.members.push(row);
+              this.saveLocal();
+              row.pending_id = queuePendingOp({ kind: "member", payload: { ...payload, member_type: memberType } });
+              this.syncSheet("member", "add", row);
+              notifyReportDataChanged();
+              toast("Saved on this device — the database schema is out of date. Run fix-supabase-schema.sql and it will sync automatically.", "warn");
+              return row;
+            }
+            throw normalizedError;
+          }
           if (!normalized && legacyRow) {
-            const row = { ...legacyRow, member_type: payload.member_type };
+            const row = { ...legacyRow, member_type: memberType };
             state.members.push(row);
+            this.saveLocal();
             this.syncSheet("member", "add", row);
             notifyReportDataChanged();
             return row;
           }
-          const row = { ...(legacyRow || normalized), ...normalized, id: legacyRow?.id || normalized.id, normalized_id: normalized.id, member_type: payload.member_type };
+          const row = {
+            ...(legacyRow || {}),
+            ...normalized,
+            id: legacyRow?.id || normalized.id,
+            normalized_id: normalized.id,
+            member_type: memberType,
+            avatar_url: normalized.photo_url || legacyRow?.avatar_url || null
+          };
           state.members.push(row);
+          this.saveLocal();
           this.syncSheet("member", "add", row);
           notifyReportDataChanged();
           return row;
@@ -2219,30 +2337,82 @@
         notifyReportDataChanged();
         return row;
       },
+
+      /* best-effort insert into the legacy `members` table: on a missing
+         column error, drop that exact column and try again */
+      async legacyMemberInsert(row) {
+        if (!sb) return null;
+        const cols = { ...row };
+        for (let attempt = 0; attempt < 6; attempt++) {
+          const res = await sb.from("members").insert([cols]).select().single();
+          if (!res.error) return res.data;
+          const missing = String(res.error.message || "").match(/could not find the '([a-z0-9_]+)' column/i);
+          if (!missing || !(missing[1] in cols)) return null;
+          delete cols[missing[1]];
+        }
+        return null;
+      },
+
       async updateMember(id, patch) {
         const existing = state.members.find(x => x.id === id);
         const normalizedApi = window.HealerMembersApi;
+        const nextType = (patch.member_type === "executive" || patch.member_type === "general")
+          ? patch.member_type
+          : (existing?.member_type === "executive" ? "executive" : "general");
+        const prevType = existing?.member_type === "executive" ? "executive" : "general";
+        const merged = { ...existing, ...patch, member_type: nextType };
         if (sb && existing?.normalized_id && normalizedApi) {
-          const merged = { ...existing, ...patch };
-          const apiResult = existing.member_type === "executive"
-            ? await normalizedApi.updateExecutiveMember(existing.normalized_id, merged)
-            : await normalizedApi.updateGeneralMember(existing.normalized_id, merged);
-          if (apiResult.error) throw apiResult.error;
+          if (nextType !== prevType) {
+            /* member moved between groups: move the row between the two
+               normalized tables so the General/Executive cards stay correct */
+            const addRes = nextType === "executive"
+              ? await normalizedApi.addExecutiveMember(merged)
+              : await normalizedApi.addGeneralMember(merged);
+            if (addRes.error) throw addRes.error;
+            const delRes = prevType === "executive"
+              ? await normalizedApi.deleteExecutiveMember(existing.normalized_id)
+              : await normalizedApi.deleteGeneralMember(existing.normalized_id);
+            if (delRes.error) throw delRes.error;
+            merged.normalized_id = addRes.data?.id || null;
+            merged.photo_url = addRes.data?.photo_url || merged.photo_url || null;
+          } else {
+            const apiResult = nextType === "executive"
+              ? await normalizedApi.updateExecutiveMember(existing.normalized_id, merged)
+              : await normalizedApi.updateGeneralMember(existing.normalized_id, merged);
+            if (apiResult.error) throw apiResult.error;
+          }
         }
-        if (sb && !existing?.normalized_id) {
-          const { error } = await sb.from("members").update(patch).eq("id", id);
-          if (error) throw error;
-        } else if (sb && existing?.normalized_id) {
-          try { await sb.from("members").update(patch).eq("id", id); } catch (e) { /* optional legacy mirror */ }
+        if (sb) {
+          /* legacy mirror: whitelist known columns and map photo_url -> avatar_url */
+          try {
+            const legacyPatch = {};
+            if (patch.name !== undefined) legacyPatch.name = patch.name;
+            if (patch.email !== undefined) legacyPatch.email = patch.email;
+            if (patch.avatar_url !== undefined || patch.photo_url !== undefined) {
+              legacyPatch.avatar_url = patch.avatar_url || patch.photo_url || null;
+            }
+            if (patch.profile !== undefined) legacyPatch.profile = patch.profile;
+            legacyPatch.member_type = nextType;
+            if (Object.keys(legacyPatch).length) {
+              await sb.from("members").update(legacyPatch).eq("id", id);
+            }
+          } catch (e) { /* optional legacy mirror */ }
         }
         const i = state.members.findIndex(x => x.id === id);
-        if (i > -1) state.members[i] = { ...state.members[i], ...patch };
-        if (!sb) this.saveLocal();
+        if (i > -1) {
+          const next = { ...state.members[i], ...patch, member_type: nextType };
+          /* keep pointing at the live normalized row (it moves on a type change) */
+          if (merged.normalized_id) next.normalized_id = merged.normalized_id;
+          if (nextType !== prevType) next.photo_url = merged.photo_url || next.photo_url || null;
+          state.members[i] = next;
+        }
+        this.saveLocal(); // keep the offline snapshot fresh in live mode too
         notifyReportDataChanged();
       },
       async deleteMember(id) {
         const existing = state.members.find(x => x.id === id);
         const normalizedApi = window.HealerMembersApi;
+        if (existing?.pending_id) removePendingOp(existing.pending_id);
         if (sb && existing?.normalized_id && normalizedApi) {
           const apiResult = existing.member_type === "executive"
             ? await normalizedApi.deleteExecutiveMember(existing.normalized_id)
@@ -2254,8 +2424,9 @@
         }
         state.members = state.members.filter(m => m.id !== id);
         state.payments = state.payments.filter(p => p.member_id !== id);
-        if (!sb) this.saveLocal();
+        this.saveLocal(); // keep the offline snapshot fresh in live mode too
         notifyReportDataChanged();
+        return true;
       },
 
       /* ---- payments ---- */
@@ -2271,6 +2442,7 @@
           if (res.error) throw res.error;
           const data = res.data;
           state.payments.push(data);
+          this.saveLocal();
           const mem = state.members.find(m => m.id === data.member_id);
           this.syncSheet("payment", "add", { ...data, member_name: mem ? mem.name : "" });
           notifyReportDataChanged();
@@ -2289,15 +2461,14 @@
           if (error) throw error;
         }
         state.payments = state.payments.filter(p => p.id !== id);
-        if (!sb) this.saveLocal();
+        this.saveLocal(); // keep the offline snapshot fresh in live mode too
         notifyReportDataChanged();
       },
 
       /* ---- donations ---- */
       async addDonation(payload) {
         if (sb) {
-          /* id was missing here before — that's the "null value in column id" error */
-            const normalized = {
+          const normalized = {
             ...payload,
             donor_name: payload.is_anonymous ? null : (payload.supporter_name || null),
             note: payload.description || "Donation",
@@ -2307,7 +2478,17 @@
           let normalizedRow = null;
           if (window.HealerMembersApi) {
             const apiResult = await window.HealerMembersApi.addDonation({ donor_name: normalized.donor_name, is_anonymous: normalized.is_anonymous, amount: normalized.amount, note: normalized.note, image_url: normalized.image_url });
-            if (apiResult.error) throw apiResult.error;
+            if (apiResult.error && !apiResult.error.schemaError) throw apiResult.error;
+            if (apiResult.error) {
+              /* schema cache broken: keep the entry locally and sync later */
+              const row = { id: newId(), ...normalized, description: normalized.note, date: payload.date || todayISO(), pending_sync: true };
+              state.donations.unshift(row);
+              this.saveLocal();
+              row.pending_id = queuePendingOp({ kind: "donation", payload: { donor_name: normalized.donor_name, is_anonymous: normalized.is_anonymous, amount: normalized.amount, note: normalized.note, image_url: normalized.image_url } });
+              this.syncSheet("donation", "add", row);
+              toast("Saved on this device — the database schema is out of date. Run fix-supabase-schema.sql and it will sync automatically.", "warn");
+              return row;
+            }
             normalizedRow = apiResult.data;
           }
           /* The normalized API already writes to the same donations table on
@@ -2315,19 +2496,21 @@
           if (normalizedRow) {
             const row = { ...normalizedRow, description: normalizedRow.note || payload.description || "Donation", date: normalizedRow.created_at?.slice(0, 10) || payload.date };
             state.donations.unshift(row);
+            this.saveLocal();
             this.syncSheet("donation", "add", row);
             return row;
           }
           let res = await sb.from("donations")
-            .insert([{ id: normalizedRow?.id || payload.id || newId(), ...normalized }]).select().single();
+            .insert([{ id: payload.id && /^[0-9a-f-]{36}$/i.test(String(payload.id)) ? payload.id : newId(), ...normalized }]).select().single();
           if (res.error && /column\s+"?id"?/i.test(res.error.message || "")) {
-            res = await sb.from("donations").insert([payload]).select().single();
+            res = await sb.from("donations").insert([normalized]).select().single();
           }
           if (res.error && /column|schema cache/i.test(res.error.message || "")) {
-            res = await sb.from("donations").insert([{ id: payload.id || newId(), ...payload }]).select().single();
+            res = await sb.from("donations").insert([{ id: newId(), ...normalized }]).select().single();
           }
           if (res.error) throw res.error;
-          state.donations.unshift({ ...res.data, ...normalizedRow, id: res.data.id });
+          state.donations.unshift({ ...res.data, description: res.data.note || normalized.note, date: res.data.created_at?.slice(0, 10) || payload.date });
+          this.saveLocal();
           this.syncSheet("donation", "add", res.data);
           return res.data;
         }
@@ -2336,6 +2519,9 @@
         this.syncSheet("donation", "add", row);
         return row;
       },
+      /* ---- Donation From Others (supporter gifts) ----
+         These rows live ONLY in supporter_donations and are ADDED to the
+         Total Fund — never mixed with, or subtracted from, donations. */
       async addSupporterDonation(payload) {
         const normalized = {
           donor_name: payload.is_anonymous ? null : (payload.supporter_name || null),
@@ -2348,13 +2534,33 @@
         };
         if (sb && typeof window.HealerMembersApi?.addSupporterDonation === "function") {
           const apiResult = await window.HealerMembersApi.addSupporterDonation(normalized);
-          if (apiResult.error) throw apiResult.error;
-          const row = { ...apiResult.data, description: apiResult.data.note || normalized.note, date: apiResult.data.created_at?.slice(0, 10) || payload.date };
+          if (apiResult.error && !apiResult.error.schemaError) throw apiResult.error;
+          if (apiResult.error) {
+            /* supporter_donations missing from the schema cache: keep the
+               entry locally + queued so the supervisor panel gets it after
+               fix-supabase-schema.sql has been run */
+            const row = {
+              id: newId(), ...normalized,
+              supporter_name: payload.supporter_name || null,
+              description: normalized.note,
+              date: normalized.donation_month,
+              pending_sync: true
+            };
+            state.supporterDonations.unshift(row);
+            this.saveLocal();
+            row.pending_id = queuePendingOp({ kind: "supporter", payload: normalized });
+            this.syncSheet("supporter", "add", row);
+            toast("Saved on this device — run fix-supabase-schema.sql in Supabase to sync supporter donations to the database.", "warn");
+            return row;
+          }
+          const row = { ...apiResult.data, description: apiResult.data.note || normalized.note, date: apiResult.data.donation_month || apiResult.data.created_at?.slice(0, 10) || payload.date };
           state.supporterDonations.unshift(row); this.saveLocal();
+          this.syncSheet("supporter", "add", row);
           return row;
         }
         const row = { id: uid("supporter"), ...payload, donation_month: payload.date || todayISO(), description: normalized.note, date: payload.date || todayISO() };
         state.supporterDonations.unshift(row); this.saveLocal();
+        this.syncSheet("supporter", "add", row);
         return row;
       },
       async deleteSupporterDonation(id) {
@@ -2362,43 +2568,76 @@
           const apiResult = await window.HealerMembersApi.deleteSupporterDonation(id);
           if (apiResult.error) throw apiResult.error;
         }
+        /* local-only rows (saved while the schema cache was broken) simply
+           drop out of the pending queue */
+        const local = state.supporterDonations.find(d => d.id === id);
+        if (local?.pending_id) removePendingOp(local.pending_id);
         state.supporterDonations = state.supporterDonations.filter(d => d.id !== id);
         this.saveLocal();
       },
       async updateSupporterDonation(id, patch) {
+        const donation_month = patch.date || patch.donation_month || todayISO();
+        const merged = {
+          donor_name: patch.is_anonymous ? null : (patch.supporter_name || patch.donor_name || null),
+          is_anonymous: patch.is_anonymous !== undefined ? Boolean(patch.is_anonymous) : undefined,
+          amount: patch.amount !== undefined ? Number(patch.amount || 0) : undefined,
+          note: patch.note || patch.description,
+          image_url: patch.image_url,
+          donation_month
+        };
         if (sb && typeof window.HealerMembersApi?.updateSupporterDonation === "function" && /^[0-9a-f-]{36}$/i.test(String(id))) {
-          const apiResult = await window.HealerMembersApi.updateSupporterDonation(id, { donor_name: patch.supporter_name || patch.donor_name, is_anonymous: patch.is_anonymous, amount: patch.amount, note: patch.note || patch.description, image_url: patch.image_url, donation_month: patch.date || patch.donation_month || todayISO() });
+          const existing = state.supporterDonations.find(d => d.id === id) || {};
+          const apiResult = await window.HealerMembersApi.updateSupporterDonation(id, {
+            donor_name: merged.donor_name,
+            is_anonymous: merged.is_anonymous !== undefined ? merged.is_anonymous : Boolean(existing.is_anonymous),
+            amount: merged.amount !== undefined ? merged.amount : Number(existing.amount || 0),
+            note: merged.note || existing.note || existing.description,
+            image_url: merged.image_url !== undefined ? merged.image_url : existing.image_url,
+            donation_month
+          });
           if (apiResult.error) throw apiResult.error;
         }
         const i = state.supporterDonations.findIndex(d => d.id === id);
-        if (i > -1) state.supporterDonations[i] = { ...state.supporterDonations[i], ...patch };
+        if (i > -1) {
+          const next = { ...state.supporterDonations[i] };
+          if (merged.donor_name !== undefined) next.donor_name = merged.donor_name;
+          if (merged.is_anonymous !== undefined) next.is_anonymous = merged.is_anonymous;
+          if (merged.amount !== undefined) next.amount = merged.amount;
+          if (merged.note) { next.note = merged.note; next.description = merged.note; }
+          if (merged.image_url !== undefined) next.image_url = merged.image_url;
+          next.donation_month = donation_month;
+          next.date = donation_month;
+          state.supporterDonations[i] = next;
+        }
         this.saveLocal();
       },
       async deleteDonation(id) {
+        const local = state.donations.find(d => d.id === id);
+        if (local?.pending_id) removePendingOp(local.pending_id);
         if (sb && window.HealerMembersApi && /^[0-9a-f-]{36}$/i.test(String(id))) {
           const apiResult = await window.HealerMembersApi.deleteDonation(id);
           if (apiResult.error) throw apiResult.error;
         }
-        if (sb) {
+        if (sb && /^[0-9a-f-]{36}$/i.test(String(id))) {
           const { error } = await sb.from("donations").delete().eq("id", id);
-          if (error) throw error;
+          if (error && !/schema cache|could not find/i.test(error.message || "")) throw error;
         }
         state.donations = state.donations.filter(d => d.id !== id);
-        if (!sb) this.saveLocal();
+        this.saveLocal(); // keep the offline snapshot fresh in live mode too
       },
       async updateDonation(id, patch) {
         if (sb && window.HealerMembersApi && /^[0-9a-f-]{36}$/i.test(String(id))) {
           const apiResult = await window.HealerMembersApi.updateDonation(id, { donor_name: patch.supporter_name || patch.donor_name, is_anonymous: patch.is_anonymous, amount: patch.amount, note: patch.note || patch.description, image_url: patch.image_url });
           if (apiResult.error) throw apiResult.error;
         }
-        if (sb) {
-          const normalized = { ...patch, note: patch.description || patch.note, donor_name: patch.is_anonymous ? null : (patch.supporter_name || patch.donor_name || null), image_url: patch.image_url || null };
+        if (sb && /^[0-9a-f-]{36}$/i.test(String(id))) {
+          const normalized = { note: patch.description || patch.note, donor_name: patch.is_anonymous ? null : (patch.supporter_name || patch.donor_name || null), is_anonymous: patch.is_anonymous, amount: patch.amount, image_url: patch.image_url || null };
           const { error } = await sb.from("donations").update(normalized).eq("id", id);
-          if (error) throw error;
+          if (error && !/schema cache|could not find/i.test(error.message || "")) throw error;
         }
         const i = state.donations.findIndex(d => d.id === id);
         if (i > -1) state.donations[i] = { ...state.donations[i], ...patch };
-        if (!sb) this.saveLocal();
+        this.saveLocal(); // keep the offline snapshot fresh in live mode too
       },
 
       /* ---- Google Sheet mirror (does not block the app if the sheet is down) ---- */
@@ -2691,7 +2930,10 @@
     function totals() {
       const collected = state.payments.reduce((a, p) => a + Number(p.amount || 0), 0);
       const donated = state.donations.reduce((a, d) => a + Number(d.amount || 0), 0);
-      return { collected, donated, fund: collected - donated, payments: state.payments.length };
+      /* Donation From Others (supporter gifts) are INCOMING money: they are
+         added to the fund, never subtracted from the donated amount. */
+      const supporters = state.supporterDonations.reduce((a, d) => a + Number(d.amount || 0), 0);
+      return { collected, donated, supporters, fund: collected + supporters - donated, payments: state.payments.length };
     }
 
     /** last n calendar months as {y, m} going back from this month, most recent last */
@@ -2705,9 +2947,9 @@
       return out;
     }
 
-    /** net fund collected within one calendar month ({y, m}), payments minus donations */
+    /** net fund collected within one calendar month ({y, m}): fees + supporter gifts − donations */
     function netForMonth(key) {
-      let collected = 0, donated = 0;
+      let collected = 0, donated = 0, supporters = 0;
       state.payments.forEach(p => {
         const k = paymentMonthKey(p);
         if (k && k.y === key.y && k.m === key.m) collected += Number(p.amount || 0);
@@ -2716,7 +2958,11 @@
         const ds = String(d.date || "");
         if (Number(ds.slice(0, 4)) === key.y && Number(ds.slice(5, 7)) === key.m) donated += Number(d.amount || 0);
       });
-      return collected - donated;
+      state.supporterDonations.forEach(d => {
+        const ds = String(d.donation_month || d.date || "");
+        if (Number(ds.slice(0, 4)) === key.y && Number(ds.slice(5, 7)) === key.m) supporters += Number(d.amount || 0);
+      });
+      return collected + supporters - donated;
     }
 
     /** % change of this month's net fund vs last month's, for the hero card badge */
@@ -3428,7 +3674,7 @@
           </span>
           <div class="fund-summary__titles">
             <h2 class="fund-summary__title" id="fundSummaryTitle">Total Fund</h2>
-            <p class="fund-summary__subtitle" id="fundSummaryFormula">Net Balance &middot; Fees &minus; Donations</p>
+            <p class="fund-summary__subtitle" id="fundSummaryFormula">Net Balance &middot; Fees + Supporter Gifts &minus; Donations</p>
           </div>
           <span class="fund-summary__live" aria-hidden="true"><i></i>LIVE</span>
         </div>
@@ -3437,12 +3683,17 @@
           <span class="fund-summary__currency" aria-hidden="true">৳</span><span id="fundBig">${fmtNumOnly(t.fund)}</span>
         </p>
 
-        <div class="fund-summary__foot">
+        <div class="fund-summary__foot ${t.supporters ? "has-supporters" : ""}">
           <div class="fund-summary__stat">
             <p class="fund-summary__stat-label">Collected</p>
             <p class="fund-summary__stat-value in">${taka(t.collected)}</p>
           </div>
           <span class="fund-summary__foot-div" aria-hidden="true"></span>
+          ${t.supporters ? `<div class="fund-summary__stat">
+            <p class="fund-summary__stat-label">Supporter gifts</p>
+            <p class="fund-summary__stat-value in">+ ${taka(t.supporters)}</p>
+          </div>
+          <span class="fund-summary__foot-div" aria-hidden="true"></span>` : ""}
           <div class="fund-summary__stat">
             <p class="fund-summary__stat-label">Donated</p>
             <p class="fund-summary__stat-value out">&minus; ${taka(t.donated)}</p>
@@ -3675,11 +3926,11 @@
           <button class="mb-overview-card exec" data-member-section="executive" type="button">
             <span class="mb-overview-top"><span class="mb-overview-label">LEADERSHIP TEAM</span></span><strong>Executive Members</strong><span class="mb-overview-sub">Leadership, contributions and monthly status</span><span class="mb-overview-bottom"><span class="mb-overview-count"><span class="mb-count-icon" aria-hidden="true">👥</span>${executiveCount} members</span><span class="mb-overview-cta">View Members <b aria-hidden="true">→</b></span></span>
           </button>
-          <button class="mb-overview-card general" data-member-section="general" type="button">
-            <span class="mb-overview-top"><span class="mb-overview-label">COMMUNITY</span></span><strong>General Members</strong><span class="mb-overview-sub">Regular members and their payment status</span><span class="mb-overview-bottom"><span class="mb-overview-count"><span class="mb-count-icon" aria-hidden="true">👥</span>${generalCount} member${generalCount === 1 ? "" : "s"}</span><span class="mb-overview-cta">View Members <b aria-hidden="true">→</b></span></span>
+          <button class="mb-overview-card general" data-member-section="general" type="button" ${state.isAdmin ? `data-addmember="1"` : ""}>
+            <span class="mb-overview-top"><span class="mb-overview-label">COMMUNITY</span></span><strong>General Members</strong><span class="mb-overview-sub">Regular members and their payment status</span><span class="mb-overview-bottom"><span class="mb-overview-count"><span class="mb-count-icon" aria-hidden="true">👥</span>${generalCount} member${generalCount === 1 ? "" : "s"}</span><span class="mb-overview-cta">${state.isAdmin ? "Add member" : "View Members"} <b aria-hidden="true">→</b></span></span>
           </button>
           <button class="mb-overview-card donation" data-member-section="donations" type="button">
-            <span class="mb-overview-top"><span class="mb-overview-label">COMMUNITY SUPPORT</span></span><strong>Donation From Others</strong><span class="mb-overview-sub">Supporter gifts and community giving</span><span class="mb-overview-bottom"><span class="mb-overview-count">${state.supporterDonations.length} supporter${state.supporterDonations.length === 1 ? "" : "s"}</span><span class="mb-overview-cta">${state.isAdmin ? "Add member" : "View Members"} <b aria-hidden="true">→</b></span></span>
+            <span class="mb-overview-top"><span class="mb-overview-label">COMMUNITY SUPPORT</span></span><strong>Donation From Others</strong><span class="mb-overview-sub">Supporter gifts added to the Total Fund</span><span class="mb-overview-bottom"><span class="mb-overview-count">${state.supporterDonations.length} supporter${state.supporterDonations.length === 1 ? "" : "s"} &middot; ${taka(donated)} collected</span><span class="mb-overview-cta">${state.isAdmin ? "Add member" : "View Members"} <b aria-hidden="true">→</b></span></span>
           </button>
         </div>
       </div>`;
@@ -3688,8 +3939,8 @@
     function ScreenDonationSupporters() {
       const list = state.supporterDonations.slice().sort((a, b) => String(b.created_at || b.date || "").localeCompare(String(a.created_at || a.date || "")));
       const total = list.reduce((sum, d) => sum + Number(d.amount || 0), 0);
-      return `<div class="screen mb-screen"><div class="mb-head"><button class="mb-back" data-member-section="overview" aria-label="Back to member groups">${ICONS.back}</button><div><p class="mb-section-kicker">Community support</p><h1 class="mb-title">Donation From Others</h1></div></div>
-        <div class="mb-donation-summary"><span>Total donated</span><strong>${taka(total)}</strong><small>${list.length} supporter${list.length === 1 ? "" : "s"}</small></div>
+      return `<div class="screen mb-screen"><div class="mb-head"><button class="mb-back" data-member-section="overview" aria-label="Back to member groups">${ICONS.back}</button><div><p class="mb-section-kicker">Community support</p><h1 class="mb-title">Donation From Others</h1></div>${state.isAdmin ? `<button class="chip" id="donAddMemberBtn" style="margin-left:auto;color:var(--don);border-color:var(--don)">${ICONS.plus}<span>Add member</span></button>` : ""}</div>
+        <div class="mb-donation-summary"><span>Total contributions</span><strong>${taka(total)}</strong><small>${list.length} supporter${list.length === 1 ? "" : "s"} &middot; added to Total Fund</small></div>
         <div class="mb-donor-list">${list.length ? list.map(d => `<article class="mb-donor-card"><span class="mb-donor-avatar" ${d.image_url ? `style="background-image:url('${esc(d.image_url)}');background-size:cover;background-position:center"` : ""}>${d.image_url ? "" : (d.is_anonymous === false ? initials(d.donor_name || d.supporter_name) : "?")}</span><div class="mb-donor-main"><div class="mb-donor-title"><strong>${d.is_anonymous === false ? esc(d.donor_name || d.supporter_name || "Supporter") : "Anonymous supporter"}</strong><span class="mb-donor-kind">${d.is_anonymous === false ? "Named supporter" : "Private gift"}</span></div><p>${esc(d.note || d.description || "Monthly supporter contribution")}</p><small>Contribution month: ${d.donation_month || d.created_at || d.date ? prettyDate(String(d.donation_month || d.created_at || d.date).slice(0, 10)) : "Date not recorded"}</small></div><b class="mb-donor-amount">${taka(d.amount)}</b>${state.isAdmin ? `<span class="mb-donor-actions"><button class="don-edit" data-editdon="${d.id}" aria-label="Edit monthly contribution">✎</button><button class="don-del" data-deldon="${d.id}" aria-label="Delete monthly contribution">${ICONS.trash}</button></span>` : ""}</article>`).join("") : `<div class="mb-empty">No donations recorded yet.</div>`}</div>
         ${state.isAdmin ? `<div class="card mb-donation-form"><div class="mb-form-heading"><span class="mb-form-icon">${ICONS.heart}</span><div><p class="eyebrow">Add member from community support</p><p class="sub">Add a supporter and their contribution; existing entries stay editable.</p></div></div><form id="donForm"><input class="field" id="dDesc" type="text" placeholder="Purpose or note" required /><div class="g2"><input class="field" id="dSupporter" type="text" placeholder="Supporter name (optional)" /><input class="field num" id="dAmount" type="number" min="0" step="1" placeholder="Amount" required /></div><label class="field-label" for="dDate">Contribution month</label><input class="field" id="dDate" type="date" value="${todayISO()}" required /><label class="mb-avatar-pick mb-donation-photo" for="dPhoto"><span class="mb-avatar-preview" id="dPhotoPreview">${ICONS.camera || "📷"}</span><span class="mb-avatar-text" id="dPhotoName">Add supporter photo (optional)</span><input id="dPhoto" type="file" accept="image/*" hidden /></label><label class="check-row"><input id="dAnonymous" type="checkbox" checked /> Anonymous supporter</label><button class="btn btn-primary" type="submit">Add member</button></form></div>` : ""}
       </div>`;
@@ -3821,15 +4072,35 @@
     </div>`;
     }
 
-    /* admin: the floating "+ Add member" button reveals the form and focuses it */
+    /* admin: the floating "+ Add member" button reveals the right form for the
+       current card and focuses it. General Members and Executive Members open
+       the member form with that group pre-selected; Donation From Others opens
+       the supporter add form on that card. */
     function openAddMember() {
+      if (path() !== "/members") {
+        navigate("/members");
+        setTimeout(openAddMember, 0);
+        return;
+      }
+      if (state.memberSection === "donations") {
+        const form = document.getElementById("donForm");
+        if (form) {
+          form.scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "center" });
+          setTimeout(() => { const n = document.getElementById("dDesc"); if (n) n.focus(); }, 320);
+        }
+        return;
+      }
       const card = document.getElementById("addMemberCard");
       if (!card) {
-        state.memberSection = "executive";
+        /* overview / unknown section: land on General Members, like the card */
+        state.memberSection = "general";
         render();
         setTimeout(openAddMember, 0);
         return;
       }
+      /* keep the member group in sync with the card being viewed */
+      const typeSel = document.getElementById("mType");
+      if (typeSel) typeSel.value = state.memberSection === "executive" ? "executive" : "general";
       card.hidden = false;
       card.scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "center" });
       setTimeout(() => { const n = document.getElementById("mName"); if (n) n.focus(); }, 320);
@@ -4651,6 +4922,8 @@
         state.memberQuery = "";
         state.memberFilter = "all";
         render();
+        /* "Add member" CTAs open the matching add form right away */
+        if (b.dataset.addmember === "1" && state.isAdmin) setTimeout(openAddMember, 0);
       });
       const ms = v.querySelector("#memberSearch");
       if (ms) ms.oninput = e => { state.memberQuery = e.target.value; rerenderList("#memberSearch", "memberQuery"); };
@@ -4723,7 +4996,7 @@
           if (!avatarUrl) toast("Photo upload failed — member added without photo", "warn");
         }
         try {
-          await db.addMember({ id: uid("mem"), name, email: email || null, avatar_url: avatarUrl, photo_url: avatarUrl, member_type: v.querySelector("#mType")?.value || "general" });
+          await db.addMember({ id: newId(), name, email: email || null, avatar_url: avatarUrl, photo_url: avatarUrl, member_type: v.querySelector("#mType")?.value || "general" });
           toast(name + " added", "ok");
           render();
         } catch (ex) { toast(ex.message, "err"); }
@@ -4880,6 +5153,9 @@
         if (!c.classList.contains("hidden")) v.querySelector("#dDesc").focus();
       };
       const df = v.querySelector("#donForm");
+      /* "Add member" on the Donation From Others card reveals the supporter form */
+      const damb = v.querySelector("#donAddMemberBtn");
+      if (damb) damb.onclick = openAddMember;
       if (df) df.onsubmit = async e => {
         e.preventDefault();
         try {
