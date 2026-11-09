@@ -58,6 +58,11 @@ alter table public.members add column if not exists email text;
 alter table public.members add column if not exists avatar_url text;
 alter table public.members add column if not exists member_type text not null default 'general';
 alter table public.members add column if not exists profile text not null default '';
+alter table public.members add column if not exists member_kind text not null default 'permanent';
+alter table public.members add column if not exists executive_tier text not null default 'general';
+alter table public.members add column if not exists designation text;
+alter table public.members add column if not exists sort_order integer not null default 0;
+
 do $$ begin
   if not exists (
     select 1 from pg_constraint where conrelid = 'public.members'::regclass
@@ -66,7 +71,30 @@ do $$ begin
     alter table public.members add constraint members_member_type_check
       check (member_type in ('executive', 'general'));
   end if;
+  if not exists (
+    select 1 from pg_constraint where conrelid = 'public.members'::regclass
+      and conname = 'members_member_kind_check'
+  ) then
+    alter table public.members add constraint members_member_kind_check
+      check (member_kind in ('permanent', 'temporary'));
+  end if;
+  if not exists (
+    select 1 from pg_constraint where conrelid = 'public.members'::regclass
+      and conname = 'members_executive_tier_check'
+  ) then
+    alter table public.members add constraint members_executive_tier_check
+      check (executive_tier in ('general', 'executive'));
+  end if;
 end $$;
+
+-- Seed the initial executive leadership committee requested by the team
+update public.members set executive_tier = 'executive', designation = 'President', sort_order = 1 where name ilike '%K%H%Rafi%' or name ilike '%Kamrul%Rafi%';
+update public.members set executive_tier = 'executive', designation = 'General Secretary', sort_order = 2 where name ilike '%Khaled%Mahmud%';
+update public.members set executive_tier = 'executive', designation = 'Financial Advisor', sort_order = 3 where name ilike '%Junaed%' or name ilike '%Junayed%';
+update public.members set executive_tier = 'executive', designation = 'FA', sort_order = 4 where name ilike '%Istique%';
+update public.members set executive_tier = 'executive', designation = 'Accountant', sort_order = 5 where name ilike '%Imtiaj%';
+update public.members set executive_tier = 'executive', designation = 'Membership Advisor', sort_order = 6 where name ilike '%Sabbir%';
+update public.members set executive_tier = 'executive', designation = 'MA', sort_order = 7 where name ilike '%Kafi%';
 
 -- members.id may be uuid on some installs — give it a default either way.
 do $$ begin

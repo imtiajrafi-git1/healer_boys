@@ -76,18 +76,30 @@ async function run(work, options = {}) {
 function memberPayload(input, kind) {
   const name = cleanText(input?.name, 160);
   if (!name) throw new Error("A member name is required.");
-  const payload = { name };
-  if (kind === "executive") {
-    payload.position = cleanText(input.position, 120) || null;
-    payload.photo_url = cleanText(input.photo_url, 1000) || null;
+  const designation = cleanText(input?.designation || input?.position, 120) || null;
+  const execTier = cleanText(input?.executive_tier, 20) || (kind === "executive" ? "executive" : "general");
+  const memberKind = cleanText(input?.member_kind, 20) || "permanent";
+  const photoUrl = cleanText(input?.photo_url || input?.avatar_url, 1000) || null;
+
+  const payload = {
+    name,
+    designation,
+    position: designation,
+    executive_tier: execTier,
+    member_type: execTier,
+    member_kind: memberKind,
+    photo_url: photoUrl,
+    avatar_url: photoUrl,
+    sort_order: Math.max(0, Number(input?.sort_order) || 0)
+  };
+
+  if (kind === "executive" || execTier === "executive") {
     payload.contribution = cleanAmount(input.contribution) ?? 0;
     payload.monthly_status = cleanText(input.monthly_status, 40) || "paid";
     payload.due_amount = cleanAmount(input.due_amount) ?? 0;
     payload.due_months = Math.max(0, Number(input.due_months) || 0);
-    payload.sort_order = Math.max(0, Number(input.sort_order) || 0);
   } else {
     payload.email = cleanText(input.email, 254) || null;
-    payload.photo_url = cleanText(input.photo_url, 1000) || null;
     payload.profile = cleanText(input.profile, 1000) || null;
     payload.payment_total = cleanAmount(input.payment_total) ?? 0;
     payload.payment_count = Math.max(0, Number(input.payment_count) || 0);
@@ -165,6 +177,53 @@ export const addGeneralMember = input => add("general", input);
 export const updateGeneralMember = (id, input) => update("general", id, input);
 export const deleteGeneralMember = id => remove("general", id);
 
+export async function setMemberExecutiveTier(id, { executive_tier, designation, sort_order = 0 }) {
+  if (!validId(id)) return result(null, new Error("Invalid member id."));
+  const cleanTier = executive_tier === "executive" ? "executive" : "general";
+  const cleanDesig = cleanTier === "executive" ? (cleanText(designation, 120) || null) : null;
+  const numOrder = Math.max(0, Number(sort_order) || 0);
+
+  return run(async db => {
+    // 1. Update primary members table
+    const { data, error } = await db.from("members").update({
+      executive_tier: cleanTier,
+      member_type: cleanTier,
+      designation: cleanDesig,
+      position: cleanDesig,
+      sort_order: numOrder
+    }).eq("id", id).select().maybeSingle();
+    if (error && !isSchemaError(error)) throw error;
+
+    // 2. Also keep executive_members / general_members tables synchronized if present
+    try {
+      if (cleanTier === "executive") {
+        await db.from("general_members").delete().eq("id", id);
+        if (data) {
+          await db.from("executive_members").upsert({
+            id: data.id,
+            name: data.name,
+            position: cleanDesig,
+            photo_url: data.avatar_url || data.photo_url,
+            sort_order: numOrder
+          });
+        }
+      } else {
+        await db.from("executive_members").delete().eq("id", id);
+        if (data) {
+          await db.from("general_members").upsert({
+            id: data.id,
+            name: data.name,
+            email: data.email,
+            photo_url: data.avatar_url || data.photo_url
+          });
+        }
+      }
+    } catch (_) { /* optional normalized mirror */ }
+
+    return data;
+  }, { retryOnSchema: true });
+}
+
 export async function addDonation(input) {
   const payload = donationPayload(input);
   return run(async db => {
@@ -235,6 +294,7 @@ window.HealerMembersApi = {
   fetchExecutiveMembers, fetchGeneralMembers, fetchDonations, fetchSupporterDonations,
   addExecutiveMember, updateExecutiveMember, deleteExecutiveMember,
   addGeneralMember, updateGeneralMember, deleteGeneralMember,
+  setMemberExecutiveTier,
   addDonation, updateDonation, deleteDonation,
   addSupporterDonation, updateSupporterDonation, deleteSupporterDonation,
   subscribeToMemberChanges,

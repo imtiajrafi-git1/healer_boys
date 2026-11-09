@@ -1932,21 +1932,58 @@
     const PAY_TYPES = ["Monthly Fee", "Advanced Fee", "Late Fine", "Personal Donation", "Other"];
     const DEFAULT_FEE = 150;
     const BRAND_NAME = "Healer Boys";
+    const DEFAULT_DESIGNATIONS = [
+      "President",
+      "General Secretary",
+      "Financial Advisor",
+      "FA",
+      "Accountant",
+      "Membership Advisor",
+      "MA"
+    ];
+
+    const EXECUTIVE_DESIGNATIONS = {
+      "Kamrul H. Rafi": "President",
+      "K H Rafi": "President",
+      "Khaled Mahmud": "General Secretary",
+      "Khaleda Mahmud": "General Secretary",
+      "Junaed Hossain Toni": "Financial Advisor",
+      "Junayed": "Financial Advisor",
+      "Istique Ahmed Chomok": "FA",
+      "Istique": "FA",
+      "Imtiaj Ahmed Rafi": "Accountant",
+      "Imtiaj": "Accountant",
+      "Sabbir Hossain": "Membership Advisor",
+      "Sabbir Hossen": "Membership Advisor",
+      "Abdullah H. Kafi": "MA",
+      "A. H. Kafi": "MA"
+    };
+
     const EXECUTIVE_NAMES = new Set([
-      "Abdullah H. Kafi", "Afrahul Haque Orko", "Imtiaj Ahmed Rafi", "Istique Ahmed Chomok",
-      "Junaed Hossain Toni", "Kamrul H. Rafi", "Khaled Mahmud", "Sabbir Hossain"
+      "Kamrul H. Rafi", "K H Rafi",
+      "Khaled Mahmud", "Khaleda Mahmud",
+      "Junaed Hossain Toni", "Junayed",
+      "Istique Ahmed Chomok", "Istique",
+      "Imtiaj Ahmed Rafi", "Imtiaj",
+      "Sabbir Hossain", "Sabbir Hossen",
+      "Abdullah H. Kafi", "A. H. Kafi"
     ]);
     function normalizeMemberTypes(rows) {
-      /* Respect the stored member_type whenever the row carries one. The name
-         heuristic only classifies legacy rows that predate the column, so a
-         member added through the General/Executive card is never re-routed
-         into the wrong group on the next load. */
       return rows.map(row => {
-        const stored = String(row.member_type || "").trim().toLowerCase();
-        const type = (stored === "executive" || stored === "general")
-          ? stored
+        const memberKind = row.member_kind || (row.member_type === "temporary" ? "temporary" : "permanent");
+        const storedTier = String(row.executive_tier || row.member_type || "").trim().toLowerCase();
+        const tier = (storedTier === "executive" || storedTier === "general")
+          ? storedTier
           : (EXECUTIVE_NAMES.has(row.name) ? "executive" : "general");
-        return { ...row, member_type: type, profile: row.profile || "" };
+        const desig = row.designation || (tier === "executive" ? (EXECUTIVE_DESIGNATIONS[row.name] || "Executive Member") : null);
+        return {
+          ...row,
+          member_kind: memberKind,
+          executive_tier: tier,
+          member_type: tier,
+          designation: desig,
+          profile: row.profile || (tier === "executive" ? desig : (memberKind === "temporary" ? "Temporary member" : "General member"))
+        };
       });
     }
     const YEAR = () => new Date().getFullYear();
@@ -2206,23 +2243,27 @@
 
       seed() {
         const defs = [
-          { name: "Abdullah H. Kafi", start: { y: 2024, m: 9 }, count: 32, fee: 150, member_type: "executive" },
-          { name: "Afrahul Haque Orko", start: { y: 2024, m: 9 }, count: 10, fee: 150, extra: 10, member_type: "executive" },
-          { name: "Imtiaj Ahmed Rafi", start: { y: 2024, m: 9 }, count: 10, fee: 150, member_type: "executive" },
-          { name: "Istique Ahmed Chomok", start: { y: 2024, m: 9 }, count: 4, fee: 150, fine: 100, member_type: "executive" },
-          { name: "Junaed Hossain Toni", start: { y: 2024, m: 9 }, count: 37, fee: 150, member_type: "executive" },
-          { name: "Kamrul H. Rafi", start: { y: 2024, m: 9 }, count: 25, fee: 150, member_type: "executive" },
-          { name: "Khaled Mahmud", start: { y: 2024, m: 9 }, count: 27, fee: 150, member_type: "executive" },
-          { name: "Mehedi Hasan Saikat", start: { y: 2025, m: 12 }, count: 5, fee: 100 },
-          { name: "Sabbir Hossain", start: { y: 2024, m: 9 }, count: 32, fee: 150 }
+          { name: "Kamrul H. Rafi", start: { y: 2024, m: 9 }, count: 25, fee: 150, exec: true, desig: "President", sort: 1 },
+          { name: "Khaled Mahmud", start: { y: 2024, m: 9 }, count: 27, fee: 150, exec: true, desig: "General Secretary", sort: 2 },
+          { name: "Junaed Hossain Toni", start: { y: 2024, m: 9 }, count: 37, fee: 150, exec: true, desig: "Financial Advisor", sort: 3 },
+          { name: "Istique Ahmed Chomok", start: { y: 2024, m: 9 }, count: 4, fee: 150, fine: 100, exec: true, desig: "FA", sort: 4 },
+          { name: "Imtiaj Ahmed Rafi", start: { y: 2024, m: 9 }, count: 10, fee: 150, exec: true, desig: "Accountant", sort: 5 },
+          { name: "Sabbir Hossain", start: { y: 2024, m: 9 }, count: 32, fee: 150, exec: true, desig: "Membership Advisor", sort: 6 },
+          { name: "Abdullah H. Kafi", start: { y: 2024, m: 9 }, count: 32, fee: 150, exec: true, desig: "MA", sort: 7 },
+          { name: "Afrahul Haque Orko", start: { y: 2024, m: 9 }, count: 10, fee: 150, extra: 10, exec: false, desig: null, sort: 8 },
+          { name: "Mehedi Hasan Saikat", start: { y: 2025, m: 12 }, count: 5, fee: 150, exec: false, desig: null, sort: 9 }
         ];
         state.members = defs.map((d, i) => ({
           id: "mem_" + (i + 1),
           name: d.name,
           email: d.name.toLowerCase().replace(/[^a-z]+/g, ".") + "@gmail.com",
           avatar_url: null,
-          member_type: d.name === "Mehedi Hasan Saikat" ? "general" : "executive",
-          profile: d.name === "Mehedi Hasan Saikat" ? "General member" : ""
+          member_kind: "permanent",
+          executive_tier: d.exec ? "executive" : "general",
+          member_type: d.exec ? "executive" : "general",
+          designation: d.desig,
+          profile: d.desig || (d.exec ? "Leadership" : "General member"),
+          sort_order: d.sort || (i + 1)
         }));
         state.payments = [];
         const now = nowLocal();
@@ -3594,6 +3635,208 @@
       if (p !== "/home") view.scrollTop = 0;
     }
 
+
+    /* =====================================================================
+       EXECUTIVE PROMOTION, DYNAMIC DESIGNATIONS & TEMPORARY MEMBERS
+    ===================================================================== */
+    function openPromoteModal(preselectedMemberId) {
+      const generalMembers = state.members.filter(m => (m.member_kind || "permanent") === "permanent" && m.executive_tier !== "executive" && m.member_type !== "executive");
+      if (!preselectedMemberId && generalMembers.length === 0) {
+        toast("All permanent members are already in Executive committee", "warn");
+        return;
+      }
+      const targetMember = preselectedMemberId ? state.members.find(m => m.id === preselectedMemberId) : null;
+      const isEditing = targetMember && (targetMember.executive_tier === "executive" || targetMember.member_type === "executive");
+
+      const desigOptions = DEFAULT_DESIGNATIONS.map(d => `<option value="${esc(d)}" ${targetMember?.designation === d ? "selected" : ""}>${esc(d)}</option>`).join("");
+
+      const memberSelectHtml = targetMember
+        ? `<input type="hidden" id="promoteMemberId" value="${targetMember.id}" /><p class="h1" style="font-size:18px;margin-top:4px">${esc(targetMember.name)}</p>`
+        : `<label class="label" for="promoteMemberId">Select General Member</label>
+           <select class="field" id="promoteMemberId" required style="width:100%">
+             ${generalMembers.map(m => `<option value="${m.id}">${esc(m.name)}</option>`).join("")}
+           </select>`;
+
+      openSheet(`
+        <div style="padding:10px 4px 6px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <h2 class="h1" style="font-size:19px">${isEditing ? "Update Designation" : "Add to Executive Members"}</h2>
+            <button class="mb-add-close" onclick="closeSheet()" aria-label="Close">${ICONS.plus.replace('width="18" height="18"', 'width="16" height="16"').replace('<path d="M12 5v14M5 12h14"/>', '<path d="M6 6l12 12M18 6 6 18"/>')}</button>
+          </div>
+          <p class="sub" style="font-size:12.5px;margin-bottom:14px">
+            ${isEditing ? "Update leadership role designation." : "Assign an executive designation. The member moves from General to Executive (keeping all payment history)."}
+          </p>
+          <form id="promoteForm">
+            <div class="mb-field" style="margin-bottom:12px">
+              ${memberSelectHtml}
+            </div>
+            <div class="mb-field" style="margin-bottom:12px">
+              <label class="label" for="desigSelect">Official Designation</label>
+              <select class="field" id="desigSelect" style="width:100%">
+                ${desigOptions}
+                <option value="__custom__" ${targetMember?.designation && !DEFAULT_DESIGNATIONS.includes(targetMember.designation) ? "selected" : ""}>Enter custom designation...</option>
+              </select>
+            </div>
+            <div class="mb-field" id="customDesigWrap" style="margin-bottom:14px;${targetMember?.designation && !DEFAULT_DESIGNATIONS.includes(targetMember.designation) ? "" : "display:none"}">
+              <label class="label" for="customDesigInput">Custom Designation Title</label>
+              <input class="field" id="customDesigInput" type="text" placeholder="e.g. Vice President, Event Coordinator" value="${targetMember?.designation && !DEFAULT_DESIGNATIONS.includes(targetMember.designation) ? esc(targetMember.designation) : ""}" />
+            </div>
+            <button class="btn btn-primary" type="submit" id="savePromoteBtn" style="width:100%">${isEditing ? "Save Designation" : "Promote to Executive"}</button>
+          </form>
+        </div>
+      `);
+
+      const form = document.getElementById("promoteForm");
+      const desigSelect = document.getElementById("desigSelect");
+      const customWrap = document.getElementById("customDesigWrap");
+      const customInput = document.getElementById("customDesigInput");
+
+      if (desigSelect) {
+        desigSelect.onchange = () => {
+          customWrap.style.display = desigSelect.value === "__custom__" ? "block" : "none";
+          if (desigSelect.value === "__custom__") customInput.focus();
+        };
+      }
+
+      if (form) {
+        form.onsubmit = async (e) => {
+          e.preventDefault();
+          const memId = document.getElementById("promoteMemberId")?.value;
+          if (!memId) return;
+          let finalDesig = desigSelect.value;
+          if (finalDesig === "__custom__") {
+            finalDesig = customInput.value.trim();
+            if (!finalDesig) { toast("Please enter a designation title", "warn"); return; }
+            if (!DEFAULT_DESIGNATIONS.includes(finalDesig)) DEFAULT_DESIGNATIONS.push(finalDesig);
+          }
+          const btn = document.getElementById("savePromoteBtn");
+          busy(btn, true, "Saving");
+          try {
+            await db.updateMember(memId, {
+              executive_tier: "executive",
+              member_type: "executive",
+              designation: finalDesig,
+              position: finalDesig
+            });
+            toast(isEditing ? "Designation updated" : "Member added to Executive committee", "ok");
+            closeSheet();
+            render();
+          } catch (err) {
+            toast(err.message, "err");
+          } finally {
+            busy(btn, false);
+          }
+        };
+      }
+    }
+
+    async function stepDownToGeneral(memberId) {
+      const m = state.members.find(x => x.id === memberId);
+      if (!m) return;
+      const ok = await confirmDelete(
+        `Step down ${m.name} from Executive to General Member? Their past payments and dues will remain completely intact.`,
+        "Step Down"
+      );
+      if (!ok) return;
+      try {
+        await db.updateMember(memberId, {
+          executive_tier: "general",
+          member_type: "general",
+          designation: null,
+          position: null
+        });
+        toast(`${m.name} moved to General Members`, "ok");
+        render();
+      } catch (err) {
+        toast(err.message, "err");
+      }
+    }
+
+    function openAddTemporaryMemberModal() {
+      openSheet(`
+        <div style="padding:10px 4px 6px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <h2 class="h1" style="font-size:19px">Add Temporary Member</h2>
+            <button class="mb-add-close" onclick="closeSheet()" aria-label="Close">${ICONS.plus.replace('width="18" height="18"', 'width="16" height="16"').replace('<path d="M12 5v14M5 12h14"/>', '<path d="M6 6l12 12M18 6 6 18"/>')}</button>
+          </div>
+          <p class="sub" style="font-size:12.5px;margin-bottom:14px">
+            Temporary members contribute voluntary donations as they wish without recurring monthly dues.
+          </p>
+          <form id="tempMemberForm">
+            <div class="mb-field" style="margin-bottom:12px">
+              <label class="label" for="tmName">Full Name</label>
+              <input class="field" id="tmName" type="text" placeholder="e.g. Tanvir Ahmed" required style="width:100%" />
+            </div>
+            <div class="mb-field" style="margin-bottom:12px">
+              <label class="label" for="tmEmail">Phone or Contact (Optional)</label>
+              <input class="field" id="tmEmail" type="text" placeholder="e.g. 017xxxxxxxx" style="width:100%" />
+            </div>
+            <div class="g2" style="margin-bottom:12px">
+              <div>
+                <label class="label" for="tmAmount">Initial Gift (Optional)</label>
+                <input class="field num" id="tmAmount" type="number" min="0" step="1" placeholder="Amount (৳)" style="width:100%" />
+              </div>
+              <div>
+                <label class="label" for="tmDate">Date</label>
+                <input class="field" id="tmDate" type="date" value="${todayISO()}" style="width:100%" />
+              </div>
+            </div>
+            <div class="mb-field" style="margin-bottom:14px">
+              <label class="label" for="tmNote">Gift Note / Purpose</label>
+              <input class="field" id="tmNote" type="text" placeholder="e.g. Voluntary Supporter Contribution" value="Voluntary Supporter Contribution" style="width:100%" />
+            </div>
+            <button class="btn btn-primary" type="submit" id="saveTempMemberBtn" style="width:100%">Add Temporary Member</button>
+          </form>
+        </div>
+      `);
+
+      const form = document.getElementById("tempMemberForm");
+      if (form) {
+        form.onsubmit = async (e) => {
+          e.preventDefault();
+          const name = document.getElementById("tmName")?.value.trim();
+          const contact = document.getElementById("tmEmail")?.value.trim();
+          const amount = Number(document.getElementById("tmAmount")?.value || 0);
+          const date = document.getElementById("tmDate")?.value || todayISO();
+          const note = document.getElementById("tmNote")?.value.trim() || "Voluntary Supporter Contribution";
+          if (!name) return;
+
+          const btn = document.getElementById("saveTempMemberBtn");
+          busy(btn, true, "Saving");
+          try {
+            await db.addMember({
+              id: newId(),
+              name,
+              email: contact || null,
+              member_kind: "temporary",
+              executive_tier: "general",
+              member_type: "general",
+              designation: null
+            });
+
+            if (amount > 0) {
+              await addDonation({
+                supporter_name: name,
+                donor_name: name,
+                amount,
+                date,
+                description: note,
+                note,
+                is_anonymous: false
+              });
+            }
+            toast(name + " added as Temporary Member", "ok");
+            closeSheet();
+            render();
+          } catch (err) {
+            toast(err.message, "err");
+          } finally {
+            busy(btn, false);
+          }
+        };
+      }
+    }
+
     function render() {
       renderNav();
       const p = path();
@@ -3963,9 +4206,12 @@
 
     function ScreenMemberOverview() {
       const rows = memberRows();
-      const executiveCount = rows.filter(r => r.m.member_type === "executive").length;
-      const generalCount = rows.filter(r => r.m.member_type !== "executive").length;
+      const executiveCount = rows.filter(r => r.m.executive_tier === "executive" || r.m.member_type === "executive").length;
+      const generalCount = rows.filter(r => (r.m.executive_tier !== "executive" && r.m.member_type !== "executive") && (r.m.member_kind || "permanent") === "permanent").length;
+      const tempMembers = state.members.filter(m => m.member_kind === "temporary");
       const donated = state.supporterDonations.reduce((sum, d) => sum + Number(d.amount || 0), 0);
+      const supportersCount = Math.max(tempMembers.length, state.supporterDonations.length);
+
       return `<div class="screen mb-screen">
         <div class="mb-head"><button class="mb-back" data-go="/home" aria-label="Back to home">${ICONS.back}</button><h1 class="mb-title">Members</h1></div>
         <p class="sub mb-overview-intro">Choose a community group to explore contributions and supporter activity.</p>
@@ -3974,10 +4220,10 @@
             <span class="mb-overview-top"><span class="mb-overview-label">LEADERSHIP TEAM</span></span><strong>Executive Members</strong><span class="mb-overview-sub">Leadership, contributions and monthly status</span><span class="mb-overview-bottom"><span class="mb-overview-count"><span class="mb-count-icon" aria-hidden="true">👥</span>${executiveCount} members</span><span class="mb-overview-cta">View Members <b aria-hidden="true">→</b></span></span>
           </button>
           <button class="mb-overview-card general" data-member-section="general" type="button" ${state.isAdmin ? `data-addmember="1"` : ""}>
-            <span class="mb-overview-top"><span class="mb-overview-label">COMMUNITY</span></span><strong>General Members</strong><span class="mb-overview-sub">Regular members and their payment status</span><span class="mb-overview-bottom"><span class="mb-overview-count"><span class="mb-count-icon" aria-hidden="true">👥</span>${generalCount} member${generalCount === 1 ? "" : "s"}</span><span class="mb-overview-cta">${state.isAdmin ? "Add member" : "View Members"} <b aria-hidden="true">→</b></span></span>
+            <span class="mb-overview-top"><span class="mb-overview-label">COMMUNITY</span></span><strong>General Members</strong><span class="mb-overview-sub">Permanent members and their payment status</span><span class="mb-overview-bottom"><span class="mb-overview-count"><span class="mb-count-icon" aria-hidden="true">👥</span>${generalCount} member${generalCount === 1 ? "" : "s"}</span><span class="mb-overview-cta">${state.isAdmin ? "Add member" : "View Members"} <b aria-hidden="true">→</b></span></span>
           </button>
           <button class="mb-overview-card donation" data-member-section="donations" type="button">
-            <span class="mb-overview-top"><span class="mb-overview-label">COMMUNITY SUPPORT</span></span><strong>Donation From Others</strong><span class="mb-overview-sub">Supporter gifts added to the Total Fund</span><span class="mb-overview-bottom"><span class="mb-overview-count">${state.supporterDonations.length} supporter${state.supporterDonations.length === 1 ? "" : "s"} &middot; ${taka(donated)} collected</span><span class="mb-overview-cta">${state.isAdmin ? "Add member" : "View Members"} <b aria-hidden="true">→</b></span></span>
+            <span class="mb-overview-top"><span class="mb-overview-label">COMMUNITY SUPPORT</span></span><strong>Donation From Others</strong><span class="mb-overview-sub">Temporary members & voluntary supporter gifts</span><span class="mb-overview-bottom"><span class="mb-overview-count">${supportersCount} supporter${supportersCount === 1 ? "" : "s"} &middot; ${taka(donated)} collected</span><span class="mb-overview-cta">${state.isAdmin ? "Add member" : "View Members"} <b aria-hidden="true">→</b></span></span>
           </button>
         </div>
       </div>`;
@@ -3986,17 +4232,22 @@
     function ScreenDonationSupporters() {
       const list = state.supporterDonations.slice().sort((a, b) => String(b.created_at || b.date || "").localeCompare(String(a.created_at || a.date || "")));
       const total = list.reduce((sum, d) => sum + Number(d.amount || 0), 0);
-      return `<div class="screen mb-screen"><div class="mb-head"><button class="mb-back" data-member-section="overview" aria-label="Back to member groups">${ICONS.back}</button><div><p class="mb-section-kicker">Community support</p><h1 class="mb-title">Donation From Others</h1></div>${state.isAdmin ? `<button class="chip" id="donAddMemberBtn" style="margin-left:auto;color:var(--don);border-color:var(--don)">${ICONS.plus}<span>Add member</span></button>` : ""}</div>
-        <div class="mb-donation-summary"><span>Total contributions</span><strong>${taka(total)}</strong><small>${list.length} supporter${list.length === 1 ? "" : "s"} &middot; added to Total Fund</small></div>
-        <div class="mb-donor-list">${list.length ? list.map(d => `<article class="mb-donor-card"><span class="mb-donor-avatar" ${d.image_url ? `style="background-image:url('${esc(d.image_url)}');background-size:cover;background-position:center"` : ""}>${d.image_url ? "" : (d.is_anonymous === false ? initials(d.donor_name || d.supporter_name) : "?")}</span><div class="mb-donor-main"><div class="mb-donor-title"><strong>${d.is_anonymous === false ? esc(d.donor_name || d.supporter_name || "Supporter") : "Anonymous supporter"}</strong><span class="mb-donor-kind">${d.is_anonymous === false ? "Named supporter" : "Private gift"}</span></div><p>${esc(d.note || d.description || "Monthly supporter contribution")}</p><small>Contribution month: ${d.donation_month || d.created_at || d.date ? prettyDate(String(d.donation_month || d.created_at || d.date).slice(0, 10)) : "Date not recorded"}</small></div><b class="mb-donor-amount">${taka(d.amount)}</b>${state.isAdmin ? `<span class="mb-donor-actions"><button class="don-edit" data-editdon="${d.id}" aria-label="Edit monthly contribution">✎</button><button class="don-del" data-deldon="${d.id}" aria-label="Delete monthly contribution">${ICONS.trash}</button></span>` : ""}</article>`).join("") : `<div class="mb-empty">No donations recorded yet.</div>`}</div>
-        ${state.isAdmin ? `<div class="card mb-donation-form"><div class="mb-form-heading"><span class="mb-form-icon">${ICONS.heart}</span><div><p class="eyebrow">Add member from community support</p><p class="sub">Add a supporter and their contribution; existing entries stay editable.</p></div></div><form id="donForm"><input class="field" id="dDesc" type="text" placeholder="Purpose or note" required /><div class="g2"><input class="field" id="dSupporter" type="text" placeholder="Supporter name (optional)" /><input class="field num" id="dAmount" type="number" min="0" step="1" placeholder="Amount" required /></div><label class="field-label" for="dDate">Contribution month</label><input class="field" id="dDate" type="date" value="${todayISO()}" required /><label class="mb-avatar-pick mb-donation-photo" for="dPhoto"><span class="mb-avatar-preview" id="dPhotoPreview">${ICONS.camera || "📷"}</span><span class="mb-avatar-text" id="dPhotoName">Add supporter photo (optional)</span><input id="dPhoto" type="file" accept="image/*" hidden /></label><label class="check-row"><input id="dAnonymous" type="checkbox" checked /> Anonymous supporter</label><button class="btn btn-primary" type="submit">Add member</button></form></div>` : ""}
+      const tempMembers = state.members.filter(m => m.member_kind === "temporary");
+      return `<div class="screen mb-screen"><div class="mb-head"><button class="mb-back" data-member-section="overview" aria-label="Back to member groups">${ICONS.back}</button><div><p class="mb-section-kicker">Community support</p><h1 class="mb-title">Donation From Others</h1></div>${state.isAdmin ? `<button class="chip" id="donAddMemberBtn" style="margin-left:auto;color:var(--don);border-color:var(--don)">${ICONS.plus}<span>Add Temporary Member</span></button>` : ""}</div>
+        <div class="mb-donation-summary"><span>Total contributions</span><strong>${taka(total)}</strong><small>${Math.max(tempMembers.length, list.length)} supporter${Math.max(tempMembers.length, list.length) === 1 ? "" : "s"} &middot; added to Total Fund (no monthly dues)</small></div>
+        <div class="mb-donor-list">${list.length ? list.map(d => {
+          const donorName = (d.donor_name || d.supporter_name || "").trim();
+          const matchedMem = donorName ? state.members.find(m => m.name.toLowerCase() === donorName.toLowerCase()) : null;
+          return `<article class="mb-donor-card"><span class="mb-donor-avatar" ${d.image_url ? `style="background-image:url('${esc(d.image_url)}');background-size:cover;background-position:center"` : ""}>${d.image_url ? "" : (d.is_anonymous === false ? initials(donorName || "S") : "?")}</span><div class="mb-donor-main"><div class="mb-donor-title"><strong>${d.is_anonymous === false ? esc(donorName || "Supporter") : "Anonymous supporter"}</strong><span class="mb-donor-kind">${matchedMem ? `<a href="#/member/${matchedMem.id}" style="color:var(--don);text-decoration:none;font-weight:700">Temporary Member &rarr;</a>` : (d.is_anonymous === false ? "Temporary Member" : "Private gift")}</span></div><p>${esc(d.note || d.description || "Voluntary supporter gift")}</p><small>Contribution month: ${d.donation_month || d.created_at || d.date ? prettyDate(String(d.donation_month || d.created_at || d.date).slice(0, 10)) : "Date not recorded"}</small></div><b class="mb-donor-amount">${taka(d.amount)}</b>${state.isAdmin ? `<span class="mb-donor-actions"><button class="don-edit" data-editdon="${d.id}" aria-label="Edit monthly contribution">✎</button><button class="don-del" data-deldon="${d.id}" aria-label="Delete monthly contribution">${ICONS.trash}</button></span>` : ""}</article>`;
+        }).join("") : `<div class="mb-empty">No donations recorded yet.</div>`}</div>
+        ${state.isAdmin ? `<div class="card mb-donation-form"><div class="mb-form-heading"><span class="mb-form-icon">${ICONS.heart}</span><div><p class="eyebrow">Log Voluntary Donation</p><p class="sub">Add a voluntary contribution from a temporary member or supporter.</p></div></div><form id="donForm"><input class="field" id="dDesc" type="text" placeholder="Purpose or note" required /><div class="g2"><input class="field" id="dSupporter" type="text" placeholder="Supporter name (optional)" /><input class="field num" id="dAmount" type="number" min="0" step="1" placeholder="Amount" required /></div><label class="field-label" for="dDate">Contribution month</label><input class="field" id="dDate" type="date" value="${todayISO()}" required /><label class="mb-avatar-pick mb-donation-photo" for="dPhoto"><span class="mb-avatar-preview" id="dPhotoPreview">${ICONS.camera || "📷"}</span><span class="mb-avatar-text" id="dPhotoName">Add supporter photo (optional)</span><input id="dPhoto" type="file" accept="image/*" hidden /></label><label class="check-row"><input id="dAnonymous" type="checkbox" checked /> Anonymous supporter</label><button class="btn btn-primary" type="submit">Log Donation</button></form></div>` : ""}
       </div>`;
     }
 
-    /* one pass over members: status, dues, paid totals, activity */
+    /* one pass over permanent members: status, dues, paid totals, activity */
     function memberRows() {
       const yr = YEAR();
-      return state.members.map(m => {
+      return state.members.filter(m => (m.member_kind || "permanent") === "permanent").map(m => {
         const dues = memberDues(m.id);
         const pays = state.payments.filter(p => p.member_id === m.id);
         return {
@@ -4013,10 +4264,11 @@
       if (state.memberSection === "overview") return ScreenMemberOverview();
       if (state.memberSection === "donations") return ScreenDonationSupporters();
       const rows = memberRows();
-      const visibleRows = rows.filter(r => state.memberSection === "executive" ? r.m.member_type === "executive" : r.m.member_type !== "executive");
+      const isExec = state.memberSection === "executive";
+      const visibleRows = rows.filter(r => isExec ? (r.m.executive_tier === "executive" || r.m.member_type === "executive") : ((r.m.executive_tier !== "executive" && r.m.member_type !== "executive") && (r.m.member_kind || "permanent") === "permanent"));
       const total = visibleRows.length;
       const activeN = visibleRows.filter(r => r.active).length;
-      const dueN = state.memberSection === "executive" ? visibleRows.filter(r => r.due).length : 0;
+      const dueN = visibleRows.filter(r => r.due).length;
       const paidN = total - dueN;
       const q = state.memberQuery.trim().toLowerCase();
 
@@ -4026,34 +4278,35 @@
       list = list.slice().sort((a, b) => {
         if (state.memberSort === "due") return (b.dueAmount - a.dueAmount) || a.m.name.localeCompare(b.m.name);
         if (state.memberSort === "name") return a.m.name.localeCompare(b.m.name);
-        /* default: whoever paid the most is first; ties fall back to name */
         return (b.paidTotal - a.paidTotal) || a.m.name.localeCompare(b.m.name);
       });
       const topPayerId = (list.length && state.memberSort === "paid" && list[0].paidTotal > 0) ? list[0].m.id : null;
       const SORT_LABEL = { paid: "top payer first", due: "highest due first", name: "A to Z" };
-      const execRows = state.memberSection === "executive" ? list : [];
-      const generalRows = state.memberSection === "general" ? list : [];
+      const execRows = isExec ? list : [];
+      const generalRows = !isExec ? list : [];
       const renderMemberCard = (r, i, executive) => `<button class="mb-card ${executive ? "mb-card-executive" : ""}" type="button" data-member="${r.m.id}" style="--tint:${MEMBER_TINTS[i % MEMBER_TINTS.length]}"
-            aria-label="${esc(r.m.name)}, ${executive && r.due ? "due " + taka(r.dueAmount) : "paid"}">
+            aria-label="${esc(r.m.name)}, ${r.due ? "due " + taka(r.dueAmount) : "paid"}">
             <span class="mb-av" ${r.m.avatar_url ? `style="background-image:url('${esc(r.m.avatar_url)}')"` : ""}>${r.m.avatar_url ? "" : initials(r.m.name)}</span>
             <span class="mb-main">
               <span class="mb-name">${esc(r.m.name)}${r.m.id === topPayerId ? `<span class="mb-top" title="Highest contributor">TOP</span>` : ""}</span>
-              <span class="mb-meta"><span class="mb-badge">${executive ? "Leadership" : esc(r.m.profile || "Member")}</span><span class="mb-paid num">Total paid ${taka(r.paidTotal)}</span></span>
+              <span class="mb-meta"><span class="mb-badge">${esc(r.m.designation || (executive ? "Executive Member" : "General Member"))}</span><span class="mb-paid num">Total paid ${taka(r.paidTotal)}</span></span>
             </span>
-            ${executive && r.due ? `<span class="mb-pill due"><span class="mb-dot" style="background:currentColor"></span>Due ${taka(r.dueAmount)}</span>` : `<span class="mb-pill paid">${ICONS.check.replace('width="16" height="16"', 'width="12" height="12"')}<span>Paid</span></span>`}
+            ${r.due ? `<span class="mb-pill due"><span class="mb-dot" style="background:currentColor"></span>Due ${taka(r.dueAmount)}</span>` : `<span class="mb-pill paid">${ICONS.check.replace('width="16" height="16"', 'width="12" height="12"')}<span>Paid</span></span>`}
           </button>`;
       const renderSection = (title, subtitle, sectionRows, executive) => `<section class="mb-member-section ${executive ? "is-executive" : ""}">
         <div class="mb-section-head"><div><p class="mb-section-kicker">${executive ? "Leadership team" : "Community"}</p><h2>${title}</h2><p>${subtitle}</p></div><span class="mb-section-count">${sectionRows.length} member${sectionRows.length === 1 ? "" : "s"}</span></div>
         <div class="mb-list">${sectionRows.length ? sectionRows.map((r, i) => renderMemberCard(r, i, executive)).join("") : `<div class="mb-empty">No members match this filter.</div>`}</div>
       </section>`;
 
-      const filters = state.memberSection === "executive" ? [["all", "All", total], ["paid", "Paid", paidN], ["due", "Due", dueN]] : [["all", "All", total], ["paid", "Paid", paidN]];
+      const filters = [["all", "All", total], ["paid", "Paid", paidN], ["due", "Due", dueN]];
 
       return `<div class="screen mb-screen">
       <div class="mb-head">
         <button class="mb-back" data-member-section="overview" aria-label="Back to member groups">${ICONS.back}</button>
-        <h1 class="mb-title">${state.memberSection === "executive" ? "Executive Members" : "General Members"}</h1>
-        ${state.memberSection === "executive" ? `<button class="home-bell" id="membersBellBtn" aria-label="Notifications${dueN ? `, ${dueN} dues pending` : ""}">${ICONS.bell}${dueN ? `<span class="dot" aria-hidden="true"></span>` : ""}</button>` : ""}
+        <h1 class="mb-title">${isExec ? "Executive Members" : "General Members"}</h1>
+        ${isExec && state.isAdmin ? `<button class="chip" id="addExecutiveBtn" style="margin-left:auto;color:var(--primary);border-color:var(--primary)">${ICONS.plus}<span>Add Executive</span></button>` : ""}
+        ${!isExec && state.isAdmin ? `<button class="chip" id="addGeneralBtn" style="margin-left:auto;color:var(--primary);border-color:var(--primary)">${ICONS.plus}<span>Add Member</span></button>` : ""}
+        ${isExec ? `<button class="home-bell" id="membersBellBtn" aria-label="Notifications${dueN ? `, ${dueN} dues pending` : ""}">${ICONS.bell}${dueN ? `<span class="dot" aria-hidden="true"></span>` : ""}</button>` : ""}
       </div>
 
       <div class="mb-search">
@@ -4207,15 +4460,79 @@
       if (!m) return `<div class="screen"><div class="card"><p class="sub">Member not found.</p>
         <button class="btn btn-outline" data-go="/members" style="margin-top:12px">Back to members</button></div></div>`;
 
+      const isTemporary = m.member_kind === "temporary";
+      const isExecutive = !isTemporary && (m.executive_tier === "executive" || m.member_type === "executive");
+
+      /* If temporary member: calculate voluntary contributions without dues */
+      if (isTemporary) {
+        const donorGifts = state.supporterDonations.filter(d => 
+          (d.donor_name && d.donor_name.toLowerCase() === m.name.toLowerCase()) || 
+          (d.supporter_name && d.supporter_name.toLowerCase() === m.name.toLowerCase()) ||
+          d.member_id === m.id
+        ).sort((a, b) => String(b.created_at || b.date || "").localeCompare(String(a.created_at || a.date || "")));
+        const totalGift = donorGifts.reduce((sum, d) => sum + Number(d.amount || 0), 0);
+
+        return `<div class="screen">
+          <button class="linklike" data-go="/members" style="margin:-4px 0 10px;padding-left:0">
+            <span style="display:flex;align-items:center;gap:6px">${ICONS.back}<span>Members</span></span>
+          </button>
+
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+            <div class="avatar avatar-lg" ${m.avatar_url ? `style="background-image:url('${esc(m.avatar_url)}')"` : ""}>
+              ${m.avatar_url ? "" : initials(m.name)}
+            </div>
+            <div class="row-main">
+              <h1 class="h1" style="font-size:20px">${esc(m.name)}</h1>
+              <p class="sub" style="margin:2px 0 0"><span class="mb-badge" style="background:var(--don-soft);color:var(--don);font-weight:700">Temporary Member &middot; Voluntary Supporter</span>${m.email ? " &middot; " + esc(m.email) : ""}</p>
+            </div>
+            ${state.isAdmin ? `<button class="mem-del" id="memberDeleteBtn" data-member-del="${m.id}" aria-label="Delete member ${esc(m.name)}">
+              ${ICONS.trash}<span>Delete</span>
+            </button>` : ""}
+          </div>
+
+          <div class="stat-grid">
+            <div class="stat" style="cursor:default">
+              <p class="eyebrow">Total contributions</p>
+              <p class="stat-num num" style="color:var(--don)">${taka(totalGift)}</p>
+              <p class="sub" style="font-size:11.5px">${donorGifts.length} gift${donorGifts.length === 1 ? "" : "s"}</p>
+            </div>
+            <div class="stat" style="cursor:default">
+              <p class="eyebrow">Membership status</p>
+              <p class="stat-num" style="font-size:18px;color:var(--text);font-weight:700">Voluntary</p>
+              <p class="sub" style="font-size:11.5px">No monthly dues</p>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:14px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+              <p class="eyebrow" style="margin:0">Voluntary gift history</p>
+              ${state.isAdmin ? `<button class="chip" id="logTempDonationBtn" data-supporter="${esc(m.name)}" style="color:var(--don);border-color:var(--don);font-size:12px;padding:3px 10px">${ICONS.plus}<span>Log Donation</span></button>` : ""}
+            </div>
+            ${donorGifts.length ? `<div class="mb-donor-list" style="margin-top:8px">${donorGifts.map(d => `
+              <article class="mb-donor-card" style="margin-bottom:8px">
+                <span class="mb-donor-avatar" ${d.image_url ? `style="background-image:url('${esc(d.image_url)}');background-size:cover;background-position:center"` : ""}>${d.image_url ? "" : initials(m.name)}</span>
+                <div class="mb-donor-main">
+                  <div class="mb-donor-title"><strong>${esc(d.note || d.description || "Voluntary contribution")}</strong></div>
+                  <small>${prettyDate(String(d.donation_month || d.created_at || d.date || "").slice(0, 10))}</small>
+                </div>
+                <b class="mb-donor-amount" style="color:var(--don)">${taka(d.amount)}</b>
+              </article>
+            `).join("")}</div>` : `<p class="sub" style="font-size:13px;padding:10px 0">No donations logged yet for this temporary supporter.</p>`}
+          </div>
+        </div>`;
+      }
+
+      /* Permanent members (both Executive and General pay monthly fees & show dues) */
       const cells = monthStatuses(m.id);
-      const isExecutive = m.member_type === "executive";
       const paid = state.payments.filter(p => p.member_id === m.id).reduce((a, p) => a + Number(p.amount || 0), 0);
       const dues = memberDues(m.id);
-      /* newest covered month first (e.g. Sep 2027 at the top, Sep 2024 at the bottom).
-         Sorted by the month the fee is FOR, not the day it was entered. */
       const history = state.payments.filter(p => p.member_id === m.id)
         .sort((a, b) => paymentSortIndex(b) - paymentSortIndex(a) || (b.date || "").localeCompare(a.date || ""));
       const dueThis = dues.count ? duePeriodRangeLabel(dues.months) : "";
+
+      const badgeHtml = isExecutive 
+        ? `<span class="mb-badge" style="background:var(--primary-soft);color:var(--primary);font-weight:700">${esc(m.designation || "Executive Member")}</span>`
+        : `<span class="mb-badge" style="background:#DBEAFE;color:#1D4ED8;font-weight:700">General Member</span>`;
 
       return `<div class="screen">
       <button class="linklike" data-go="/members" style="margin:-4px 0 10px;padding-left:0">
@@ -4228,11 +4545,12 @@
         </div>
         <div class="row-main">
           <h1 class="h1" style="font-size:20px">${esc(m.name)}</h1>
-          <p class="sub" style="margin:2px 0 0">${m.member_type === "executive" ? "Leadership" : "General member"}${m.email ? " &middot; " + esc(m.email) : ""}</p>
+          <p class="sub" style="margin:2px 0 0">${badgeHtml}${m.email ? " &middot; " + esc(m.email) : ""}</p>
         </div>
-        ${state.isAdmin ? `<button class="mem-edit" id="memberEditBtn" data-member-edit="${m.id}" aria-label="Edit member ${esc(m.name)}">✎ <span>Edit</span></button><button class="mem-del" id="memberDeleteBtn" data-member-del="${m.id}" aria-label="Delete member ${esc(m.name)}">
-          ${ICONS.trash}<span>Delete</span>
-        </button>` : ""}
+        ${state.isAdmin ? `<div style="display:flex;gap:6px;align-items:center">
+          ${isExecutive ? `<button class="mem-edit" id="changeDesigBtn" data-member="${m.id}" title="Change Executive Designation">✎ <span>Role</span></button><button class="mem-edit" id="stepDownBtn" data-member="${m.id}" style="color:var(--due)" title="Step down to General Member">↩ <span>General</span></button>` : `<button class="mem-edit" id="promoteExecBtn" data-member="${m.id}" style="color:var(--primary)" title="Promote to Executive">★ <span>Executive</span></button>`}
+          <button class="mem-del" id="memberDeleteBtn" data-member-del="${m.id}" aria-label="Delete member ${esc(m.name)}">${ICONS.trash}</button>
+        </div>` : ""}
       </div>
 
       <div class="stat-grid">
@@ -4241,14 +4559,14 @@
           <p class="stat-num num" style="color:var(--fund)">${taka(paid)}</p>
           <p class="sub" style="font-size:11.5px">${history.length} payment${history.length === 1 ? "" : "s"}</p>
         </div>
-        ${isExecutive ? `<div class="stat" style="cursor:default">
+        <div class="stat" style="cursor:default">
           <p class="eyebrow">Due</p>
           <p class="stat-num num" style="color:var(--due)">${taka(dues.amount)}</p>
           <p class="sub" style="font-size:11.5px">${dues.count} month${dues.count === 1 ? "" : "s"}${dueThis ? " &middot; " + dueThis : ""}</p>
-        </div>` : ""}
+        </div>
       </div>
 
-      ${isExecutive ? `<div class="card" style="margin-top:12px">
+      <div class="card" style="margin-top:12px">
         <p class="eyebrow">Monthly dues &middot; ${YEAR()}</p>
         <div class="month-grid" style="margin-top:12px">
           ${cells.map(c => `<div class="month-cell ${c.st}">
@@ -4256,19 +4574,18 @@
             <span class="s">${c.st === "paid" ? "Paid" : c.st === "due" ? "Due" : "-"}</span>
           </div>`).join("")}
         </div>
-          <p class="sub" style="font-size:11.5px;margin-top:12px">
+        <p class="sub" style="font-size:11.5px;margin-top:12px">
           Monthly fee ${taka(dues.fee)} &middot; ${dues.count} month${dues.count === 1 ? "" : "s"} unpaid${dues.count ? ` (${esc(dueThis)})` : ""}.
         </p>
-      </div>` : `<div class="card" style="margin-top:12px"><p class="eyebrow">Profile</p><p class="sub">${esc(m.profile || "General member")}</p></div>`}
+      </div>
 
       <div class="stack" style="margin-top:14px">
-        ${isExecutive ? `<button class="btn btn-primary" id="remindBtn" ${state.isAdmin ? "" : "disabled"}>
-          ${state.isAdmin ? ICONS.mail + "<span>Send reminder by email</span>"
-        : ICONS.lock + "<span>Send reminder by email</span>"}
-        </button>` : ""}
+        <button class="btn btn-primary" id="remindBtn" ${state.isAdmin ? "" : "disabled"}>
+          ${state.isAdmin ? ICONS.mail + "<span>Send reminder by email</span>" : ICONS.lock + "<span>Send reminder by email</span>"}
+        </button>
         <button class="btn btn-outline" id="pdfBtn">${ICONS.doc}<span>Download receipt (PDF)</span></button>
       </div>
-      ${isExecutive && !state.isAdmin ? `<p class="sub center" style="font-size:11px;margin-top:8px">Reminders can only be sent by the admin.</p>` : ""}
+      ${!state.isAdmin ? `<p class="sub center" style="font-size:11px;margin-top:8px">Reminders can only be sent by the admin.</p>` : ""}
 
       ${state.isAdmin ? `<div class="card" style="margin-top:12px">
         <p class="eyebrow">Record a payment</p>
@@ -5056,6 +5373,37 @@
         const m = state.members.find(x => x.id === p.split("/")[2]);
         if (m) remindOne(m, rb);
       };
+
+      /* ---- Executive & Member Action Handlers ---- */
+      const addExecBtn = v.querySelector("#addExecutiveBtn");
+      if (addExecBtn) addExecBtn.onclick = () => openPromoteModal();
+
+      const addGenBtn = v.querySelector("#addGeneralBtn");
+      if (addGenBtn) addGenBtn.onclick = openAddMember;
+
+      const changeDesigBtn = v.querySelector("#changeDesigBtn");
+      if (changeDesigBtn) changeDesigBtn.onclick = () => openPromoteModal(changeDesigBtn.dataset.member);
+
+      const stepDownBtn = v.querySelector("#stepDownBtn");
+      if (stepDownBtn) stepDownBtn.onclick = () => stepDownToGeneral(stepDownBtn.dataset.member);
+
+      const promoteExecBtn = v.querySelector("#promoteExecBtn");
+      if (promoteExecBtn) promoteExecBtn.onclick = () => openPromoteModal(promoteExecBtn.dataset.member);
+
+      const logTempBtn = v.querySelector("#logTempDonationBtn");
+      if (logTempBtn) logTempBtn.onclick = () => {
+        state.memberSection = "donations";
+        render();
+        setTimeout(() => {
+          const supField = document.getElementById("dSupporter");
+          if (supField) supField.value = logTempBtn.dataset.supporter || "";
+          const form = document.getElementById("donForm");
+          if (form) form.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 100);
+      };
+
+      const donAddBtn = v.querySelector("#donAddMemberBtn");
+      if (donAddBtn) donAddBtn.onclick = openAddTemporaryMemberModal;
 
       /* ---- delete member (admin, from member detail header) ---- */
       const delBtn = v.querySelector("#memberDeleteBtn");
