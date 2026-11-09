@@ -564,7 +564,6 @@
 
     /* ============ TOTAL FUND — premium summary card ============ */
     .fund-summary {
-      container: fund-summary / inline-size;
       position: relative;
       width: 100%;
       padding: 15px 16px 0;
@@ -580,7 +579,9 @@
         inset 0 1.5px 0 #fff;
       color: #2B1B3D;
       overflow: hidden;
-      isolation: isolate;
+      transform: translateZ(0);
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
     }
 
     /* emerald accent beam across the top edge */
@@ -608,6 +609,7 @@
       color: rgba(4, 120, 87, .05);
       pointer-events: none;
       z-index: 0;
+      font-family: 'Noto Sans Bengali', 'Plus Jakarta Sans', system-ui, sans-serif;
     }
 
     .fund-summary > * { position: relative; z-index: 1; }
@@ -671,16 +673,36 @@
     }
 
     .fund-summary__live i {
+      position: relative;
       width: 6px;
       height: 6px;
       border-radius: 50%;
       background: #10B981;
+    }
+
+    .fund-summary__live i::after {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      border-radius: 50%;
+      background: #10B981;
       animation: fundPulse 2.2s ease-in-out infinite;
+      pointer-events: none;
     }
 
     @keyframes fundPulse {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, .45); }
-      55% { box-shadow: 0 0 0 5px rgba(16, 185, 129, 0); }
+      0% {
+        transform: scale(1);
+        opacity: .75;
+      }
+      55% {
+        transform: scale(2.6);
+        opacity: 0;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 0;
+      }
     }
 
     /* --- hero amount --- */
@@ -752,7 +774,7 @@
     }
 
     /* wider containers: everything breathes a little more */
-    @container fund-summary (min-width: 440px) {
+    @media (min-width: 440px) {
       .fund-summary { padding: 22px 22px 0; }
       .fund-summary__icon { width: 54px; height: 54px; border-radius: 17px; }
       .fund-summary__title { font-size: 14px; }
@@ -774,7 +796,7 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .fund-summary__live i { animation: none; }
+      .fund-summary__live i::after { animation: none; }
     }
 
     /* ============ MONTH GRID ============ */
