@@ -13,43 +13,110 @@
   z-index:50;
 }
 .dock:not(.show){display:none}
+
 .tab{
-  appearance:none; border:0; background:transparent; cursor:pointer; padding:0;
+  appearance:none; border:0; background:transparent; cursor:pointer; padding:0 8px;
   position:relative; flex:1 1 0; min-width:0; height:50px;
   display:flex; flex-direction:row; align-items:center; justify-content:center; gap:0;
   border-radius:24px; color:#6f6892; font:inherit;
-  transition:flex-grow .42s cubic-bezier(.34,1.4,.5,1), background .3s, color .3s, box-shadow .3s;
+  /* Symmetrical, butter-smooth layout transition */
+  transition:flex-grow 0.38s cubic-bezier(0.25, 1, 0.5, 1),
+             color 0.25s ease;
   -webkit-tap-highlight-color:transparent; touch-action:manipulation;
+  isolation:isolate;
+  will-change:flex-grow;
 }
+
+/* Independent GPU-accelerated pill capsule layer */
+.tab::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:24px;
+  background:linear-gradient(135deg, #5b3df5, #7c5cff);
+  box-shadow:0 8px 18px -6px rgba(91,61,245,.65), inset 0 1px 0 rgba(255,255,255,.3);
+  opacity:0;
+  transform:scale(0.88);
+  transition:opacity 0.28s cubic-bezier(0.25, 1, 0.5, 1),
+             transform 0.35s cubic-bezier(0.34, 1.3, 0.64, 1);
+  pointer-events:none;
+  z-index:-1;
+}
+
 .tab svg{
-  width:23px; height:23px; flex:none; overflow:visible;
+  width:23px; height:23px; flex-shrink:0; overflow:visible;
   stroke:currentColor; fill:none; stroke-width:1.8;
   stroke-linecap:round; stroke-linejoin:round;
-  transition:transform .3s;
+  transition:transform 0.35s cubic-bezier(0.34, 1.3, 0.64, 1),
+             fill 0.25s ease,
+             stroke 0.25s ease;
+  z-index:1;
 }
+
 .tab .lbl{
-  max-width:0; opacity:0; overflow:hidden; white-space:nowrap;
-  font-size:13.5px; font-weight:700; letter-spacing:-.005em;
-  transition:max-width .42s cubic-bezier(.34,1.2,.5,1), opacity .25s, margin .3s;
+  display:inline-block;
+  max-width:0;
+  opacity:0;
+  overflow:hidden;
+  white-space:nowrap;
+  font-size:13.5px;
+  font-weight:700;
+  letter-spacing:-0.005em;
+  line-height:1;
+  margin-left:0;
+  transform:translateX(-6px);
+  transition:max-width 0.38s cubic-bezier(0.25, 1, 0.5, 1),
+             opacity 0.25s cubic-bezier(0.25, 1, 0.5, 1),
+             margin-left 0.38s cubic-bezier(0.25, 1, 0.5, 1),
+             transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+  z-index:1;
+  pointer-events:none;
 }
-.tab:active svg{transform:scale(.88)}
+
+.tab:active svg{transform:scale(0.88)}
 .tab:hover:not(.on){color:#5b3df5}
 .tab:focus-visible{outline:2.5px solid #7c5cff; outline-offset:2px}
+
 .tab.on{
-  flex-grow:2.15; color:#fff;
-  background:linear-gradient(135deg,#5b3df5,#7c5cff);
-  box-shadow:0 8px 18px -6px rgba(91,61,245,.65), inset 0 1px 0 rgba(255,255,255,.3);
+  flex-grow:2.15;
+  color:#ffffff;
 }
-.tab.on .lbl{max-width:90px; opacity:1; margin-left:7px}
-.tab.on svg{fill:rgba(255,255,255,.2)}
+
+.tab.on::before{
+  opacity:1;
+  transform:scale(1);
+}
+
+.tab.on .lbl{
+  max-width:85px;
+  opacity:1;
+  margin-left:7px;
+  transform:translateX(0);
+}
+
+.tab.on svg{
+  fill:rgba(255,255,255,0.2);
+  transform:scale(1.04);
+}
+
 .dot{
   position:absolute; top:9px; right:calc(50% - 17px);
   width:8px; height:8px; border-radius:50%;
   background:#ff5d8f; border:2px solid #fbf9ff;
+  transition:transform 0.25s cubic-bezier(0.34, 1.4, 0.64, 1), opacity 0.2s ease;
+  z-index:2;
 }
-.tab.on .dot{display:none}
+
+.tab.on .dot{
+  transform:scale(0);
+  opacity:0;
+  pointer-events:none;
+}
+
 .screen{padding-bottom:calc(130px + env(safe-area-inset-bottom,0px))}
 
 @media (prefers-reduced-motion: reduce) {
-  .tab, .tab svg, .tab .lbl { transition:none; }
+  .tab, .tab::before, .tab svg, .tab .lbl, .dot {
+    transition:none !important;
+  }
 }

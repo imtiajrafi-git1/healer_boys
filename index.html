@@ -3491,30 +3491,77 @@
 
     function renderNav() {
       const nav = document.getElementById("nav");
+      if (!nav) return;
       const p = path();
-      const idx = navIndexFor(p);
+      const activeIdx = navIndexFor(p);
       const show = NAV_PATHS.includes(p) || p.startsWith("/member/") || p === "/dues" || p === "/reminders" || p === "/report";
-      nav.classList.toggle("show", show && requireAuth());
+      const shouldShow = show && requireAuth();
+      nav.classList.toggle("show", shouldShow);
 
-      if (!nav.classList.contains("show")) {
+      if (!shouldShow) {
         nav.innerHTML = "";
         nav.dataset.built = "";
         return;
       }
 
-      nav.innerHTML = NAV.map(n => {
-        const active = navIndexFor(p) === NAV.findIndex(x => x.path === n.path);
-        const aria = n.path === "/profile" ? "Profile and settings" : n.path === "/donations" ? "Donation, new campaign" : n.label;
-        return `<button class="tab${active ? " on" : ""}" data-nav="${n.path}" aria-label="${aria}"${active ? ' aria-current="page"' : ""}>${navButtonHTML(n, active)}</button>`;
-      }).join("");
-      nav.querySelectorAll("[data-nav]").forEach(b => b.onclick = () => {
-        nav.querySelectorAll(".tab").forEach(tab => {
-          tab.classList.remove("on");
-          tab.removeAttribute("aria-current");
+      const showDonationDot = state.donations.some(d => {
+        const date = String(d.date || d.created_at || "").slice(0, 10);
+        const age = date ? Date.now() - new Date(`${date}T00:00:00`).getTime() : Infinity;
+        return age >= 0 && age < 30 * 24 * 60 * 60 * 1000;
+      });
+
+      if (nav.dataset.built !== "true" || nav.children.length !== NAV.length) {
+        nav.innerHTML = NAV.map((n, i) => {
+          const isActive = (i === activeIdx);
+          const aria = n.path === "/profile" ? "Profile and settings" : n.path === "/donations" ? "Donation, new campaign" : n.label;
+          return `<button class="tab${isActive ? " on" : ""}" data-nav="${n.path}" data-idx="${i}" aria-label="${aria}"${isActive ? ' aria-current="page"' : ""}>${navButtonHTML(n, isActive)}</button>`;
+        }).join("");
+
+        nav.querySelectorAll("[data-nav]").forEach(b => {
+          b.onclick = (e) => {
+            e.preventDefault();
+            const targetPath = b.dataset.nav;
+            if (path() === targetPath) return;
+
+            nav.querySelectorAll(".tab").forEach(tab => {
+              tab.classList.remove("on");
+              tab.removeAttribute("aria-current");
+            });
+            b.classList.add("on");
+            b.setAttribute("aria-current", "page");
+
+            navigate(targetPath);
+          };
         });
-        b.classList.add("on");
-        b.setAttribute("aria-current", "page");
-        navigate(b.dataset.nav);
+
+        nav.dataset.built = "true";
+        return;
+      }
+
+      const tabs = nav.querySelectorAll(".tab");
+      tabs.forEach((tab, i) => {
+        const isActive = (i === activeIdx);
+        if (isActive) {
+          if (!tab.classList.contains("on")) tab.classList.add("on");
+          tab.setAttribute("aria-current", "page");
+        } else {
+          if (tab.classList.contains("on")) tab.classList.remove("on");
+          tab.removeAttribute("aria-current");
+        }
+
+        if (NAV[i].path === "/donations") {
+          let dot = tab.querySelector(".dot");
+          if (showDonationDot && !isActive) {
+            if (!dot) {
+              dot = document.createElement("i");
+              dot.className = "dot";
+              dot.setAttribute("aria-hidden", "true");
+              tab.appendChild(dot);
+            }
+          } else if (dot) {
+            dot.remove();
+          }
+        }
       });
     }
 
