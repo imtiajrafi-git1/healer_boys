@@ -61,6 +61,7 @@ alter table public.members add column if not exists profile text not null defaul
 alter table public.members add column if not exists member_kind text not null default 'permanent';
 alter table public.members add column if not exists executive_tier text not null default 'general';
 alter table public.members add column if not exists designation text;
+alter table public.members add column if not exists position text;
 alter table public.members add column if not exists sort_order integer not null default 0;
 
 do $$ begin
@@ -88,13 +89,13 @@ do $$ begin
 end $$;
 
 -- Seed the initial executive leadership committee requested by the team
-update public.members set executive_tier = 'executive', designation = 'President', sort_order = 1 where name ilike '%K%H%Rafi%' or name ilike '%Kamrul%Rafi%';
-update public.members set executive_tier = 'executive', designation = 'General Secretary', sort_order = 2 where name ilike '%Khaled%Mahmud%';
-update public.members set executive_tier = 'executive', designation = 'Financial Advisor', sort_order = 3 where name ilike '%Junaed%' or name ilike '%Junayed%';
-update public.members set executive_tier = 'executive', designation = 'FA', sort_order = 4 where name ilike '%Istique%';
-update public.members set executive_tier = 'executive', designation = 'Accountant', sort_order = 5 where name ilike '%Imtiaj%';
-update public.members set executive_tier = 'executive', designation = 'Membership Advisor', sort_order = 6 where name ilike '%Sabbir%';
-update public.members set executive_tier = 'executive', designation = 'MA', sort_order = 7 where name ilike '%Kafi%';
+update public.members set executive_tier = 'executive', member_type = 'executive', designation = 'President', position = 'President', sort_order = 1 where name ilike '%K%H%Rafi%' or name ilike '%Kamrul%Rafi%';
+update public.members set executive_tier = 'executive', member_type = 'executive', designation = 'General Secretary', position = 'General Secretary', sort_order = 2 where name ilike '%Khaled%Mahmud%';
+update public.members set executive_tier = 'executive', member_type = 'executive', designation = 'Financial Advisor', position = 'Financial Advisor', sort_order = 3 where name ilike '%Junaed%' or name ilike '%Junayed%';
+update public.members set executive_tier = 'executive', member_type = 'executive', designation = 'FA', position = 'FA', sort_order = 4 where name ilike '%Istique%';
+update public.members set executive_tier = 'executive', member_type = 'executive', designation = 'Accountant', position = 'Accountant', sort_order = 5 where name ilike '%Imtiaj%';
+update public.members set executive_tier = 'executive', member_type = 'executive', designation = 'Membership Advisor', position = 'Membership Advisor', sort_order = 6 where name ilike '%Sabbir%';
+update public.members set executive_tier = 'executive', member_type = 'executive', designation = 'MA', position = 'MA', sort_order = 7 where name ilike '%Kafi%';
 
 -- members.id may be uuid on some installs — give it a default either way.
 do $$ begin
@@ -266,9 +267,18 @@ create table if not exists public.general_members (
   updated_at timestamptz not null default now()
 );
 alter table public.executive_members add column if not exists photo_url text;
+alter table public.executive_members add column if not exists designation text;
+alter table public.executive_members add column if not exists executive_tier text not null default 'executive';
+alter table public.executive_members add column if not exists member_type text not null default 'executive';
+alter table public.executive_members add column if not exists member_kind text not null default 'permanent';
+alter table public.executive_members add column if not exists email text;
 alter table public.general_members  add column if not exists photo_url text;
 alter table public.general_members  add column if not exists email text;
 alter table public.general_members  add column if not exists profile text;
+alter table public.general_members  add column if not exists designation text;
+alter table public.general_members  add column if not exists executive_tier text not null default 'general';
+alter table public.general_members  add column if not exists member_type text not null default 'general';
+alter table public.general_members  add column if not exists member_kind text not null default 'permanent';
 
 create index if not exists executive_members_sort_idx on public.executive_members (sort_order, name);
 create index if not exists general_members_name_idx on public.general_members (name);

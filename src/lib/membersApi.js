@@ -18,7 +18,8 @@ const cleanAmount = (value) => {
   const amount = Number(value);
   return Number.isFinite(amount) && amount >= 0 ? amount : null;
 };
-const validId = (value) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || ""));
+const isUuid = (value) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || ""));
+const validId = (value) => Boolean(value && String(value).trim().length > 0);
 
 /* ---------------------------------------------------------------------------
  * Schema cache / missing table detection.
@@ -196,26 +197,33 @@ export async function setMemberExecutiveTier(id, { executive_tier, designation, 
 
     // 2. Also keep executive_members / general_members tables synchronized if present
     try {
-      if (cleanTier === "executive") {
-        await db.from("general_members").delete().eq("id", id);
-        if (data) {
-          await db.from("executive_members").upsert({
-            id: data.id,
-            name: data.name,
-            position: cleanDesig,
-            photo_url: data.avatar_url || data.photo_url,
-            sort_order: numOrder
-          });
-        }
-      } else {
-        await db.from("executive_members").delete().eq("id", id);
-        if (data) {
-          await db.from("general_members").upsert({
-            id: data.id,
-            name: data.name,
-            email: data.email,
-            photo_url: data.avatar_url || data.photo_url
-          });
+      if (isUuid(id)) {
+        if (cleanTier === "executive") {
+          await db.from("general_members").delete().eq("id", id);
+          if (data) {
+            await db.from("executive_members").upsert({
+              id: data.id,
+              name: data.name,
+              position: cleanDesig,
+              designation: cleanDesig,
+              executive_tier: "executive",
+              member_type: "executive",
+              photo_url: data.avatar_url || data.photo_url,
+              sort_order: numOrder
+            });
+          }
+        } else {
+          await db.from("executive_members").delete().eq("id", id);
+          if (data) {
+            await db.from("general_members").upsert({
+              id: data.id,
+              name: data.name,
+              email: data.email,
+              executive_tier: "general",
+              member_type: "general",
+              photo_url: data.avatar_url || data.photo_url
+            });
+          }
         }
       }
     } catch (_) { /* optional normalized mirror */ }
